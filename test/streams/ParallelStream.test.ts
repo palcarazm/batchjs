@@ -4,7 +4,6 @@ describe("ParallelStream", () => {
     let parallelStream: ParallelStream<string,string>;
     const options: ParallelStreamOptions<string,string> = {
         maxConcurrent: 2,
-        objectMode: true,
         transform(chunk: string) {
             return Promise.resolve(chunk.toUpperCase());
         },

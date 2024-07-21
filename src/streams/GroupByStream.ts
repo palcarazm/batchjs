@@ -5,9 +5,13 @@ import { PushError } from "./errors/PushError";
  * Options for the GroupByStream.
  */
 export interface GroupByStreamOptions<T> extends DuplexOptions {
-    objectMode: true;
+    objectMode?: true;
     groupBy: (chunk: T) => string;
 }
+
+const defaultOptions = {
+    objectMode: true
+};
 
 /**
  * A class that allows you to transform and stream data in parallel.
@@ -22,8 +26,9 @@ export class GroupByStream<T> extends Duplex {
      * @param {GroupByStreamOptions<T>} options - The options for the GroupBy.
      */
     constructor(options: GroupByStreamOptions<T>) {
-        super(options);
-        this.groupBy = options.groupBy;
+        const opts = {...defaultOptions, ...options};
+        super(opts);
+        this.groupBy = opts.groupBy;
     }
 
     /**

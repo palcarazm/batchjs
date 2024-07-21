@@ -1,5 +1,3 @@
 export abstract class BatchJSError extends Error{
-    constructor(message:string){
-        super(message);
-    }
+    readonly moduleProvenance: string = "BatchJS";
 }

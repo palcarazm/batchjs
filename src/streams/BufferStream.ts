@@ -40,7 +40,7 @@ export class BufferStream<T> extends Duplex {
     }
 
     /**
-     * Performs the final actions for the stream, pushing remaining data batches, handling errors,
+     * Finalizes the stream by pushing remaining data batches, handling errors,
      * and executing the final callback.
      *
      * @param {TransformCallback} callback - The callback function to be executed after finalizing the stream.
@@ -60,7 +60,7 @@ export class BufferStream<T> extends Duplex {
     }
 
     /**
-     * A description of the entire function.
+     * Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
      *
      * @param {number} size - The size parameter for controlling the read operation.
      * @return {void} This function does not return anything.

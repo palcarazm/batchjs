@@ -70,7 +70,7 @@ export class ParallelStream<TInput, TOutput> extends Duplex {
     }
 
     /**
-     * A description of the entire function.
+     * Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
      *
      * @param {number} size - The size parameter for controlling the read operation.
      * @return {void} This function does not return anything.

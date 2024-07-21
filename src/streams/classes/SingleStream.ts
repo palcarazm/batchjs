@@ -13,7 +13,7 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you  stream data in batches of a specified size.
+ * A class that allows you to verify that a stream contains only one chunk.
  */
 export class SingleStream<T> extends Duplex {
     private buffer: T[] = [];

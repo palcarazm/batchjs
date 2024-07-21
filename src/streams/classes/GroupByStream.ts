@@ -14,7 +14,7 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to transform and stream data in parallel.
+ * A class that allows you to group data in a stream.
  */
 export class GroupByStream<T> extends Duplex {
     private buffer: Map<string,Array<T>> = new Map();

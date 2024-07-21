@@ -1,11 +1,10 @@
 import { Duplex, DuplexOptions, TransformCallback } from "stream";
-import { PushError } from "./errors/PushError";
+import { PushError, SingleStreamError } from "../errors/_index";
 
 /**
- * Options for the BufferStream.
+ * Options for the SingleStream.
  */
-export interface BufferStreamOptions extends DuplexOptions {
-    batchSize: number;
+export interface SingleStreamOptions extends DuplexOptions {
     objectMode?:true;
 }
 
@@ -16,23 +15,22 @@ const defaultOptions = {
 /**
  * A class that allows you  stream data in batches of a specified size.
  */
-export class BufferStream<T> extends Duplex {
-    private batchSize: number;
+export class SingleStream<T> extends Duplex {
     private buffer: T[] = [];
+    private isFirstChunk = true;
 
     /**
-     * Initializes a new instance of the BufferStream class with the specified options.
+     * Initializes a new instance of the SingleStream class with the specified options.
      *
-     * @param {BufferStreamOptions} options - The options for the BufferStream.
+     * @param {SingleStreamOptions} options - The options for the SingleStream.
      */
-    constructor(options: BufferStreamOptions) {
+    constructor(options: SingleStreamOptions) {
         const opts = {...defaultOptions, ...options};
         super(opts);
-        this.batchSize = opts.batchSize;
     }
 
     /**
-     * A method to write data to the stream, push the chunk to the buffer, and execute the callback.
+     * A method to write data to the stream, push the chunk to the buffer if its the first chunk, otherwise discard it, and execute the callback.
      *
      * @param {T} chunk - The data chunk to write to the stream.
      * @param {BufferEncoding} encoding - The encoding of the data.
@@ -40,12 +38,18 @@ export class BufferStream<T> extends Duplex {
      * @return {void} This function does not return anything.
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
-        this.buffer.push(chunk);
+        if (this.isFirstChunk) {
+            this.isFirstChunk = false;
+            this.buffer.push(chunk);
+        } else {
+            const error = new SingleStreamError();
+            this.emit("error", error);
+        }
         callback();
     }
 
     /**
-     * Finalizes the stream by pushing remaining data batches, handling errors,
+     * Finalizes the stream by pushing remaining data, handling errors,
      * and executing the final callback.
      *
      * @param {TransformCallback} callback - The callback function to be executed after finalizing the stream.
@@ -53,9 +57,9 @@ export class BufferStream<T> extends Duplex {
      */
     _final(callback: TransformCallback): void {
         while (this.buffer.length > 0) {
-            const batch = this.buffer.splice(0, this.batchSize);
-            if (!this.push(batch)) {
-                this.buffer.unshift(...batch);
+            const chunk = this.buffer.shift() as T;
+            if (!this.push(chunk)) {
+                this.buffer.unshift(chunk);
                 callback(new PushError());
                 return;
             }
@@ -72,9 +76,9 @@ export class BufferStream<T> extends Duplex {
      */
     _read(size: number): void {
         while (this.buffer.length > 0 && size > 0) {
-            const batch = this.buffer.splice(0, this.batchSize);
-            if (!this.push(batch)) {
-                this.buffer.unshift(...batch);
+            const chunk = this.buffer.shift() as T;
+            if (!this.push(chunk)) {
+                this.buffer.unshift(chunk);
             }
             size--;
         }

@@ -1,4 +1,4 @@
-import { GroupByStream, GroupByStreamOptions, PushError } from "../../src/streams/index";
+import { GroupByStream, GroupByStreamOptions, PushError } from "../../../src/streams/index";
 
 describe("GroupByStream", () => {
     const options: GroupByStreamOptions<string> = {

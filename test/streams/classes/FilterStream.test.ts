@@ -1,4 +1,4 @@
-import { FilterStream, FilterStreamOptions, PushError } from "../../src/streams/index";
+import { FilterStream, FilterStreamOptions, PushError } from "../../../src/streams/index";
 describe("FilterStream", () => {
     const options: FilterStreamOptions<string> = {
         filter: (chunk: string) => chunk === "data1" || chunk === "data2",

@@ -1,4 +1,4 @@
-import { BufferStream, BufferStreamOptions, PushError } from "../../src/streams/index";
+import { BufferStream, BufferStreamOptions, PushError } from "../../../src/streams/index";
 
 describe("BufferStream", () => {
     const options: BufferStreamOptions = {

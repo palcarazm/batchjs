@@ -1,5 +1,5 @@
 import { Duplex, DuplexOptions, TransformCallback  } from "stream";
-import { PushError } from "./errors/PushError";
+import { PushError } from "../errors/PushError";
 
 /**
  * Options for the ParallelStream.

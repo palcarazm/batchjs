@@ -1,6 +1,6 @@
 import { Duplex, DuplexOptions, TransformCallback } from "stream";
-import { PushError } from "./errors/PushError";
-import { DuplexEventEmitters, DuplexEventHandlers } from "./interfaces/index";
+import { PushError } from "../errors/PushError";
+import { DuplexEventEmitters, DuplexEventHandlers } from "../interfaces/index";
 
 /**
  * Options for the FilterStream.

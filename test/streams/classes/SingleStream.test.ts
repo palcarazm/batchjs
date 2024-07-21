@@ -1,4 +1,4 @@
-import { SingleStream, SingleStreamOptions, PushError, SingleStreamError } from "../../src/streams/index";
+import { SingleStream, SingleStreamOptions, PushError, SingleStreamError } from "../../../src/streams/index";
 
 describe("SingleStream", () => {
     const options: SingleStreamOptions = {};

@@ -1,4 +1,4 @@
-import { ParallelStreamOptions, ParallelStream, PushError } from "../../src/streams/index";
+import { ParallelStreamOptions, ParallelStream, PushError } from "../../../src/streams/index";
 
 describe("ParallelStream", () => {
     const options: ParallelStreamOptions<string,string> = {

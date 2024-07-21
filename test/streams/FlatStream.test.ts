@@ -1,6 +1,4 @@
-import { FlatStream, FlatStreamOptions } from "../../src/streams/FlatStream";
-import { PushError } from "../../src/streams/errors/PushError";
-
+import { FlatStream, FlatStreamOptions, PushError } from "../../src/streams/index";
 describe("FlatStream", () => {
     let flatStream: FlatStream<string>;
     const chunks: Array<Array<string>> = [];

@@ -1,5 +1,4 @@
-import { GroupByStream, GroupByStreamOptions } from "../../src/streams/GroupByStream";
-import { PushError } from "../../src/streams/errors/PushError";
+import { GroupByStream, GroupByStreamOptions, PushError } from "../../src/streams/index";
 
 describe("GroupByStream", () => {
     let groupByStream: GroupByStream<string>;

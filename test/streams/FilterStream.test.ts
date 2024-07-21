@@ -1,6 +1,4 @@
-import { FilterStream, FilterStreamOptions } from "../../src/streams/FilterStream";
-import { PushError } from "../../src/streams/errors/PushError";
-
+import { FilterStream, FilterStreamOptions, PushError } from "../../src/streams/index";
 describe("FilterStream", () => {
     let filterStream: FilterStream<string>;
     const chunks: Array<string> = [];

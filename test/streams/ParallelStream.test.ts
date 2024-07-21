@@ -1,5 +1,4 @@
-import { ParallelStreamOptions, ParallelStream } from "../../src/streams/ParallelStream";
-import { PushError } from "../../src/streams/errors/PushError";
+import { ParallelStreamOptions, ParallelStream, PushError } from "../../src/streams/index";
 
 describe("ParallelStream", () => {
     let parallelStream: ParallelStream<string,string>;

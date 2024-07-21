@@ -6,7 +6,6 @@ describe("GroupByStream", () => {
 
     beforeEach(() => {
         const options: GroupByStreamOptions<string> = {
-            objectMode: true,
             groupBy: (chunk: string) => chunk.split("").at(0) ?? "",
         };
         groupByStream = new GroupByStream(options);

@@ -6,9 +6,13 @@ import { PushError } from "./errors/PushError";
  */
 export interface ParallelStreamOptions<TInput, TOutput> extends DuplexOptions {
     maxConcurrent: number;
-    objectMode: true;
+    objectMode?: true;
     transform: (chunk: TInput) => Promise<TOutput>;
 }
+
+const defaultOptions = {
+    objectMode: true
+};
 
 /**
  * A class that allows you to transform and stream data in parallel.
@@ -26,9 +30,10 @@ export class ParallelStream<TInput, TOutput> extends Duplex {
      * @param {ParallelStreamOptions<TInput, TOutput>} options - The options for the ParallelStream.
      */
     constructor(options: ParallelStreamOptions<TInput, TOutput>) {
-        super(options);
-        this.maxConcurrent = options.maxConcurrent;
-        this.transform = options.transform;
+        const opts = {...defaultOptions, ...options};
+        super(opts);
+        this.maxConcurrent = opts.maxConcurrent;
+        this.transform = opts.transform;
     }
 
     /**

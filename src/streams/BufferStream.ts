@@ -6,8 +6,12 @@ import { PushError } from "./errors/PushError";
  */
 export interface BufferStreamOptions extends DuplexOptions {
     batchSize: number;
-    objectMode:true;
+    objectMode?:true;
 }
+
+const defaultOptions = {
+    objectMode: true
+};
 
 /**
  * A class that allows you  stream data in batches of a specified size.
@@ -22,8 +26,9 @@ export class BufferStream<T> extends Duplex {
      * @param {BufferStreamOptions} options - The options for the BufferStream.
      */
     constructor(options: BufferStreamOptions) {
-        super(options);
-        this.batchSize = options.batchSize;
+        const opts = {...defaultOptions, ...options};
+        super(opts);
+        this.batchSize = opts.batchSize;
     }
 
     /**

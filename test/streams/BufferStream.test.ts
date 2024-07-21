@@ -7,7 +7,6 @@ describe("BufferStream", () => {
     beforeEach(() => {
         const options: BufferStreamOptions = {
             batchSize: 2,
-            objectMode: true,
         };
         bufferStream = new BufferStream(options);
     });

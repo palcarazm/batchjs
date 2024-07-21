@@ -5,7 +5,6 @@ describe("FlatStream", () => {
 
     beforeEach(() => {
         const options: FlatStreamOptions = {
-            objectMode: true,
         };
         flatStream = new FlatStream(options);
     });

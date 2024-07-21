@@ -6,9 +6,13 @@ import { DuplexEventEmitters, DuplexEventHandlers } from "./interfaces/index";
  * Options for the FilterStream.
  */
 export interface FilterStreamOptions<T> extends DuplexOptions {
-    objectMode:true;
+    objectMode?:true;
     filter: (chunk: T) => boolean;
 }
+
+const defaultOptions = {
+    objectMode: true
+};
 
 /**
  * Event emitters interface for the FilterStream.
@@ -37,8 +41,9 @@ export class FilterStream<T> extends Duplex {
      * @param {FilterStreamOptions} options - The options for the FilterStream.
      */
     constructor(options: FilterStreamOptions<T>) {
-        super(options);
-        this._filter = options.filter;
+        const opts = {...defaultOptions, ...options};
+        super(opts);
+        this._filter = opts.filter;
     }
 
     /**

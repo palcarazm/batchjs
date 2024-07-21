@@ -5,7 +5,6 @@ describe("FilterStream", () => {
 
     beforeEach(() => {
         const options: FilterStreamOptions<string> = {
-            objectMode: true,
             filter: (chunk: string) => chunk === "data1" || chunk === "data2",
         };
         filterStream = new FilterStream(options);

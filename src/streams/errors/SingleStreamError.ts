@@ -1,4 +1,4 @@
-import { BatchJSError } from "../../common/errors/BatchJSError";
+import { BatchJSError } from "../../common/errors/_index";
 
 export class SingleStreamError extends BatchJSError{
     constructor(){

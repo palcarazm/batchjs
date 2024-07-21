@@ -2,11 +2,10 @@ import { Duplex, DuplexOptions, TransformCallback  } from "stream";
 import { PushError } from "../errors/PushError";
 
 /**
- * Options for the GroupByStream.
+ * Options for the CountStream.
  */
-export interface GroupByStreamOptions<T> extends DuplexOptions {
+export interface CountStreamOptions extends DuplexOptions {
     objectMode?: true;
-    groupBy: (chunk: T) => string;
 }
 
 const defaultOptions = {
@@ -14,21 +13,19 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to group data in a stream.
+ * A class that allows you to count the number of chunks in a stream.
  */
-export class GroupByStream<T> extends Duplex {
-    private buffer: Map<string,Array<T>> = new Map();
-    private readonly groupBy: (chunk: T) => string;
+export class CountStream<T> extends Duplex {
+    private count: number = 0;
 
     /**
      * Creates a new instance of GroupBy with the given options.
      *
-     * @param {GroupByStreamOptions<T>} options - The options for the GroupBy.
+     * @param {CountStreamOptions} options - The options for the GroupBy.
      */
-    constructor(options: GroupByStreamOptions<T>) {
+    constructor(options: CountStreamOptions) {
         const opts = {...defaultOptions, ...options};
         super(opts);
-        this.groupBy = opts.groupBy;
     }
 
     /**
@@ -41,24 +38,24 @@ export class GroupByStream<T> extends Duplex {
      * @return {void}
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
-        this._groupBy(chunk);
+        if (chunk !== null) {
+            this.count++;
+        }
         callback();
     }
 
  
     /**
-     * Finalize the stream by draining the buffer and pushing any remaining chunks to the stream.
+     * Finalize the stream by draining the buffer and pushing the count of chunks to the stream.
      *
      * @param {TransformCallback} callback - The callback to be called when the stream is finalized.
      * @return {void}
      */
     _final(callback: TransformCallback): void {
         try {
-            Array.from(this.buffer.values()).forEach((group:Array<T>) => {
-                if (!this.push(group)) {
-                    throw new PushError();
-                }
-            });
+            if (!this.push(this.count)) {
+                throw new PushError();
+            }
             this.push(null);
             callback();
         } catch (error) {
@@ -74,18 +71,5 @@ export class GroupByStream<T> extends Duplex {
      */
     _read(): void {
         return;
-    }
-
-    /**
-     * Groups a chunk of data based on the provided groupBy function and stores it in the buffer.
-     *
-     * @param {T} chunk - The data chunk to be grouped.
-     * @return {void} This function does not return anything.
-     */
-    private _groupBy(chunk: T): void {
-        const groupKey = this.groupBy(chunk);
-        const group = this.buffer.get(groupKey) ?? [];
-        group.push(chunk);
-        this.buffer.set(groupKey, group);
     }
 }

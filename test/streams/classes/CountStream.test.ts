@@ -1,24 +1,22 @@
-import { BufferStream, BufferStreamOptions, PushError } from "../../../src/streams/index";
+import { CountStream, CountStreamOptions, PushError } from "../../../src/streams/index";
 
-describe("BufferStream", () => {
-    const options: BufferStreamOptions = {
-        batchSize: 2,
-    };
-    let stream: BufferStream<string>;
-    let  chunks: Array<Array<string>>;
+describe("CountStream", () => {
+    const options: CountStreamOptions = {};
+    let stream: CountStream<string>;
+    let chunks: Array<number>;
 
     beforeEach(() => {
-        stream = new BufferStream(options);
+        stream = new CountStream(options);
 
         chunks = [];
-        stream.on("data", (chunk: Array<string>) => {
+        stream.on("data", (chunk: number) => {
             chunks.push(chunk);
         });
     });
 
     test("should write and read data correctly", (done) => {
         stream.on("end", () => {
-            expect(chunks).toEqual([["data1", "data2"], ["data3"]]);
+            expect(chunks).toEqual([3]);
             done();
         });
 
@@ -30,7 +28,7 @@ describe("BufferStream", () => {
 
     test("should handle _final correctly", (done) => {     
         stream.on("end", () => {
-            expect(stream["buffer"].length).toBe(0);
+            expect(chunks).toEqual([2]);
             done();
         });
 
@@ -39,21 +37,23 @@ describe("BufferStream", () => {
         stream.end();
     });
 
-    test("should not lose data when push is disabled", (done) => {
-        jest.spyOn(stream, "push").mockImplementation(() => false);
+    test("should wait streams end to push count", (done) => {
+
+        stream.on("error", (err) => {
+            expect(err).toBeInstanceOf(PushError);
+            done();
+        });
 
         // No data should be emitted
         stream.on("data", () => {
-            done.fail("Expected no data was received.");
+            done.fail("Expected error to be thrown but data was received.");
         });
 
         stream.write("data1");
         stream.write("data2");
-       
-        setTimeout(()=>{
-            expect(stream["buffer"].length).toBe(2);
+        setTimeout(() => {
             done();
-        },200);
+        },50);
     });
 
     test("should throw PushError when push is disabled in stream end", (done) => {

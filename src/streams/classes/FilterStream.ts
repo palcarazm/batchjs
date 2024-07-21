@@ -29,7 +29,7 @@ interface FilterStreamEventHandlers<T> extends DuplexEventHandlers {
 }
 
 /**
- * A class that allows you  stream data in batches of a specified size.
+ * A class that allows you to filter data in a stream.
  */
 export class FilterStream<T> extends Duplex {
     private buffer: T[] = [];

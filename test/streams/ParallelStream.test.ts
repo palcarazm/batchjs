@@ -1,24 +1,25 @@
 import { ParallelStreamOptions, ParallelStream, PushError } from "../../src/streams/index";
 
 describe("ParallelStream", () => {
-    let parallelStream: ParallelStream<string,string>;
     const options: ParallelStreamOptions<string,string> = {
         maxConcurrent: 2,
         transform(chunk: string) {
             return Promise.resolve(chunk.toUpperCase());
         },
     };
-    const chunks: Array<string> = [];
+    let parallelStream: ParallelStream<string,string>;
+    let chunks: Array<string>;
 
     beforeEach(() => {
         parallelStream = new ParallelStream(options);
-    });
 
-    test("should write and read data correctly", (done) => {
+        chunks = [];
         parallelStream.on("data", (chunk: string) => {
             chunks.push(chunk);
         });
+    });
 
+    test("should write and read data correctly", (done) => {
         parallelStream.on("end", () => {
             expect(chunks).toEqual(["DATA1", "DATA2","DATA3"]);
             done();
@@ -31,10 +32,6 @@ describe("ParallelStream", () => {
     });
 
     test("should handle _final correctly", (done) => {     
-        parallelStream.on("data", (chunk: string) => {
-            chunks.push(chunk);
-        });
-
         parallelStream.on("end", () => {
             expect(parallelStream["queue"].length).toBe(0);
             expect(parallelStream["buffer"].length).toBe(0);

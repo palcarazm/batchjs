@@ -1,11 +1,11 @@
 import { SingleStream, SingleStreamOptions, PushError, SingleStreamError } from "../../src/streams/index";
 
 describe("SingleStream", () => {
+    const options: SingleStreamOptions = {};
     let singleStream: SingleStream<string>;
     let chunks: Array<string>;
 
     beforeEach(() => {
-        const options: SingleStreamOptions = {};
         singleStream = new SingleStream(options);
 
         chunks = [];

@@ -1,21 +1,22 @@
 import { BufferStream, BufferStreamOptions, PushError } from "../../src/streams/index";
 
 describe("BufferStream", () => {
+    const options: BufferStreamOptions = {
+        batchSize: 2,
+    };
     let bufferStream: BufferStream<string>;
-    const chunks: Array<Array<string>> = [];
+    let  chunks: Array<Array<string>>;
 
     beforeEach(() => {
-        const options: BufferStreamOptions = {
-            batchSize: 2,
-        };
         bufferStream = new BufferStream(options);
-    });
 
-    test("should write and read data correctly", (done) => {
+        chunks = [];
         bufferStream.on("data", (chunk: Array<string>) => {
             chunks.push(chunk);
         });
+    });
 
+    test("should write and read data correctly", (done) => {
         bufferStream.on("end", () => {
             expect(chunks).toEqual([["data1", "data2"], ["data3"]]);
             done();
@@ -28,10 +29,6 @@ describe("BufferStream", () => {
     });
 
     test("should handle _final correctly", (done) => {     
-        bufferStream.on("data", (chunk: Array<string>) => {
-            chunks.push(chunk);
-        });
-
         bufferStream.on("end", () => {
             expect(bufferStream["buffer"].length).toBe(0);
             done();

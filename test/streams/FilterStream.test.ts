@@ -1,20 +1,21 @@
 import { FilterStream, FilterStreamOptions, PushError } from "../../src/streams/index";
 describe("FilterStream", () => {
+    const options: FilterStreamOptions<string> = {
+        filter: (chunk: string) => chunk === "data1" || chunk === "data2",
+    };
     let filterStream: FilterStream<string>;
-    const chunks: Array<string> = [];
+    let chunks: Array<string>;
 
     beforeEach(() => {
-        const options: FilterStreamOptions<string> = {
-            filter: (chunk: string) => chunk === "data1" || chunk === "data2",
-        };
         filterStream = new FilterStream(options);
-    });
 
-    test("should write and read data correctly", (done) => {
+        chunks = [];
         filterStream.on("data", (chunk: string) => {
             chunks.push(chunk);
         });
+    });
 
+    test("should write and read data correctly", (done) => {
         filterStream.on("end", () => {
             expect(chunks).toEqual(["data1", "data2"]);
             done();
@@ -27,10 +28,6 @@ describe("FilterStream", () => {
     });
 
     test("should handle _final correctly", (done) => {     
-        filterStream.on("data", (chunk: string) => {
-            chunks.push(chunk);
-        });
-
         filterStream.on("end", () => {
             expect(filterStream["buffer"].length).toBe(0);
             done();

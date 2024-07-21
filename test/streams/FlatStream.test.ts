@@ -1,19 +1,19 @@
 import { FlatStream, FlatStreamOptions, PushError } from "../../src/streams/index";
 describe("FlatStream", () => {
+    const options: FlatStreamOptions = {};
     let flatStream: FlatStream<string>;
-    const chunks: Array<Array<string>> = [];
+    let chunks: Array<Array<string>>;
 
     beforeEach(() => {
-        const options: FlatStreamOptions = {
-        };
         flatStream = new FlatStream(options);
-    });
 
-    test("should write and read data correctly", (done) => {
+        chunks = [];
         flatStream.on("data", (chunk: Array<string>) => {
             chunks.push(chunk);
         });
+    });
 
+    test("should write and read data correctly", (done) => {
         flatStream.on("end", () => {
             expect(chunks).toEqual(["data1","data2","data3"]);
             done();
@@ -25,10 +25,6 @@ describe("FlatStream", () => {
     });
 
     test("should handle _final correctly", (done) => {     
-        flatStream.on("data", (chunk: Array<string>) => {
-            chunks.push(chunk);
-        });
-
         flatStream.on("end", () => {
             expect(flatStream["buffer"].length).toBe(0);
             done();

@@ -1,21 +1,22 @@
 import { GroupByStream, GroupByStreamOptions, PushError } from "../../src/streams/index";
 
 describe("GroupByStream", () => {
+    const options: GroupByStreamOptions<string> = {
+        groupBy: (chunk: string) => chunk.split("").at(0) ?? "",
+    };
     let groupByStream: GroupByStream<string>;
-    const chunks: Array<Array<string>> = [];
+    let chunks: Array<Array<string>>;
 
     beforeEach(() => {
-        const options: GroupByStreamOptions<string> = {
-            groupBy: (chunk: string) => chunk.split("").at(0) ?? "",
-        };
         groupByStream = new GroupByStream(options);
-    });
 
-    test("should write and read data correctly", (done) => {
+        chunks = [];
         groupByStream.on("data", (chunk: Array<string>) => {
             chunks.push(chunk);
         });
+    });
 
+    test("should write and read data correctly", (done) => {
         groupByStream.on("end", () => {
             expect(chunks).toEqual([["DATA1", "DATA2"], ["data3"]]);
             done();

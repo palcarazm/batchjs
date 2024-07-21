@@ -1,1 +1,2 @@
-export * from "./duplex/index";
+export * from "./errors/index";
+export * from "./BufferStream";

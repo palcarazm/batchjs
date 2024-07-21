@@ -1,4 +1,4 @@
-import { BatchJSError } from "../../commons/errors/BatchJSError";
+import { BatchJSError } from "../../common/errors/BatchJSError";
 
 export class PushError extends BatchJSError{
     constructor(){

@@ -1,13 +1,11 @@
-import { FilterStream, FilterStreamOptions, PushError } from "../../../src/streams/index";
-describe("FilterStream", () => {
-    const options: FilterStreamOptions<string> = {
-        filter: (chunk: string) => chunk === "data1" || chunk === "data2",
-    };
-    let stream: FilterStream<string>;
+import { FirstStream, FirstStreamOptions, PushError } from "../../../src/streams/index";
+describe("FirstStream", () => {
+    const options: FirstStreamOptions = {};
+    let stream: FirstStream<string>;
     let chunks: Array<string>;
 
     beforeEach(() => {
-        stream = new FilterStream(options);
+        stream = new FirstStream(options);
 
         chunks = [];
         stream.on("data", (chunk: string) => {
@@ -16,25 +14,25 @@ describe("FilterStream", () => {
     });
 
     test("should write and read data correctly", (done) => {
-        stream.on("end", () => {
-            expect(chunks).toEqual(["data1", "data2"]);
-            done();
-        });
+        stream.write("first");
+        stream.write("second");// Discarded
+        stream.write("third");// Discarded
 
-        stream.write("data1");
-        stream.write("data2");
-        stream.write("data3");// Discarded
-        stream.end();
+        setTimeout(()=>{
+            expect(stream["pushedFirstChunk"]).toBeTruthy();
+            expect(chunks).toEqual(["first"]);
+            done();
+        },50);
     });
 
     test("should handle _final correctly", (done) => {     
         stream.on("end", () => {
-            expect(stream["buffer"].length).toBe(0);
+            expect(stream["pushedFirstChunk"]).toBeTruthy();
             done();
         });
 
-        stream.write("data1");
-        stream.write("data2");
+        stream.write("first");
+        stream.write("second"); // Discarded
         stream.end();
     });
 
@@ -46,12 +44,12 @@ describe("FilterStream", () => {
             done.fail("Expected no data was received.");
         });
 
-        stream.write("data1");
-        stream.write("data2");
-        stream.write("data3"); // Discarded
+        stream.write("first");
+        stream.write("second"); // Discarded
+        stream.write("third"); // Discarded
        
         setTimeout(()=>{
-            expect(stream["buffer"].length).toBe(2);
+            expect(stream["pushedFirstChunk"]).toBeFalsy();
             done();
         },200);
     });
@@ -69,30 +67,29 @@ describe("FilterStream", () => {
             done.fail("Expected error to be thrown but data was received.");
         });
 
-        stream.write("data1");
-        stream.write("data2");
-        stream.write("data3"); // Discarded
+        stream.write("first");
+        stream.write("second"); // Discarded
+        stream.write("third"); // Discarded
         stream.end();
     });
 
     test("should send discarded data to discard event listener", (done) => {
-        // No data should be emitted
-        stream.on("data", () => {
-            done.fail("Expected no data was received.");
+        stream.on("data", (chunk: string) => {
+            expect(chunk).toEqual("first");
         });
 
         stream.on("end", () => {
-            expect(stream["buffer"].length).toBe(0);
+            expect(stream["pushedFirstChunk"]).toBeTruthy();
             done();
         });
 
         stream.on("discard", (chunk: string) => {
-            expect(["data3","data4","data5"]).toContain(chunk);
+            expect(["second","third"]).toContain(chunk);
         });
 
-        stream.write("data3");// Discarded
-        stream.write("data4");// Discarded
-        stream.write("data5");// Discarded
+        stream.write("first");
+        stream.write("second"); // Discarded
+        stream.write("third"); // Discarded
         stream.end();
     });
 });

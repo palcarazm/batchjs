@@ -22,3 +22,7 @@ export interface WritableEventHandlers extends StreamEventHandlers{
 }
 
 export interface DuplexEventHandlers extends WritableEventHandlers, ReadableEventHandlers {}
+
+export interface DiscardingStreamEventHandlers<T> extends DuplexEventHandlers {
+    discard: (chunk: T) => void;
+}

@@ -22,3 +22,7 @@ export interface WritableEventEmitters extends StreamEventEmitters{
 }
 
 export interface DuplexEventEmitters extends WritableEventEmitters, ReadableEventEmitters {}
+
+export interface DiscardingStreamEventEmitters<T> extends DuplexEventEmitters {
+    discard: T;
+}

@@ -1,6 +1,6 @@
-import { Duplex, DuplexOptions, TransformCallback } from "stream";
+import { DuplexOptions, TransformCallback } from "stream";
 import { PushError } from "../errors/PushError";
-import { DuplexEventEmitters, DuplexEventHandlers } from "../interfaces/index";
+import { DiscardingStream } from "../interfaces/_index";
 
 /**
  * Options for the FilterStream.
@@ -15,23 +15,9 @@ const defaultOptions = {
 };
 
 /**
- * Event emitters interface for the FilterStream.
- */
-interface FilterStreamEventEmitters<T> extends DuplexEventEmitters {
-    discard: T;
-}
-
-/**
- *  Event handlers interface for the FilterStream.
- */
-interface FilterStreamEventHandlers<T> extends DuplexEventHandlers {
-    discard: (chunk: T) => void;
-}
-
-/**
  * A class that allows you to filter data in a stream.
  */
-export class FilterStream<T> extends Duplex {
+export class FilterStream<T> extends DiscardingStream<T> {
     private buffer: T[] = [];
     private readonly _filter: (chunk: T) => boolean;
 
@@ -98,33 +84,5 @@ export class FilterStream<T> extends Duplex {
             }
             size--;
         }
-    }
-
-    addListener<U extends keyof FilterStreamEventHandlers<T>>(event: U, listener: FilterStreamEventHandlers<T>[U]): this {
-        return super.addListener(event, listener);
-    }
-
-    emit<U extends keyof FilterStreamEventEmitters<T>>(event: U, ...args: Array<FilterStreamEventEmitters<T>[U]>): boolean {
-        return super.emit(event, ...args);
-    }
-
-    on<U extends keyof FilterStreamEventHandlers<T>>(event: U, listener: FilterStreamEventHandlers<T>[U]): this {
-        return super.on(event, listener);
-    }
-
-    once<U extends keyof FilterStreamEventHandlers<T>>(event: U, listener: FilterStreamEventHandlers<T>[U]): this {
-        return super.once(event, listener);
-    }
-
-    prependListener<U extends keyof FilterStreamEventHandlers<T>>(event: U, listener: FilterStreamEventHandlers<T>[U]): this {
-        return super.prependListener(event, listener);
-    }
-
-    prependOnceListener<U extends keyof FilterStreamEventHandlers<T>>(event: U, listener: FilterStreamEventHandlers<T>[U]): this {
-        return super.prependOnceListener(event, listener);
-    }
-
-    removeListener<U extends keyof FilterStreamEventHandlers<T>>(event: U, listener: FilterStreamEventHandlers<T>[U]): this {
-        return super.removeListener(event, listener);
     }
 }

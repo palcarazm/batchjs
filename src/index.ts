@@ -1,2 +1,2 @@
-export * from "./commons/index";
+export * from "./common/index";
 export * from "./streams/index";

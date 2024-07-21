@@ -1,6 +1,7 @@
 export * from "./BufferStream";
 export * from "./CountStream";
 export * from "./FilterStream";
+export * from "./FirstStream";
 export * from "./FlatStream";
 export * from "./GroupByStream";
 export * from "./ParallelStream";

@@ -1,16 +1,16 @@
 import { Duplex, DuplexOptions, TransformCallback } from "stream";
-import { PushError } from "../errors/PushError";
+import { PushError } from "./errors/PushError";
 
-export interface BufferDuplexOptions extends DuplexOptions {
+export interface BufferStreamOptions extends DuplexOptions {
     batchSize: number;
     objectMode:true;
 }
 
-export class BufferDuplex<T> extends Duplex {
+export class BufferStream<T> extends Duplex {
     private batchSize: number;
     private buffer: T[] = [];
 
-    constructor(options: BufferDuplexOptions) {
+    constructor(options: BufferStreamOptions) {
         super(options);
         this.batchSize = options.batchSize;
     }

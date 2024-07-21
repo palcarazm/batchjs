@@ -4,5 +4,6 @@ export * from "./FilterStream";
 export * from "./FirstStream";
 export * from "./FlatStream";
 export * from "./GroupByStream";
+export * from "./LastStream";
 export * from "./ParallelStream";
 export * from "./SingleStream"; 

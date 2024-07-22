@@ -2,6 +2,10 @@ import { Step } from "../../../../src/common/index";
 import { Readable, Writable, Transform, TransformCallback, TransformOptions } from "stream";
 
 export class MockPassingStep extends Step {
+    constructor(name: string = "MockPassingStep") {
+        super(name);
+    }
+
     protected _reader() {
         return new Readable({
             objectMode: true,

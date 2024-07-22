@@ -4,6 +4,18 @@ import { Readable, Duplex, Writable } from "stream";
  * The base class for all steps.
  */
 export abstract class Step {
+    readonly name:string;
+
+    /**
+     * Constructor for initializing the name property.
+     *
+     * @param {string} name - The name to assign to the Step.
+     * @return {void} 
+     */
+    constructor(name:string) {
+        this.name = name;
+    }
+    
     /**
      * The reader stream.
      * @returns {Readable}

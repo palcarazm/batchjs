@@ -1,3 +1,5 @@
+export * from "./AllMatchStream";
+export * from "./AnyMatchStream";
 export * from "./BufferStream";
 export * from "./CountStream";
 export * from "./EmptyStream";

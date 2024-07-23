@@ -1,6 +1,10 @@
-name: PR Check
+name: CI Workflow
 
 on:
+  push:
+    branches:
+      - "develop/*"
+      - "version/*"
   pull_request:
     branches:
       - "develop/*"

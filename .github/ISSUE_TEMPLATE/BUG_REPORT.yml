@@ -1,0 +1,86 @@
+name: Bug Report
+description: Use this template to report a bug or issue with the project.
+
+labels:
+  - bug
+
+fields:
+  - name: Error Description
+    description: Provide a detailed description of the error encountered.
+    required: true
+    type: textarea
+
+  - name: Steps to Reproduce
+    description: Describe the steps to reproduce the error and include a minimal code snippet if possible.
+    required: true
+    type: textarea
+
+  - name: Expected Behavior
+    description: Describe the expected result of the minimal code snippet provided.
+    required: true
+    type: textarea
+
+  - name: Actual Behavior
+    description: Describe the actual erroneous result of the minimal code snippet provided.
+    required: true
+    type: textarea
+
+  - name: Impact of the Error
+    description: Describe the impact of the error on the project or users.
+    required: true
+    type: textarea
+
+  - name: Severity
+    description: Select the severity level of the error.
+    required: true
+    type: choice
+    options:
+      - Minimal
+      - Moderate
+      - Severe
+      - Critical
+
+  - name: Version
+    description: Provide the version of the product where the error was encountered.
+    required: true
+    type: input
+
+  - name: Node Version
+    description: Provide the version of Node.js being used.
+    required: true
+    type: input
+
+  - name: Additional Comments
+    description: (Optional) Include any additional comments or context.
+    required: false
+    type: textarea
+
+  - name: Adhere to Code of Conduct
+    description: Confirm that you agree to follow the project's code of conduct.
+    required: true
+    type: checkbox
+    options:
+      - Adhere to Code of Conduct
+
+  - name: Review of Existing Anomalies
+    description: Confirm that you have reviewed open and rejected anomalies and have not found the reported anomaly.
+    required: true
+    type: checkbox
+    options:
+      - Reviewed existing anomalies and confirmed the issue is novel
+
+# This is a required section and will be added automatically by GitHub
+sections:
+  - name: Bug Report Checklist
+    description: Ensure that all items are completed before submitting the bug report.
+    type: checklist
+    items:
+      - [ ] Error description is provided.
+      - [ ] Steps to reproduce are included with code snippet if applicable.
+      - [ ] Expected and actual behaviors are described.
+      - [ ] Impact of the error is noted.
+      - [ ] Severity is selected.
+      - [ ] Version and Node version are provided.
+      - [ ] Additional comments are added if applicable.
+      - [ ] Code of conduct is acknowledged.
+      - [ ] Existing anomalies have been reviewed to ensure novelty.

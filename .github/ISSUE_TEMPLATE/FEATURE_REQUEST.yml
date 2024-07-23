@@ -1,0 +1,45 @@
+name: Feature Request
+description: Use this template to propose a new feature for the project.
+
+labels:
+  - feature
+
+fields:
+  - name: Short Description of the Feature
+    description: Provide a brief description of the functionality you want to propose.
+    required: true
+    type: textarea
+
+  - name: Expected Benefits
+    description: Describe the expected benefits or impact of this feature.
+    required: true
+    type: textarea
+
+  - name: Acceptance Criteria
+    description: (Optional) Define the criteria for considering this feature complete.
+    required: false
+    type: textarea
+
+  - name: Documentation
+    description: (Optional) Provide detailed logic or documentation for the feature.
+    required: false
+    type: textarea
+
+  - name: Additional Comments
+    description: (Optional) Include any additional comments or context.
+    required: false
+    type: textarea
+
+# This is a required section and will be added automatically by GitHub
+sections:
+  - name: Feature Request Checklist
+    description: Ensure that all items are completed before submitting the feature request.
+    type: checklist
+    items:
+      - [ ] The short description is provided.
+      - [ ] Expected benefits are clearly described.
+      - [ ] Acceptance criteria are defined if applicable.
+      - [ ] Documentation is included if necessary.
+      - [ ] Additional comments are added if applicable.
+      - [ ] Code of conduct is acknowledged.
+      - [ ] Existing features and open feature requests have been reviewed to ensure novelty.

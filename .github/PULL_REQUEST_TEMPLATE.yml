@@ -1,0 +1,53 @@
+name: Pull Request Template
+description: A template to standardize pull requests and ensure key information is included.
+
+fields:
+  - name: Change Summary
+    description: Describe the type of change being made.
+    required: true
+    type: choice
+    options:
+      - New Feature
+      - Bug Fix
+      - Refactor
+      - Documentation
+
+  - name: Description
+    description: 
+      - For New Features or Bug Fixes, reference the related issue number.
+      - For other changes, provide a brief description.
+    required: false
+    type: textarea
+
+  - name: Test Coverage
+    description: Indicate whether you have added, modified, fixed, or removed tests. If removed, please explain why in additional notes.
+    required: false
+    type: checkbox
+    options:
+      - Added tests
+      - Modified tests
+      - Fixed tests
+      - Removed tests
+
+  - name: Documentation Changes
+    description: Indicate whether any documentation has been updated.
+    required: false
+    type: checkbox
+    options:
+      - Documentation updated
+
+  - name: Additional Notes
+    description: Provide any additional information or context related to this pull request.
+    required: false
+    type: textarea
+
+# This is a required section and will be added automatically by GitHub
+sections:
+  - name: Pull Request Checklist
+    description: Ensure that all items are completed before submitting the pull request.
+    type: checklist
+    items:
+      - [ ] Code adheres to the project's coding style guide.
+      - [ ] All tests are passing.
+      - [ ] The pull request description is complete.
+      - [ ] Documentation is updated if needed.

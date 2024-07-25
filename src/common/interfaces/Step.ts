@@ -1,16 +1,65 @@
 import { Readable, Duplex, Writable } from "stream";
 
 /**
- * The base class for all steps.
+ * @abstract
+ * @class
+ * Abstract base class for all steps.
+ * @example
+ * ```typescript
+ * class StepImplementation extends Step {
+    constructor(name: string = "MockPassingStep") {
+        super(name);
+    }
+
+    protected _reader() {
+        return new Readable({
+            objectMode: true,
+            read() {
+                this.push("data");
+                this.push(null);
+            }
+        });
+    }
+
+    protected _processors() {
+        const opts: TransformOptions = {
+            objectMode: true,
+            transform(chunk: unknown, encoding: BufferEncoding, callback: TransformCallback) {
+                this.push(chunk);
+                callback();
+            }
+        };
+        return [new Transform(opts), new Transform(opts)];
+    }
+
+    protected _writer() {
+        return new Writable({
+            objectMode: true,
+            write(chunk: unknown, encoding: BufferEncoding, callback: TransformCallback) {
+                callback();
+            }
+        });
+    }
+}
+ * const step = new StepImplementation("StepImplementation");
+ * step.run()
+ *     .then(() => {
+ *         console.log("Step completed successfully");
+ *     })
+ *     .catch((error) => {
+ *         console.log("Step completed with errors");
+ *     });
+ * ```
+ * ```shell
+ * >> Step completed successfully
+ * ```
  */
 export abstract class Step {
     readonly name:string;
 
     /**
-     * Constructor for initializing the name property.
-     *
+     * @constructor
      * @param {string} name - The name to assign to the Step.
-     * @return {void} 
      */
     constructor(name:string) {
         this.name = name;
@@ -19,18 +68,21 @@ export abstract class Step {
     /**
      * The reader stream.
      * @returns {Readable}
+     * @protected
      */
     protected abstract _reader():Readable;
 
     /**
      * The processors in order to process the data from the reader to the writer.
      * @returns {Array<Duplex>}
+     * @protected
      */
     protected abstract _processors():Array<Duplex>;
 
     /**
      * The writer stream.
      * @returns {Writable}
+     * @protected
      */
     protected abstract _writer():Writable;
     

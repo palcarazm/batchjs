@@ -2,7 +2,9 @@ import { Duplex, DuplexOptions, TransformCallback } from "stream";
 import { PushError } from "../errors/PushError";
 
 /**
+ * @interface
  * Options for the FlatStream.
+ * @extends DuplexOptions
  */
 export interface FlatStreamOptions extends DuplexOptions {
     objectMode?:true;
@@ -13,15 +15,38 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to transform an array stream into a flat stream.
+ * @class
+ * Class that allows you to transform an array stream into a flat stream.
+ * @extends Duplex
+ * @template T
+ * @example
+ * ```typescript
+ * const stream:FlatStream<string> = new FlatStream({
+ *     objectMode: true,
+ *     matcher: (chunk: string) => chunk.length > 2
+ * });
+ * 
+ * stream.write(["data1", "data2"]);
+ * stream.write(["data3"]);
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: string) => {
+ *     console.log(``Pushed chunk: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Pushed chunk: data1
+ * >> Pushed chunk: data2
+ * >> Pushed chunk: data3
+ * ```
  */
 export class FlatStream<T> extends Duplex {
     private buffer: T[] = [];
 
     /**
-     * Initializes a new instance of the FlatStream class with the specified options.
-     *
+     * @constructor
      * @param {FlatStreamOptions} options - The options for the FlatStream.
+     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      */
     constructor(options: FlatStreamOptions) {
         const opts = {...defaultOptions, ...options};

@@ -1,0 +1,87 @@
+# Stream API
+
+<!--Auto generated Documentation PLEASE DO NOT MODIFY THIS FILE. MODIFY THE JSDOC INSTEAD-->
+
+{{!-- TOC --}}
+## Table of Contents
+
+{{#each (getClasses this)}}
+  - [{{name}}](#{{toLink name}})
+{{/each}}
+{{!-- Class --}}
+{{#each (getClasses this)}}
+
+## {{name}}
+
+{{#if access}}`{{access}}` | {{/if}}{{#if virtual}}`Abstract` | {{/if}}{{#if augments}}`Extends {{toList augments}}`{{/if}}
+{{#if description}}
+
+{{stripTags description}}
+{{/if}}
+{{#each (getConstructors ../this id)}}{{!-- Constructors --}}
+
+{{#if examples}}
+  {{#if examples.length}}
+
+### Examples
+{{#each examples}}
+
+{{{this}}}
+{{/each}}
+  {{/if}}
+{{/if}}
+{{#if params}}
+  {{#if params.length}}
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  {{#each params}}
+  | **{{name}}** | {{stripTags description}} | {{#each type.names}}{{this}}{{/each}} |
+  {{/each}}
+  {{/if}}
+{{/if}}
+{{/each}}{{!-- END Constructors --}}
+{{#each (getMethods ../this id)}}{{!-- Class methods --}}
+
+### {{name}} ({{kind}})
+
+{{#if access}}`{{access}}` | {{/if}}{{#if virtual}}`Abstract` | {{/if}}{{#if augments}}`Extends {{toList augments}}`{{/if}}
+{{#if description}}
+
+{{stripTags description}}
+{{/if}}
+{{#if examples}}
+  {{#if examples.length}}
+
+#### Examples
+{{#each examples}}
+
+{{{this}}}
+{{/each}}
+  {{/if}}
+{{/if}}
+{{#if params}}
+  {{#if params.length}}
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  {{#each params}}
+  | **{{name}}** | {{stripTags description}} | {{#each type.names}}{{this}}{{/each}} |
+  {{/each}}
+  {{/if}}
+{{/if}}
+{{#if returns}}
+  {{#if returns.length}}
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  {{#each returns}}
+  | {{#each type.names}}{{this}}{{/each}} | {{#if description}}{{stripTags description}}{{/if}} |
+  {{/each}}
+  {{/if}}
+{{/if}}
+{{/each}}{{!-- END Class methods --}}
+{{/each}}{{!-- END Class --}}

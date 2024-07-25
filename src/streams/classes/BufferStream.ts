@@ -2,7 +2,9 @@ import { Duplex, DuplexOptions, TransformCallback } from "stream";
 import { PushError } from "../errors/PushError";
 
 /**
+ * @interface
  * Options for the BufferStream.
+ * @extends DuplexOptions
  */
 export interface BufferStreamOptions extends DuplexOptions {
     batchSize: number;
@@ -14,16 +16,40 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you  stream data in batches of a specified size.
+ * @class
+ * Class that allows you  stream data in batches of a specified size.
+ * @extends Duplex
+ * @template T
+ * @example
+ * ```typescript
+ * const stream:BufferStream<string> = new BufferStream({
+ *     objectMode: true,
+ *     batchSize: 2,
+ * });
+ * 
+ * stream.write("data1");
+ * stream.write("data2");
+ * stream.write("data3");
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: Array<string>) => {
+ *     console.log(``Pushed chunk: ${JSON.stringify(chunk)}```);
+ * });
+ * ```
+ * ```shell
+ * >> Pushed chunk: ["data1", "data2"]
+ * >> Pushed chunk: ["data3"]
+ * ```
  */
 export class BufferStream<T> extends Duplex {
     private batchSize: number;
     private buffer: T[] = [];
 
     /**
-     * Initializes a new instance of the BufferStream class with the specified options.
-     *
+     * @constructor
      * @param {BufferStreamOptions} options - The options for the BufferStream.
+     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
+     * @param [options.batchSize] {number} - The maximum number of elements in a batch.
      */
     constructor(options: BufferStreamOptions) {
         const opts = {...defaultOptions, ...options};

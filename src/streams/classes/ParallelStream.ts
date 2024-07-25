@@ -2,7 +2,11 @@ import { Duplex, DuplexOptions, TransformCallback  } from "stream";
 import { PushError } from "../errors/PushError";
 
 /**
+ * @interface
  * Options for the ParallelStream.
+ * @extends DuplexOptions
+ * @template TInput The type of the input data.
+ * @template TOutput The type of the output data.
  */
 export interface ParallelStreamOptions<TInput, TOutput> extends DuplexOptions {
     maxConcurrent: number;
@@ -15,7 +19,35 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to transform and stream data in parallel.
+ * @class
+ * Class that allows you to transform and stream data in parallel.
+ * @extends Duplex
+ * @template TInput The type of the input data.
+ * @template TOutput The type of the output data.
+ * @example
+ * ```typescript
+ * const stream:ParallelStream<string,string> = new ParallelStream({
+ *     objectMode: true,
+ *     maxConcurrent: 2,
+ *     transform(chunk: string) {
+ *         return Promise.resolve(chunk.toUpperCase());
+ *     },
+ * });
+ * 
+ * stream.write("data1");
+ * stream.write("data2");
+ * stream.write("data3");
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: string) => {
+ *     console.log(``Pushed chunk: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Pushed chunk: DATA1
+ * >> Pushed chunk: DATA2
+ * >> Pushed chunk: DATA3
+ * ```
  */
 export class ParallelStream<TInput, TOutput> extends Duplex {
     private queue: Array<TInput> = [];
@@ -25,9 +57,11 @@ export class ParallelStream<TInput, TOutput> extends Duplex {
     private readonly transform: (chunk: TInput) => Promise<TOutput>;
 
     /**
-     * Creates a new instance of ParallelStream with the given options.
-     *
+     * @constructor
      * @param {ParallelStreamOptions<TInput, TOutput>} options - The options for the ParallelStream.
+     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
+     * @param [options.maxConcurrent] {number} - The maximum number of concurrent promises.
+     * @param [options.transform] {Function} - The function to transform the data returning a promise.
      */
     constructor(options: ParallelStreamOptions<TInput, TOutput>) {
         const opts = {...defaultOptions, ...options};

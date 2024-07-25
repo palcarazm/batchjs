@@ -1,0 +1,24 @@
+{
+  "no-cache": true,
+  "source": {
+    "includePattern": ".+\\.ts?$",
+    "excludePattern": ".+\\.(test|spec).ts"
+  },
+  "plugins": [
+    "plugins/markdown",
+    "node_modules/jsdoc-babel"
+  ],
+  "babel": {
+    "extensions": ["ts"],
+    "ignore": ["**/*.(test|spec).ts"],
+    "babelrc": false,
+    "presets": [
+      ["@babel/preset-env", { "targets": { "node": "current" } }],
+      "@babel/preset-typescript"
+    ],
+    "plugins": [
+      "@babel/plugin-transform-class-properties",
+      "@babel/plugin-transform-object-rest-spread"
+    ]
+  }
+}

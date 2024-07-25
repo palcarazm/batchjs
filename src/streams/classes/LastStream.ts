@@ -3,7 +3,9 @@ import { PushError } from "../errors/PushError";
 import { DiscardingStream } from "../interfaces/_index";
 
 /**
+ * @interface
  * Options for the LastStream.
+ * @extends DuplexOptions
  */
 export interface LastStreamOptions extends DuplexOptions {
     objectMode?:true;
@@ -14,15 +16,41 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to emit only the last chunk in a stream and discard the rest.
+ * @class
+ * Class that allows you to emit only the last chunk in a stream and discard the rest.
+ * @extends DiscardingStream
+ * @template T
+ * @example
+ * ```typescript
+ * const stream:LastStream<string> = new LastStream({
+ *     objectMode: true,
+ * });
+ * 
+ * stream.write("first"); //Discarded
+ * stream.write("second"); //Discarded
+ * stream.write("third");
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: boolean) => {
+ *     console.log(``Pushed chunk: ${chunk}```);
+ * });
+ * stream.on("discard", (chunk: boolean) => {
+ *     console.log(``Discarded chunk: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Discarded chunk: first
+ * >> Discarded chunk: second
+ * >> Pushed chunk: third
+ * ```
  */
 export class LastStream<T> extends DiscardingStream<T> {
     private lastChunk: T | undefined = undefined;
 
     /**
-     * Initializes a new instance of the LastStream class with the specified options.
-     *
+     * @constructor
      * @param {LastStreamOptions} options - The options for the LastStream.
+     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      */
     constructor(options: LastStreamOptions) {
         const opts = {...defaultOptions, ...options};

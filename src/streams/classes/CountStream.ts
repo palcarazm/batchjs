@@ -2,7 +2,9 @@ import { Duplex, DuplexOptions, TransformCallback  } from "stream";
 import { PushError } from "../errors/PushError";
 
 /**
+ * @interface
  * Options for the CountStream.
+ * @extends DuplexOptions
  */
 export interface CountStreamOptions extends DuplexOptions {
     objectMode?: true;
@@ -13,15 +15,36 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to count the number of chunks in a stream.
+ * @class
+ * Class that allows you to count the number of chunks in a stream.
+ * @extends Duplex
+ * @template T
+ * @example
+ * ```typescript
+ * const stream:CountStream<string> = new CountStream({
+ *     objectMode: true,
+ * });
+ * 
+ * stream.write("data1");
+ * stream.write("data2");
+ * stream.write("data3");
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: number) => {
+ *     console.log(``Received chunks: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Received chunks: 3
+ * ```
  */
 export class CountStream<T> extends Duplex {
     private count: number = 0;
 
     /**
-     * Creates a new instance of GroupBy with the given options.
-     *
+     * @constructor
      * @param {CountStreamOptions} options - The options for the GroupBy.
+     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      */
     constructor(options: CountStreamOptions) {
         const opts = {...defaultOptions, ...options};

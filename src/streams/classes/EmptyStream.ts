@@ -2,7 +2,9 @@ import { Duplex, DuplexOptions, TransformCallback } from "stream";
 import { PushError } from "../errors/PushError";
 
 /**
+ * @interface
  * Options for the EmptyStream.
+ * @extends DuplexOptions
  */
 export interface EmptyStreamOptions extends DuplexOptions {
     objectMode?:true;
@@ -13,16 +15,35 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to validate that a stream is empty.
+ * @class
+ * Class that allows you to validate that a stream is empty.
+ * @extends Duplex
+ * @template T
+ * @example
+ * ```typescript
+ * const stream:EmptyStream<string> = new EmptyStream({
+ *     objectMode: true,
+ * });
+ * 
+ * stream.write("first"); // not empty
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: boolean) => {
+ *     console.log(``Result: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Result: false
+ * ```
  */
 export class EmptyStream<T> extends Duplex {
     private hasChunks: boolean = false;
     private pushedHasElements: boolean = false;
 
     /**
-     * Initializes a new instance of the EmptyStream class with the specified options.
-     *
+     * @constructor
      * @param {EmptyStreamOptions} options - The options for the EmptyStream.
+     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      */
     constructor(options: EmptyStreamOptions) {
         const opts = {...defaultOptions, ...options};

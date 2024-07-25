@@ -2,7 +2,10 @@ import { Duplex, DuplexOptions, TransformCallback } from "stream";
 import { PushError } from "../errors/PushError";
 
 /**
+ * @interface
  * Options for the HasElementsStream.
+ * @extends DuplexOptions
+ * @template T
  */
 export interface HasElementsStreamOptions extends DuplexOptions {
     objectMode?:true;
@@ -13,16 +16,35 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to validate that a stream has elements.
+ * @class
+ * Class that allows you to validate that a stream has elements.
+ * @extends Duplex
+ * @template T
+ * @example
+ * ```typescript
+ * const stream:HasElementsStream<string> = new HasElementsStream({
+ *     objectMode: true,
+ * });
+ * 
+ * stream.write("first"); // not empty
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: boolean) => {
+ *     console.log(``Result: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Result: false
+ * ```
  */
 export class HasElementsStream<T> extends Duplex {
     private hasChunks: boolean = false;
     private pushedHasElements: boolean = false;
 
     /**
-     * Initializes a new instance of the HasElementsStream class with the specified options.
-     *
+     * @constructor
      * @param {HasElementsStreamOptions} options - The options for the HasElementsStream.
+     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      */
     constructor(options: HasElementsStreamOptions) {
         const opts = {...defaultOptions, ...options};

@@ -3,7 +3,10 @@ import { PushError } from "../errors/PushError";
 import { DiscardingStream } from "../interfaces/_index";
 
 /**
+ * @interface
  * Options for the FilterStream.
+ * @extends DuplexOptions
+ * @template T
  */
 export interface FilterStreamOptions<T> extends DuplexOptions {
     objectMode?:true;
@@ -15,16 +18,44 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to filter data in a stream.
+ * @class
+ * Class that allows you to filter data in a stream.
+ * @extends DiscardingStream
+ * @template T
+ * @example
+ * ```typescript
+ * const stream:FilterStream<string> = new FilterStream({
+ *     objectMode: true,
+ *     filter: (chunk: string) => chunk === "data1" || chunk === "data2",
+ * });
+ * 
+ * stream.write("data1");
+ * stream.write("data2");
+ * stream.write("data3");// Discarded
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: string) => {
+ *     console.log(``Pushed chunk: ${chunk}```);
+ * });
+ * stream.on("discard", (chunk: string) => {
+ *     console.log(``Discarded chunk: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Pushed chunk: data1
+ * >> Pushed chunk: data2
+ * >> Discarded chunk: data3
+ * ```
  */
 export class FilterStream<T> extends DiscardingStream<T> {
     private buffer: T[] = [];
     private readonly _filter: (chunk: T) => boolean;
 
     /**
-     * Initializes a new instance of the FilterStream class with the specified options.
-     *
+     * @constructor
      * @param {FilterStreamOptions} options - The options for the FilterStream.
+     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
+     * @param [options.filter] {Function} - The filter function for pushing data to the stream or discarding it.
      */
     constructor(options: FilterStreamOptions<T>) {
         const opts = {...defaultOptions, ...options};

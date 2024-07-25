@@ -1,10 +1,57 @@
-import { Duplex } from "stream";
+import { DuplexOptions,Duplex } from "stream";
 import { DiscardingStreamEventEmitters, DiscardingStreamEventHandlers } from "../events/_index";
 
 /**
- * A class that allows you to filter data in a stream.
+ * @abstract
+ * @class
+ * Abstract class that allows you to emit discarded data in a stream adding support to discard events.
+ * @extends Duplex
+ * @template T
+ * @example
+ * ```typescript
+ * class DiscardingStreamImplementation<T> extends DiscardingStream<T> {
+ *     constructor(){
+ *         super({objectMode: true});
+ *     }
+ * 
+ *     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
+ *         this.emit("discard", chunk);
+ *         callback();
+ *     }
+ * 
+ *     _final(callback: TransformCallback): void {
+ *         this.push(null);
+ *         callback();
+ *     }
+ * 
+ *     _read(): void {}
+ * }
+ * const stream:DiscardingStreamImplementation<string> = new DiscardingStreamImplementation();
+ * 
+ * stream.write("data1"); //Discarded
+ * stream.write("data2"); //Discarded
+ * stream.write("data3"); //Discarded
+ * stream.end();
+ * 
+ * stream.on("discard", (chunk: string) => {
+ *     console.log(``Discarded chunk: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Discarded chunk: data1
+ * >> Discarded chunk: data2
+ * >> Discarded chunk: data3
+ * ```
  */
 export abstract class DiscardingStream<T> extends Duplex {
+    /**
+     * @constructor
+     * @param options {DuplexOptions}
+     */
+    constructor(options:DuplexOptions) {
+        super(options);
+    }
+
     addListener<U extends keyof DiscardingStreamEventHandlers<T>>(event: U, listener: DiscardingStreamEventHandlers<T>[U]): this {
         return super.addListener(event, listener);
     }

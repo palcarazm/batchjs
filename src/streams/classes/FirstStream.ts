@@ -3,7 +3,9 @@ import { PushError } from "../errors/PushError";
 import { DiscardingStream } from "../interfaces/_index";
 
 /**
+ * @interface
  * Options for the FirstStream.
+ * @extends DuplexOptions
  */
 export interface FirstStreamOptions extends DuplexOptions {
     objectMode?:true;
@@ -14,16 +16,43 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to emit only the first chunk in a stream and discard the rest.
+ * @class
+ * Class that allows you to emit only the first chunk in a stream and discard the rest.
+ * @extends DiscardingStream
+ * @template T
+ * @example
+ * ```typescript
+ * const stream:FirstStream<string> = new FirstStream({
+ *     objectMode: true,
+ *     matcher: (chunk: string) => chunk.length > 2
+ * });
+ * 
+ * stream.write("first");
+ * stream.write("second");// Discarded
+ * stream.write("third");// Discarded
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: string) => {
+ *     console.log(``Pushed chunk: ${chunk}```);
+ * });
+ * stream.on("discard", (chunk: string) => {
+ *     console.log(``Discarded chunk: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Pushed chunk: first
+ * >> Discarded chunk: second
+ * >> Discarded chunk: third
+ * ```
  */
 export class FirstStream<T> extends DiscardingStream<T> {
     private firstChunk: T | undefined = undefined;
     private pushedFirstChunk = false;
 
     /**
-     * Initializes a new instance of the FirstStream class with the specified options.
-     *
+     * @constructor
      * @param {FirstStreamOptions} options - The options for the FirstStream.
+     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      */
     constructor(options: FirstStreamOptions) {
         const opts = {...defaultOptions, ...options};

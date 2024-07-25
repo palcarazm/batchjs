@@ -2,7 +2,10 @@ import { Duplex, DuplexOptions, TransformCallback  } from "stream";
 import { PushError } from "../errors/PushError";
 
 /**
+ * @interface
  * Options for the GroupByStream.
+ * @extends DuplexOptions
+ * @template T
  */
 export interface GroupByStreamOptions<T> extends DuplexOptions {
     objectMode?: true;
@@ -14,16 +17,40 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to group data in a stream.
+ * @class
+ * Class that allows you to group data in a stream.
+ * @extends Duplex
+ * @template T
+ * @example
+ * ```typescript
+ * const stream:GroupByStream<string> = new GroupByStream({
+ *     objectMode: true,
+ *     groupBy: (chunk: string) => chunk.split("").at(0) ?? "",
+ * });
+ * 
+ * stream.write("DATA1"); //group : D
+ * stream.write("DATA2"); //group : D
+ * stream.write("data3"); //group : d
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: Array<string>) => {
+ *     console.log(``Pushed chunk: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Pushed chunk: ["DATA1", "DATA2"]
+ * >> Pushed chunk: ["data3"]
+ * ```
  */
 export class GroupByStream<T> extends Duplex {
     private buffer: Map<string,Array<T>> = new Map();
     private readonly groupBy: (chunk: T) => string;
 
     /**
-     * Creates a new instance of GroupBy with the given options.
-     *
+     * @constructor
      * @param {GroupByStreamOptions<T>} options - The options for the GroupBy.
+     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
+     * @param [options.groupBy] {Function} - The function used to get the grouping key from the chunk.
      */
     constructor(options: GroupByStreamOptions<T>) {
         const opts = {...defaultOptions, ...options};

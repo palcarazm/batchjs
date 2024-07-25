@@ -2,7 +2,9 @@ import { Duplex, DuplexOptions, TransformCallback } from "stream";
 import { PushError, SingleStreamError } from "../errors/_index";
 
 /**
+ * @interface
  * Options for the SingleStream.
+ * @extends DuplexOptions
  */
 export interface SingleStreamOptions extends DuplexOptions {
     objectMode?:true;
@@ -13,16 +15,40 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to verify that a stream contains only one chunk.
+ * @class
+ * Class that allows you to verify that a stream contains only one chunk.
+ * @extends Duplex
+ * @template T
+ * @example
+ * ```typescript
+ * const stream:SingleStream<string> = new SingleStream({
+ *     objectMode: true,
+ * });
+ * 
+ * stream.write("data1");
+ * stream.write("data2"); // This should launch error
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: string) => {
+ *     console.log(``Pushed chunk: ${chunk}```);
+ * });
+ * stream.once("error", (err: SingleStreamError) => {
+ *     console.log(``Error: ${err.message}```);
+ * });
+ * ```
+ * ```shell
+ * >> Pushed chunk: data1
+ * >> Error: Expected only one chunk in the stream
+ * ```
  */
 export class SingleStream<T> extends Duplex {
     private buffer: T[] = [];
     private isFirstChunk = true;
 
     /**
-     * Initializes a new instance of the SingleStream class with the specified options.
-     *
+     * @constructor
      * @param {SingleStreamOptions} options - The options for the SingleStream.
+     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      */
     constructor(options: SingleStreamOptions) {
         const opts = {...defaultOptions, ...options};

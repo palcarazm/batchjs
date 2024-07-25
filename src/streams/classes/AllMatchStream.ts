@@ -3,7 +3,10 @@ import { PushError } from "../errors/PushError";
 import { DiscardingStream } from "../interfaces/_index";
 
 /**
+ * @interface
  * Options for the AllMatchStream.
+ * @extends DuplexOptions
+ * @template T
  */
 export interface AllMatchStreamOptions<T> extends DuplexOptions {
     objectMode?:true;
@@ -15,7 +18,29 @@ const defaultOptions = {
 };
 
 /**
- * A class that allows you to validate that all elements in a stream match a given condition.
+ * @class
+ * Class that allows you to validate that all elements in a stream match a given condition.
+ * @extends DiscardingStream
+ * @template T
+ * @example
+ * ```typescript
+ * const stream:AllMatchStream<string> = new AllMatchStream({
+ *     objectMode: true,
+ *     matcher: (chunk: string) => chunk.length > 2
+ * });
+ * 
+ * stream.write("first"); // match
+ * stream.write("second"); // match
+ * stream.write("3"); // not match
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: boolean) => {
+ *     console.log(``Result: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Result: false
+ * ```
  */
 export class AllMatchStream<T> extends DiscardingStream<T> {
     private allChunksMatch: boolean|undefined = undefined;
@@ -23,9 +48,10 @@ export class AllMatchStream<T> extends DiscardingStream<T> {
     private readonly _matcher: (chunk: T) => boolean;
 
     /**
-     * Initializes a new instance of the AllMatchStream class with the specified options.
-     *
+     * @constructor
      * @param {AllMatchStreamOptions} options - The options for the AllMatchStream.
+     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
+     * @param [options.matcher] {Function} - The function that will be used to validate the chunk.
      */
     constructor(options: AllMatchStreamOptions<T>) {
         const opts = {...defaultOptions, ...options};

@@ -37,7 +37,7 @@
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   {{#each params}}
-  | **{{name}}** | {{stripTags description}} | {{#each type.names}}{{this}}{{/each}} |
+  | **{{name}}** | {{stripTags description}} | {{toList type.names}} |
   {{/each}}
   {{/if}}
 {{/if}}
@@ -68,7 +68,7 @@
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   {{#each params}}
-  | **{{name}}** | {{stripTags description}} | {{#each type.names}}{{this}}{{/each}} |
+  | **{{name}}** | {{stripTags description}} | {{toList type.names}} |
   {{/each}}
   {{/if}}
 {{/if}}
@@ -79,7 +79,7 @@
   | Type       | Description                             |
   |------------|-----------------------------------------|
   {{#each returns}}
-  | {{#each type.names}}{{this}}{{/each}} | {{#if description}}{{stripTags description}}{{/if}} |
+  | {{toList type.names}} | {{#if description}}{{stripTags description}}{{/if}} |
   {{/each}}
   {{/if}}
 {{/if}}

@@ -6,7 +6,7 @@ module.exports = {
         return !value;
     },
     toList: function (input) {
-        return input ? input.join(" | ") : "";
+        return input ? input.join(", ") : "";
     },
     getClasses: function (context) {
         return context.filter(item => item.kind === "class");

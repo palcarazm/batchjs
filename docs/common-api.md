@@ -57,7 +57,7 @@ Adds an event listener to the specified event type.
   #### Parameters
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **event** |  | start | end | stepStart | stepEnd |
+  | **event** |  | start, end, stepStart, stepEnd |
   | **listener** |  | function |
 
   #### Returns
@@ -75,7 +75,7 @@ Emits an event of the specified type to the listeners.
   #### Parameters
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **event** |  | start | end | stepStart | stepEnd |
+  | **event** |  | start, end, stepStart, stepEnd |
   | **args** | Data to sent to the listeners depending on the event type | Array.&lt;JobEventEmitters&gt; |
 
   #### Returns
@@ -93,7 +93,7 @@ Adds an event listener to the specified event type.
   #### Parameters
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **event** |  | start | end | stepStart | stepEnd |
+  | **event** |  | start, end, stepStart, stepEnd |
   | **listener** |  | function |
 
   #### Returns
@@ -111,7 +111,7 @@ Adds a one time event listener to the specified event type.
   #### Parameters
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **event** |  | start | end | stepStart | stepEnd |
+  | **event** |  | start, end, stepStart, stepEnd |
   | **listener** |  | function |
 
   #### Returns
@@ -129,7 +129,7 @@ Adds an event listener to the specified event type to the beginning of the liste
   #### Parameters
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **event** |  | start | end | stepStart | stepEnd |
+  | **event** |  | start, end, stepStart, stepEnd |
   | **listener** |  | function |
 
   #### Returns
@@ -147,7 +147,7 @@ Adds a one time event listener to the specified event type to the beginning of t
   #### Parameters
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **event** |  | start | end | stepStart | stepEnd |
+  | **event** |  | start, end, stepStart, stepEnd |
   | **listener** |  | function |
 
   #### Returns
@@ -165,7 +165,7 @@ Removes an event listener to the specified event type.
   #### Parameters
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **event** |  | start | end | stepStart | stepEnd |
+  | **event** |  | start, end, stepStart, stepEnd |
   | **listener** |  | function |
 
   #### Returns

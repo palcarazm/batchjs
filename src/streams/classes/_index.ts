@@ -2,6 +2,7 @@ export * from "./AllMatchStream";
 export * from "./AnyMatchStream";
 export * from "./BufferStream";
 export * from "./CountStream";
+export * from "./DistinctStream";
 export * from "./EmptyStream";
 export * from "./FilterStream";
 export * from "./FirstStream";

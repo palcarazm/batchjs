@@ -12,6 +12,7 @@ In this documentation, we will focus on the streams API. This module includes so
   - [AnyMatchStream](#anymatchstream)
   - [BufferStream](#bufferstream)
   - [CountStream](#countstream)
+  - [DistinctStream](#distinctstream)
   - [EmptyStream](#emptystream)
   - [FilterStream](#filterstream)
   - [FirstStream](#firststream)
@@ -303,6 +304,82 @@ Reading is not supported since writer finishes first.
   | Type       | Description                             |
   |------------|-----------------------------------------|
   | void |  |
+
+
+## DistinctStream
+
+`extends DiscardingStream`
+
+Class that allows you to discard repeated data in a stream in base on a key.
+Data with duplicated key will be emitted through the discard event.
+
+
+
+### Examples
+
+```typescriptconst stream:DistinctStream<string,string> = new DistinctStream({    objectMode: true,    keyExtractor: (chunk: string) => chunk,});stream.write("data1");stream.write("data2");stream.write("data1"); //Duplicatedstream.end();stream.on("data", (chunk: string) => {    console.log(``Pushed chunk: ${chunk}```);});stream.on("discard", (chunk: string) => {    console.log(``Duplicated chunk: ${chunk}```);});``````shell>> Pushed chunk: data1>> Pushed chunk: data2>> Duplicated chunk: data1```
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **options** | The options for the FilterStream. | DistinctStreamOptions |
+  | **options.objectMode** | Whether the stream should operate in object mode. | true |
+  | **options.keyExtractor** | The key extractor function for determining the key of the data to be filtered. | function |
+
+
+
+### _write (function)
+
+
+
+A method to write data to the stream, get the key of the data, and if the key is not in the set, push the data to the buffer, otherwise discard it.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **chunk** | The data chunk to write to the stream. | TInput |
+  | **encoding** | The encoding of the data. | BufferEncoding |
+  | **callback** | The callback function to be executed after writing the data. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _final (function)
+
+
+
+Finalizes the stream by pushing remaining data, handling errors,
+and executing the final callback.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **callback** | The callback function to be executed after finalizing the stream. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _read (function)
+
+
+
+Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **size** | The size parameter for controlling the read operation. | number |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
 
 
 ## EmptyStream

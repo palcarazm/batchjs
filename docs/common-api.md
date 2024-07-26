@@ -1,4 +1,8 @@
-# Stream API
+# Common API
+
+In this documentation, we will focus on the common API. This module includes the core of BatchJS. This API allows you to create your own custom jobs and steps using the common interface.
+
+------------
 
 <!--Auto generated Documentation PLEASE DO NOT MODIFY THIS FILE. MODIFY THE JSDOC INSTEAD-->
 
@@ -9,7 +13,7 @@
 
 ## Job
 
-`Abstract` | `Extends EventEmitter`
+`abstract` `extends EventEmitter`
 
 Abstract base class for all jobs.
 
@@ -28,7 +32,9 @@ Abstract base class for all jobs.
 
 ### _steps (function)
 
-`protected` | `Abstract` | 
+`protected` `abstract` 
+
+Abstract method that most be implemented by the job in order to returns an ordered array of steps that make up the job.
 
   #### Returns
   | Type       | Description                             |
@@ -176,7 +182,7 @@ Removes an event listener to the specified event type.
 
 ## Step
 
-`Abstract` | 
+`abstract` 
 
 Abstract base class for all steps.
 
@@ -225,6 +231,43 @@ Abstract base class for all steps.
   |------------|-----------------------------------------|------------------------------|
   | **name** | The name to assign to the Step. | string |
 
+
+
+### _reader (function)
+
+`protected` `abstract` 
+
+Abstract method that must be implemented by the step in order to defined the reader stream.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | Readable |  |
+
+
+### _processors (function)
+
+`protected` `abstract` 
+
+Abstract method that must be implemented by the step in order to process the data from the reader stream and push it to the writer stream.
+Processors are defined in an ordered array to be chained on the runner.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | Array.&lt;Duplex&gt; |  |
+
+
+### _writer (function)
+
+`protected` `abstract` 
+
+Abstract method that must be implemented by the step in order to defined the writer stream.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | Writable |  |
 
 
 ### run (function)

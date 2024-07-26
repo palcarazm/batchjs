@@ -1,5 +1,9 @@
 # Stream API
 
+In this documentation, we will focus on the streams API. This module includes somes useful utilities for working with streams to implements parts of your custom steps.
+
+------------
+
 <!--Auto generated Documentation PLEASE DO NOT MODIFY THIS FILE. MODIFY THE JSDOC INSTEAD-->
 
 ## Table of Contents
@@ -21,7 +25,7 @@
 
 ## AllMatchStream
 
-`Extends DiscardingStream`
+`extends DiscardingStream`
 
 Class that allows you to validate that all elements in a stream match a given condition.
 
@@ -90,7 +94,7 @@ Push once false if at least one chunk has not matched.
 
 ## AnyMatchStream
 
-`Extends DiscardingStream`
+`extends DiscardingStream`
 
 Class that allows you to validate that all elements in a stream match a given condition.
 
@@ -159,7 +163,7 @@ Push once false if at least one chunk has matched.
 
 ## BufferStream
 
-`Extends Duplex`
+`extends Duplex`
 
 Class that allows you  stream data in batches of a specified size.
 
@@ -234,7 +238,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## CountStream
 
-`Extends Duplex`
+`extends Duplex`
 
 Class that allows you to count the number of chunks in a stream.
 
@@ -303,7 +307,7 @@ Reading is not supported since writer finishes first.
 
 ## EmptyStream
 
-`Extends Duplex`
+`extends Duplex`
 
 Class that allows you to validate that a stream is empty.
 
@@ -371,7 +375,7 @@ Push once false if at least one chunk has been received.
 
 ## FilterStream
 
-`Extends DiscardingStream`
+`extends DiscardingStream`
 
 Class that allows you to filter data in a stream.
 
@@ -446,7 +450,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## FirstStream
 
-`Extends DiscardingStream`
+`extends DiscardingStream`
 
 Class that allows you to emit only the first chunk in a stream and discard the rest.
 
@@ -515,7 +519,7 @@ Pushes the first chunk, if it exists and not pushed, to the consumer stream and 
 
 ## FlatStream
 
-`Extends Duplex`
+`extends Duplex`
 
 Class that allows you to transform an array stream into a flat stream.
 
@@ -589,7 +593,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## GroupByStream
 
-`Extends Duplex`
+`extends Duplex`
 
 Class that allows you to group data in a stream.
 
@@ -676,7 +680,7 @@ Groups a chunk of data based on the provided groupBy function and stores it in t
 
 ## HasElementsStream
 
-`Extends Duplex`
+`extends Duplex`
 
 Class that allows you to validate that a stream has elements.
 
@@ -744,7 +748,7 @@ Push once true if at least one chunk has been received.
 
 ## LastStream
 
-`Extends DiscardingStream`
+`extends DiscardingStream`
 
 Class that allows you to emit only the last chunk in a stream and discard the rest.
 
@@ -813,7 +817,7 @@ Reading is not supported since writer finishes first.
 
 ## ParallelStream
 
-`Extends Duplex`
+`extends Duplex`
 
 Class that allows you to transform and stream data in parallel.
 
@@ -897,7 +901,7 @@ Loop through the pool and queue to process chunks, adding promises to the pool.
 
 ## SingleStream
 
-`Extends Duplex`
+`extends Duplex`
 
 Class that allows you to verify that a stream contains only one chunk.
 
@@ -971,7 +975,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## DiscardingStream
 
-`Abstract` | `Extends Duplex`
+`abstract` `extends Duplex`
 
 Abstract class that allows you to emit discarded data in a stream adding support to discard events.
 

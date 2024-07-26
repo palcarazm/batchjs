@@ -47,7 +47,8 @@ export abstract class Job extends EventEmitter {
 
     /**
      * @abstract
-     * The steps that make up the job.
+     * @description
+     * Abstract method that most be implemented by the job in order to returns an ordered array of steps that make up the job.
      * @function _steps
      * @memberof Job
      * @returns {Array<Step>}

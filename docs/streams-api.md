@@ -1,6 +1,6 @@
 # Stream API
 
-In this documentation, we will focus on the streams API. This module includes somes useful utilities for working with streams to implements parts of your custom steps.
+In this documentation, we will focus on the streams API. This module includes some useful utilities for working with streams to implements parts of your custom steps.
 
 ------------
 

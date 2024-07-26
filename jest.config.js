@@ -25,4 +25,5 @@ module.exports = {
         },
     },
     coverageDirectory: "coverage",
+    reporters: [["github-actions", {silent: false}], "summary"],
 };

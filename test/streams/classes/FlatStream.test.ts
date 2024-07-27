@@ -2,13 +2,13 @@ import { FlatStream, FlatStreamOptions, PushError } from "../../../src/streams/i
 describe("FlatStream", () => {
     const options: FlatStreamOptions = {};
     let stream: FlatStream<string>;
-    let chunks: Array<Array<string>>;
+    let chunks: Array<string>;
 
     beforeEach(() => {
         stream = new FlatStream(options);
 
         chunks = [];
-        stream.on("data", (chunk: Array<string>) => {
+        stream.on("data", (chunk: string) => {
             chunks.push(chunk);
         });
     });

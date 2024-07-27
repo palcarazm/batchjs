@@ -11,4 +11,5 @@ export * from "./GroupByStream";
 export * from "./HasElementsStream";
 export * from "./LastStream";
 export * from "./ParallelStream";
+export * from "./ReplayStream"; 
 export * from "./SingleStream"; 

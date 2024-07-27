@@ -56,7 +56,7 @@ export class FlatStream<T> extends Duplex {
     /**
      * A method to write data to the stream, push the chunk to the buffer, and execute the callback.
      *
-     * @param {T} chunk - The data chunk to write to the stream.
+     * @param {Array<T>} chunk - The data chunk to write to the stream.
      * @param {BufferEncoding} encoding - The encoding of the data.
      * @param {TransformCallback} callback - The callback function to be executed after writing the data.
      * @return {void} This function does not return anything.

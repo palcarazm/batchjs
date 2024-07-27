@@ -21,6 +21,7 @@ In this documentation, we will focus on the streams API. This module includes so
   - [HasElementsStream](#haselementsstream)
   - [LastStream](#laststream)
   - [ParallelStream](#parallelstream)
+  - [ReplayStream](#replaystream)
   - [SingleStream](#singlestream)
   - [DiscardingStream](#discardingstream)
 
@@ -623,7 +624,7 @@ A method to write data to the stream, push the chunk to the buffer, and execute 
   #### Parameters
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **chunk** | The data chunk to write to the stream. | T |
+  | **chunk** | The data chunk to write to the stream. | Array.&lt;T&gt; |
   | **encoding** | The encoding of the data. | BufferEncoding |
   | **callback** | The callback function to be executed after writing the data. | TransformCallback |
 
@@ -974,6 +975,92 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 
 Loop through the pool and queue to process chunks, adding promises to the pool.
+
+
+## ReplayStream
+
+`extends Duplex`
+
+Class that allows you to remit chunks from a stream when the source is finished.
+
+
+
+### Examples
+
+```typescriptconst stream:ReplayStream<string> = new ReplayStream({    objectMode: true,});stream.write("data1");stream.write("data2");stream.write("data3");stream.end();stream.on("data", (chunk: string) => {    console.log(``Pushed chunk: ${chunk}```);}).on("close", () => {    stream.replay().on("data", (chunk: string) => {        console.log(`Replayed chunk: ${chunk}`);    });});``````shell>> Pushed chunk: data1>> Pushed chunk: data2>> Pushed chunk: data3>> Replayed chunk: data1>> Replayed chunk: data2>> Replayed chunk: data3```
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **options** | The options for the ReplayStream. | ReplayStreamOptions |
+  | **options.objectMode** | Whether the stream should operate in object mode. | true |
+
+
+
+### _write (function)
+
+
+
+A method to write data to the stream, push the chunk to the buffer, and execute the callback.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **chunk** | The data chunk to write to the stream. | T |
+  | **encoding** | The encoding of the data. | BufferEncoding |
+  | **callback** | The callback function to be executed after writing the data. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _final (function)
+
+
+
+Finalizes the stream by pushing remaining data, handling errors,
+and executing the final callback.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **callback** | The callback function to be executed after finalizing the stream. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _read (function)
+
+
+
+Pushes the ready chunks to the consumer stream since all the buffer is pushed or the size limit is reached.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **size** | The size parameter for controlling the read operation. | number |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### replay (function)
+
+
+
+Creates a readable stream from the buffer to replay the data that have been pushed.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | Readable | The replay stream. |
 
 
 ## SingleStream

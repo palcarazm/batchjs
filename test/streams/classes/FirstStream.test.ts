@@ -1,6 +1,6 @@
-import { FirstStream, FirstStreamOptions, PushError } from "../../../src/streams/index";
+import { FirstStream, ObjectDuplexOptions, PushError } from "../../../src/streams/index";
 describe("FirstStream", () => {
-    const options: FirstStreamOptions = {};
+    const options: ObjectDuplexOptions = {};
     let stream: FirstStream<string>;
     let chunks: Array<string>;
 

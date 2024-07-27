@@ -1,6 +1,6 @@
-import { LastStream, LastStreamOptions, PushError } from "../../../src/streams/index";
+import { LastStream, ObjectDuplexOptions, PushError } from "../../../src/streams/index";
 describe("LastStream", () => {
-    const options: LastStreamOptions = {};
+    const options: ObjectDuplexOptions = {};
     let stream: LastStream<string>;
     let chunks: Array<string>;
 

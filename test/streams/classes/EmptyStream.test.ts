@@ -1,6 +1,6 @@
-import { EmptyStream, EmptyStreamOptions, PushError } from "../../../src/streams/index";
+import { EmptyStream, ObjectDuplexOptions, PushError } from "../../../src/streams/index";
 describe("EmptyStream", () => {
-    const options: EmptyStreamOptions = {};
+    const options: ObjectDuplexOptions = {};
     let stream: EmptyStream<string>;
     let chunks: Array<boolean>;
 

@@ -1,7 +1,7 @@
-import { CountStream, CountStreamOptions, PushError } from "../../../src/streams/index";
+import { CountStream, ObjectDuplexOptions, PushError } from "../../../src/streams/index";
 
 describe("CountStream", () => {
-    const options: CountStreamOptions = {};
+    const options: ObjectDuplexOptions = {};
     let stream: CountStream<string>;
     let chunks: Array<number>;
 

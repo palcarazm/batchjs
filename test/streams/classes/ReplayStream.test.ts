@@ -1,6 +1,6 @@
-import { ReplayStream, ReplayStreamOptions, PushError, NotClosedError } from "../../../src/streams/index";
+import { ReplayStream, ObjectDuplexOptions, PushError, NotClosedError } from "../../../src/streams/index";
 describe("ReplayStream", () => {
-    const options: ReplayStreamOptions = {};
+    const options: ObjectDuplexOptions = {};
     let stream: ReplayStream<string>;
     let chunks: Array<string>;
 

@@ -1,6 +1,6 @@
-import { HasElementsStream, HasElementsStreamOptions, PushError } from "../../../src/streams/index";
+import { HasElementsStream, ObjectDuplexOptions, PushError } from "../../../src/streams/index";
 describe("HasElementsStream", () => {
-    const options: HasElementsStreamOptions = {};
+    const options: ObjectDuplexOptions = {};
     let stream: HasElementsStream<string>;
     let chunks: Array<boolean>;
 

@@ -1,21 +1,16 @@
-import { DuplexOptions, TransformCallback } from "stream";
+import { TransformCallback } from "stream";
 import { PushError } from "../errors/PushError";
-import { DiscardingStream } from "../interfaces/_index";
+import { DiscardingStream, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @interface
  * Options for the FilterStream.
- * @extends DuplexOptions
+ * @extends ObjectDuplexOptions
  * @template T
  */
-export interface FilterStreamOptions<T> extends DuplexOptions {
-    objectMode?:true;
+export interface FilterStreamOptions<T> extends ObjectDuplexOptions {
     filter: (chunk: T) => boolean;
 }
-
-const defaultOptions = {
-    objectMode: true
-};
 
 /**
  * @class
@@ -48,19 +43,17 @@ const defaultOptions = {
  * ```
  */
 export class FilterStream<T> extends DiscardingStream<T> {
-    private buffer: T[] = [];
+    protected buffer: T[] = [];
     private readonly _filter: (chunk: T) => boolean;
 
     /**
      * @constructor
      * @param {FilterStreamOptions} options - The options for the FilterStream.
-     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      * @param [options.filter] {Function} - The filter function for pushing data to the stream or discarding it.
      */
     constructor(options: FilterStreamOptions<T>) {
-        const opts = {...defaultOptions, ...options};
-        super(opts);
-        this._filter = opts.filter;
+        super(options);
+        this._filter = options.filter;
     }
 
     /**

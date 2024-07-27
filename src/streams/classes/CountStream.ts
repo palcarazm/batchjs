@@ -1,23 +1,11 @@
-import { Duplex, DuplexOptions, TransformCallback  } from "stream";
+import {  TransformCallback  } from "stream";
 import { PushError } from "../errors/PushError";
-
-/**
- * @interface
- * Options for the CountStream.
- * @extends DuplexOptions
- */
-export interface CountStreamOptions extends DuplexOptions {
-    objectMode?: true;
-}
-
-const defaultOptions = {
-    objectMode: true
-};
+import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @class
  * Class that allows you to count the number of chunks in a stream.
- * @extends Duplex
+ * @extends ObjectDuplex
  * @template T
  * @example
  * ```typescript
@@ -38,17 +26,15 @@ const defaultOptions = {
  * >> Received chunks: 3
  * ```
  */
-export class CountStream<T> extends Duplex {
+export class CountStream<T> extends ObjectDuplex {
     private count: number = 0;
 
     /**
      * @constructor
-     * @param {CountStreamOptions} options - The options for the GroupBy.
-     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
+     * @param {ObjectDuplexOptions} options - The options for the GroupBy.
      */
-    constructor(options: CountStreamOptions) {
-        const opts = {...defaultOptions, ...options};
-        super(opts);
+    constructor(options: ObjectDuplexOptions) {
+        super(options);
     }
 
     /**

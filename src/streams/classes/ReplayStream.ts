@@ -1,24 +1,12 @@
-import { Duplex, DuplexOptions, TransformCallback, Readable } from "stream";
+import { TransformCallback, Readable } from "stream";
 import { PushError } from "../errors/PushError";
 import { NotClosedError } from "../errors/NotClosedError";
-
-/**
- * @interface
- * Options for the ReplayStream.
- * @extends DuplexOptions
- */
-export interface ReplayStreamOptions extends DuplexOptions {
-    objectMode?:true;
-}
-
-const defaultOptions = {
-    objectMode: true
-};
+import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @class
  * Class that allows you to remit chunks from a stream when the source is finished.
- * @extends Duplex
+ * @extends ObjectDuplex
  * @template T
  * @example
  * ```typescript
@@ -48,18 +36,17 @@ const defaultOptions = {
  * >> Replayed chunk: data3
  * ```
  */
-export class ReplayStream<T> extends Duplex {
+export class ReplayStream<T> extends ObjectDuplex {
     private buffer: T[] = [];
     private index:number = 0;
 
     /**
      * @constructor
-     * @param {ReplayStreamOptions} options - The options for the ReplayStream.
+     * @param {ObjectDuplexOptions} options - The options for the ReplayStream.
      * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      */
-    constructor(options: ReplayStreamOptions) {
-        const opts = {...defaultOptions, ...options};
-        super(opts);
+    constructor(options: ObjectDuplexOptions) {
+        super(options);
     }
 
     /**

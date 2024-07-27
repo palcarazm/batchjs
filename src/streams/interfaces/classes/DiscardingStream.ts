@@ -1,11 +1,11 @@
-import { DuplexOptions,Duplex } from "stream";
 import { DiscardingStreamEventEmitters, DiscardingStreamEventHandlers } from "../events/_index";
+import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
 
 /**
  * @abstract
  * @class
  * Abstract class that allows you to emit discarded data in a stream adding support to discard events.
- * @extends Duplex
+ * @extends ObjectDuplex
  * @template T
  * @example
  * ```typescript
@@ -43,12 +43,12 @@ import { DiscardingStreamEventEmitters, DiscardingStreamEventHandlers } from "..
  * >> Discarded chunk: data3
  * ```
  */
-export abstract class DiscardingStream<T> extends Duplex {
+export abstract class DiscardingStream<T> extends ObjectDuplex {
     /**
      * @constructor
-     * @param options {DuplexOptions}
+     * @param options {ObjectDuplexOptions} - The options for the GroupBy.
      */
-    constructor(options:DuplexOptions) {
+    constructor(options:ObjectDuplexOptions) {
         super(options);
     }
 

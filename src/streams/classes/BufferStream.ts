@@ -1,24 +1,20 @@
-import { Duplex, DuplexOptions, TransformCallback } from "stream";
+import { TransformCallback } from "stream";
 import { PushError } from "../errors/PushError";
+import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @interface
  * Options for the BufferStream.
- * @extends DuplexOptions
+ * @extends ObjectDuplexOptions
  */
-export interface BufferStreamOptions extends DuplexOptions {
+export interface BufferStreamOptions extends ObjectDuplexOptions {
     batchSize: number;
-    objectMode?:true;
 }
-
-const defaultOptions = {
-    objectMode: true
-};
 
 /**
  * @class
  * Class that allows you  stream data in batches of a specified size.
- * @extends Duplex
+ * @extends ObjectDuplex
  * @template T
  * @example
  * ```typescript
@@ -41,20 +37,18 @@ const defaultOptions = {
  * >> Pushed chunk: ["data3"]
  * ```
  */
-export class BufferStream<T> extends Duplex {
+export class BufferStream<T> extends ObjectDuplex {
+    protected buffer: T[] = [];
     private batchSize: number;
-    private buffer: T[] = [];
 
     /**
      * @constructor
      * @param {BufferStreamOptions} options - The options for the BufferStream.
-     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      * @param [options.batchSize] {number} - The maximum number of elements in a batch.
      */
     constructor(options: BufferStreamOptions) {
-        const opts = {...defaultOptions, ...options};
-        super(opts);
-        this.batchSize = opts.batchSize;
+        super(options);
+        this.batchSize = options.batchSize;
     }
 
     /**

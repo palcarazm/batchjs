@@ -1,27 +1,23 @@
-import { Duplex, DuplexOptions, TransformCallback  } from "stream";
+import { TransformCallback  } from "stream";
 import { PushError } from "../errors/PushError";
+import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @interface
  * Options for the ParallelStream.
- * @extends DuplexOptions
+ * @extends ObjectDuplexOptions
  * @template TInput The type of the input data.
  * @template TOutput The type of the output data.
  */
-export interface ParallelStreamOptions<TInput, TOutput> extends DuplexOptions {
+export interface ParallelStreamOptions<TInput, TOutput> extends ObjectDuplexOptions {
     maxConcurrent: number;
-    objectMode?: true;
     transform: (chunk: TInput) => Promise<TOutput>;
 }
-
-const defaultOptions = {
-    objectMode: true
-};
 
 /**
  * @class
  * Class that allows you to transform and stream data in parallel.
- * @extends Duplex
+ * @extends ObjectDuplex
  * @template TInput The type of the input data.
  * @template TOutput The type of the output data.
  * @example
@@ -49,7 +45,7 @@ const defaultOptions = {
  * >> Pushed chunk: DATA3
  * ```
  */
-export class ParallelStream<TInput, TOutput> extends Duplex {
+export class ParallelStream<TInput, TOutput> extends ObjectDuplex {
     private queue: Array<TInput> = [];
     private buffer: Array<TOutput> = [];
     private pool: Set<Promise<void>> = new Set();
@@ -59,15 +55,13 @@ export class ParallelStream<TInput, TOutput> extends Duplex {
     /**
      * @constructor
      * @param {ParallelStreamOptions<TInput, TOutput>} options - The options for the ParallelStream.
-     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      * @param [options.maxConcurrent] {number} - The maximum number of concurrent promises.
      * @param [options.transform] {Function} - The function to transform the data returning a promise.
      */
     constructor(options: ParallelStreamOptions<TInput, TOutput>) {
-        const opts = {...defaultOptions, ...options};
-        super(opts);
-        this.maxConcurrent = opts.maxConcurrent;
-        this.transform = opts.transform;
+        super(options);
+        this.maxConcurrent = options.maxConcurrent;
+        this.transform = options.transform;
     }
 
     /**

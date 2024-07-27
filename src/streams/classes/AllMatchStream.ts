@@ -1,21 +1,16 @@
-import { DuplexOptions, TransformCallback } from "stream";
+import { TransformCallback } from "stream";
 import { PushError } from "../errors/PushError";
-import { DiscardingStream } from "../interfaces/_index";
+import { ObjectDuplexOptions, DiscardingStream } from "../interfaces/_index";
 
 /**
  * @interface
  * Options for the AllMatchStream.
- * @extends DuplexOptions
+ * @extends ObjectDuplexOptions
  * @template T
  */
-export interface AllMatchStreamOptions<T> extends DuplexOptions {
-    objectMode?:true;
+export interface AllMatchStreamOptions<T> extends ObjectDuplexOptions {
     matcher: (chunk: T) => boolean;
 }
-
-const defaultOptions = {
-    objectMode: true
-};
 
 /**
  * @class
@@ -50,13 +45,11 @@ export class AllMatchStream<T> extends DiscardingStream<T> {
     /**
      * @constructor
      * @param {AllMatchStreamOptions} options - The options for the AllMatchStream.
-     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      * @param [options.matcher] {Function} - The function that will be used to validate the chunk.
      */
     constructor(options: AllMatchStreamOptions<T>) {
-        const opts = {...defaultOptions, ...options};
-        super(opts);
-        this._matcher = opts.matcher;
+        super(options);
+        this._matcher = options.matcher;
     }
 
     /**

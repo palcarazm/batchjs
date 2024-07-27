@@ -24,6 +24,7 @@ In this documentation, we will focus on the streams API. This module includes so
   - [ReplayStream](#replaystream)
   - [SingleStream](#singlestream)
   - [DiscardingStream](#discardingstream)
+  - [ObjectDuplex](#objectduplex)
 
 ## AllMatchStream
 
@@ -41,7 +42,6 @@ Class that allows you to validate that all elements in a stream match a given co
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **options** | The options for the AllMatchStream. | AllMatchStreamOptions |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
   | **options.matcher** | The function that will be used to validate the chunk. | function |
 
 
@@ -110,7 +110,6 @@ Class that allows you to validate that all elements in a stream match a given co
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **options** | The options for the AnyMatchStream. | AnyMatchStreamOptions |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
   | **options.matcher** | The function that will be used to validate the chunk. | function |
 
 
@@ -165,7 +164,7 @@ Push once false if at least one chunk has matched.
 
 ## BufferStream
 
-`extends Duplex`
+`extends ObjectDuplex`
 
 Class that allows you  stream data in batches of a specified size.
 
@@ -179,7 +178,6 @@ Class that allows you  stream data in batches of a specified size.
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **options** | The options for the BufferStream. | BufferStreamOptions |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
   | **options.batchSize** | The maximum number of elements in a batch. | number |
 
 
@@ -240,7 +238,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## CountStream
 
-`extends Duplex`
+`extends ObjectDuplex`
 
 Class that allows you to count the number of chunks in a stream.
 
@@ -253,8 +251,7 @@ Class that allows you to count the number of chunks in a stream.
   ### Constructor
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **options** | The options for the GroupBy. | CountStreamOptions |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
+  | **options** | The options for the GroupBy. | ObjectDuplexOptions |
 
 
 
@@ -324,7 +321,6 @@ Data with duplicated key will be emitted through the discard event.
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **options** | The options for the FilterStream. | DistinctStreamOptions |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
   | **options.keyExtractor** | The key extractor function for determining the key of the data to be filtered. | function |
 
 
@@ -398,8 +394,7 @@ Class that allows you to validate that a stream is empty.
   ### Constructor
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **options** | The options for the EmptyStream. | EmptyStreamOptions |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
+  | **options** | The options for the EmptyStream. | ObjectDuplexOptions |
 
 
 
@@ -467,7 +462,6 @@ Class that allows you to filter data in a stream.
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **options** | The options for the FilterStream. | FilterStreamOptions |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
   | **options.filter** | The filter function for pushing data to the stream or discarding it. | function |
 
 
@@ -541,8 +535,7 @@ Class that allows you to emit only the first chunk in a stream and discard the r
   ### Constructor
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **options** | The options for the FirstStream. | FirstStreamOptions |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
+  | **options** | The options for the FirstStream. | ObjectDuplexOptions |
 
 
 
@@ -597,7 +590,7 @@ Pushes the first chunk, if it exists and not pushed, to the consumer stream and 
 
 ## FlatStream
 
-`extends Duplex`
+`extends ObjectDuplex`
 
 Class that allows you to transform an array stream into a flat stream.
 
@@ -610,8 +603,7 @@ Class that allows you to transform an array stream into a flat stream.
   ### Constructor
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **options** | The options for the FlatStream. | FlatStreamOptions |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
+  | **options** | The options for the FlatStream. | ObjectDuplexOptions |
 
 
 
@@ -671,7 +663,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## GroupByStream
 
-`extends Duplex`
+`extends ObjectDuplex`
 
 Class that allows you to group data in a stream.
 
@@ -685,7 +677,6 @@ Class that allows you to group data in a stream.
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **options** | The options for the GroupBy. | GroupByStreamOptions.&lt;T&gt; |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
   | **options.groupBy** | The function used to get the grouping key from the chunk. | function |
 
 
@@ -758,7 +749,7 @@ Groups a chunk of data based on the provided groupBy function and stores it in t
 
 ## HasElementsStream
 
-`extends Duplex`
+`extends ObjectDuplex`
 
 Class that allows you to validate that a stream has elements.
 
@@ -771,8 +762,7 @@ Class that allows you to validate that a stream has elements.
   ### Constructor
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **options** | The options for the HasElementsStream. | HasElementsStreamOptions |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
+  | **options** | The options for the HasElementsStream. | ObjectDuplexOptions |
 
 
 
@@ -839,8 +829,7 @@ Class that allows you to emit only the last chunk in a stream and discard the re
   ### Constructor
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **options** | The options for the LastStream. | LastStreamOptions |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
+  | **options** | The options for the LastStream. | ObjectDuplexOptions |
 
 
 
@@ -895,7 +884,7 @@ Reading is not supported since writer finishes first.
 
 ## ParallelStream
 
-`extends Duplex`
+`extends ObjectDuplex`
 
 Class that allows you to transform and stream data in parallel.
 
@@ -909,7 +898,6 @@ Class that allows you to transform and stream data in parallel.
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **options** | The options for the ParallelStream. | ParallelStreamOptions.&lt;TInput, TOutput&gt; |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
   | **options.maxConcurrent** | The maximum number of concurrent promises. | number |
   | **options.transform** | The function to transform the data returning a promise. | function |
 
@@ -979,7 +967,7 @@ Loop through the pool and queue to process chunks, adding promises to the pool.
 
 ## ReplayStream
 
-`extends Duplex`
+`extends ObjectDuplex`
 
 Class that allows you to remit chunks from a stream when the source is finished.
 
@@ -992,7 +980,7 @@ Class that allows you to remit chunks from a stream when the source is finished.
   ### Constructor
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **options** | The options for the ReplayStream. | ReplayStreamOptions |
+  | **options** | The options for the ReplayStream. | ObjectDuplexOptions |
   | **options.objectMode** | Whether the stream should operate in object mode. | true |
 
 
@@ -1065,7 +1053,7 @@ Creates a readable stream from the buffer to replay the data that have been push
 
 ## SingleStream
 
-`extends Duplex`
+`extends ObjectDuplex`
 
 Class that allows you to verify that a stream contains only one chunk.
 
@@ -1078,8 +1066,7 @@ Class that allows you to verify that a stream contains only one chunk.
   ### Constructor
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **options** | The options for the SingleStream. | SingleStreamOptions |
-  | **options.objectMode** | Whether the stream should operate in object mode. | true |
+  | **options** | The options for the SingleStream. | ObjectDuplexOptions |
 
 
 
@@ -1139,7 +1126,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## DiscardingStream
 
-`abstract` `extends Duplex`
+`abstract` `extends ObjectDuplex`
 
 Abstract class that allows you to emit discarded data in a stream adding support to discard events.
 
@@ -1152,7 +1139,23 @@ Abstract class that allows you to emit discarded data in a stream adding support
   ### Constructor
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **options** |  | DuplexOptions |
+  | **options** | The options for the GroupBy. | ObjectDuplexOptions |
+
+
+
+## ObjectDuplex
+
+`abstract` `extends Duplex`
+
+Abstract class that handle data in a stream in object mode.
+
+
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **options** | The options for the ObjectDuplex. | ObjectDuplexOptions |
+  | **options.objectMode** | Whether the stream should operate in object mode. | true |
 
 
 

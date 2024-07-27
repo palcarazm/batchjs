@@ -1,18 +1,6 @@
-import { Duplex, DuplexOptions, TransformCallback } from "stream";
+import { TransformCallback } from "stream";
 import { PushError } from "../errors/PushError";
-
-/**
- * @interface
- * Options for the EmptyStream.
- * @extends DuplexOptions
- */
-export interface EmptyStreamOptions extends DuplexOptions {
-    objectMode?:true;
-}
-
-const defaultOptions = {
-    objectMode: true
-};
+import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @class
@@ -36,18 +24,16 @@ const defaultOptions = {
  * >> Result: false
  * ```
  */
-export class EmptyStream<T> extends Duplex {
+export class EmptyStream<T> extends ObjectDuplex {
     private hasChunks: boolean = false;
     private pushedHasElements: boolean = false;
 
     /**
      * @constructor
-     * @param {EmptyStreamOptions} options - The options for the EmptyStream.
-     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
+     * @param {ObjectDuplexOptions} options - The options for the EmptyStream.
      */
-    constructor(options: EmptyStreamOptions) {
-        const opts = {...defaultOptions, ...options};
-        super(opts);
+    constructor(options: ObjectDuplexOptions) {
+        super(options);
     }
 
     /**

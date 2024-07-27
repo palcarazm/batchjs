@@ -1,19 +1,7 @@
-import { DuplexOptions, TransformCallback } from "stream";
+import { TransformCallback } from "stream";
 import { PushError } from "../errors/PushError";
-import { DiscardingStream } from "../interfaces/_index";
+import { DiscardingStream, ObjectDuplexOptions } from "../interfaces/_index";
 
-/**
- * @interface
- * Options for the LastStream.
- * @extends DuplexOptions
- */
-export interface LastStreamOptions extends DuplexOptions {
-    objectMode?:true;
-}
-
-const defaultOptions = {
-    objectMode: true
-};
 
 /**
  * @class
@@ -49,12 +37,10 @@ export class LastStream<T> extends DiscardingStream<T> {
 
     /**
      * @constructor
-     * @param {LastStreamOptions} options - The options for the LastStream.
-     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
+     * @param {ObjectDuplexOptions} options - The options for the LastStream.
      */
-    constructor(options: LastStreamOptions) {
-        const opts = {...defaultOptions, ...options};
-        super(opts);
+    constructor(options: ObjectDuplexOptions) {
+        super(options);
     }
 
     /**

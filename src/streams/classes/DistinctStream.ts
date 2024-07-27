@@ -1,6 +1,6 @@
-import { DuplexOptions, TransformCallback } from "stream";
+import { TransformCallback } from "stream";
 import { PushError } from "../errors/PushError";
-import { DiscardingStream } from "../interfaces/_index";
+import { DiscardingStream, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @interface
@@ -9,14 +9,9 @@ import { DiscardingStream } from "../interfaces/_index";
  * @template TInput
  * @template TKey
  */
-export interface DistinctStreamOptions<TInput,TKey> extends DuplexOptions {
-    objectMode?:true;
+export interface DistinctStreamOptions<TInput,TKey> extends ObjectDuplexOptions {
     keyExtractor: (chunk: TInput) => TKey;
 }
-
-const defaultOptions = {
-    objectMode: true
-};
 
 /**
  * @class
@@ -51,20 +46,18 @@ const defaultOptions = {
  * ```
  */
 export class DistinctStream<TInput,TKey> extends DiscardingStream<TInput> {
-    private buffer: Array<TInput> = [];
+    protected buffer: Array<TInput> = [];
     private keySet: Set<TKey> = new Set();
     private readonly _keyExtractor: (chunk: TInput) => TKey;
 
     /**
      * @constructor
      * @param {DistinctStreamOptions} options - The options for the FilterStream.
-     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      * @param [options.keyExtractor] {Function} - The key extractor function for determining the key of the data to be filtered.
      */
     constructor(options: DistinctStreamOptions<TInput,TKey>) {
-        const opts = {...defaultOptions, ...options};
-        super(opts);
-        this._keyExtractor = opts.keyExtractor;
+        super(options);
+        this._keyExtractor = options.keyExtractor;
     }
 
     /**

@@ -25,6 +25,21 @@ module.exports = {
     },
     equals: function (a, b) {
         return a === b;
-    }
+    },getTags: function({access, augments, scope, virtual}) {
+        const tags = [];
+        if (access) {
+            tags.push(access);
+        }
+        if (scope &&  ["static"].includes(scope)) {
+            tags.push(scope);
+        }
+        if (virtual) {
+            tags.push("abstract");
+        }
+        if (augments) {
+            tags.push("extends " + augments.join(", "));
+        }
+        return tags;
+    },
 };
   

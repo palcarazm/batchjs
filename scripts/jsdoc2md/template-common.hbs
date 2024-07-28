@@ -17,7 +17,7 @@ In this documentation, we will focus on the common API. This module includes the
 
 ## {{name}}
 
-{{#if access}}`{{access}}` {{/if}}{{#if virtual}}`abstract` {{/if}}{{#if augments}}`extends {{toList augments}}`{{/if}}
+{{#each (getTags this)}}`{{{this}}}` {{/each}}
 {{#if description}}
 
 {{stripTags description}}
@@ -50,7 +50,7 @@ In this documentation, we will focus on the common API. This module includes the
 
 ### {{name}} ({{kind}})
 
-{{#if access}}`{{access}}` {{/if}}{{#if virtual}}`abstract` {{/if}}{{#if augments}}`extends {{toList augments}}`{{/if}}
+{{#each (getTags this)}}`{{{this}}}` {{/each}}
 {{#if description}}
 
 {{stripTags description}}

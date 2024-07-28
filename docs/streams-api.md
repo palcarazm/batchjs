@@ -25,10 +25,11 @@ In this documentation, we will focus on the streams API. This module includes so
   - [SingleStream](#singlestream)
   - [DiscardingStream](#discardingstream)
   - [ObjectDuplex](#objectduplex)
+  - [StreamUtils](#streamutils)
 
 ## AllMatchStream
 
-`extends DiscardingStream`
+`extends DiscardingStream` 
 
 Class that allows you to validate that all elements in a stream match a given condition.
 
@@ -96,7 +97,7 @@ Push once false if at least one chunk has not matched.
 
 ## AnyMatchStream
 
-`extends DiscardingStream`
+`extends DiscardingStream` 
 
 Class that allows you to validate that all elements in a stream match a given condition.
 
@@ -164,7 +165,7 @@ Push once false if at least one chunk has matched.
 
 ## BufferStream
 
-`extends ObjectDuplex`
+`extends ObjectDuplex` 
 
 Class that allows you  stream data in batches of a specified size.
 
@@ -238,7 +239,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## CountStream
 
-`extends ObjectDuplex`
+`extends ObjectDuplex` 
 
 Class that allows you to count the number of chunks in a stream.
 
@@ -306,7 +307,7 @@ Reading is not supported since writer finishes first.
 
 ## DistinctStream
 
-`extends DiscardingStream`
+`extends DiscardingStream` 
 
 Class that allows you to discard repeated data in a stream in base on a key.
 Data with duplicated key will be emitted through the discard event.
@@ -381,7 +382,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## EmptyStream
 
-`extends Duplex`
+`extends Duplex` 
 
 Class that allows you to validate that a stream is empty.
 
@@ -448,7 +449,7 @@ Push once false if at least one chunk has been received.
 
 ## FilterStream
 
-`extends DiscardingStream`
+`extends DiscardingStream` 
 
 Class that allows you to filter data in a stream.
 
@@ -522,7 +523,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## FirstStream
 
-`extends DiscardingStream`
+`extends DiscardingStream` 
 
 Class that allows you to emit only the first chunk in a stream and discard the rest.
 
@@ -590,7 +591,7 @@ Pushes the first chunk, if it exists and not pushed, to the consumer stream and 
 
 ## FlatStream
 
-`extends ObjectDuplex`
+`extends ObjectDuplex` 
 
 Class that allows you to transform an array stream into a flat stream.
 
@@ -663,7 +664,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## GroupByStream
 
-`extends ObjectDuplex`
+`extends ObjectDuplex` 
 
 Class that allows you to group data in a stream.
 
@@ -749,7 +750,7 @@ Groups a chunk of data based on the provided groupBy function and stores it in t
 
 ## HasElementsStream
 
-`extends ObjectDuplex`
+`extends ObjectDuplex` 
 
 Class that allows you to validate that a stream has elements.
 
@@ -816,7 +817,7 @@ Push once true if at least one chunk has been received.
 
 ## LastStream
 
-`extends DiscardingStream`
+`extends DiscardingStream` 
 
 Class that allows you to emit only the last chunk in a stream and discard the rest.
 
@@ -884,7 +885,7 @@ Reading is not supported since writer finishes first.
 
 ## ParallelStream
 
-`extends ObjectDuplex`
+`extends ObjectDuplex` 
 
 Class that allows you to transform and stream data in parallel.
 
@@ -967,7 +968,7 @@ Loop through the pool and queue to process chunks, adding promises to the pool.
 
 ## ReplayStream
 
-`extends ObjectDuplex`
+`extends ObjectDuplex` 
 
 Class that allows you to remit chunks from a stream when the source is finished.
 
@@ -1053,7 +1054,7 @@ Creates a readable stream from the buffer to replay the data that have been push
 
 ## SingleStream
 
-`extends ObjectDuplex`
+`extends ObjectDuplex` 
 
 Class that allows you to verify that a stream contains only one chunk.
 
@@ -1126,7 +1127,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## DiscardingStream
 
-`abstract` `extends ObjectDuplex`
+`abstract` `extends ObjectDuplex` 
 
 Abstract class that allows you to emit discarded data in a stream adding support to discard events.
 
@@ -1145,7 +1146,7 @@ Abstract class that allows you to emit discarded data in a stream adding support
 
 ## ObjectDuplex
 
-`abstract` `extends Duplex`
+`abstract` `extends Duplex` 
 
 Abstract class that handle data in a stream in object mode.
 
@@ -1157,5 +1158,57 @@ Abstract class that handle data in a stream in object mode.
   | **options** | The options for the ObjectDuplex. | ObjectDuplexOptions |
   | **options.objectMode** | Whether the stream should operate in object mode. | true |
 
+
+
+## StreamUtils
+
+`abstract` 
+
+Utility class for streams exposing static methods.
+
+
+
+### mergeStreams (function)
+
+`static` 
+
+Merges multiple readable streams into a single duplex stream.
+
+#### Examples
+
+```typescript const streams: Array<Readable> = [     Readable.from(["a","b"],{objectMode: true}),     Readable.from(["c"],{objectMode: true}),     Readable.from(["d","e"],{objectMode: true}) ]; const merged: Readable = StreamUtils.mergeStreams(streams,{objectMode: true}); merged.on("data", (chunk: string) => {     console.log(`Received chunk: ${chunk}`); });``````shell>> Received chunk: a>> Received chunk: b>> Received chunk: c>> Received chunk: d>> Received chunk: e```
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **streams** | An array of readable streams to merge. | Array.&lt;Readable&gt; |
+  | **options** | The options for the Readable stream. | ReadableOptions |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | Readable | A readable stream that combines the input streams. |
+
+
+### splitStreams (function)
+
+`static` 
+
+Returns a stream that split the input stream into multiple writable streams.
+
+#### Examples
+
+```typescript const streams: Array<Writable> = [   new Writable({     objectMode: true},     write(chunk: unknown, encoding: BufferEncoding, callback: TransformCallback) {       console.log(`Writer 1 - Received chunk: ${chunk}`);       callback();     }   }),   new Writable({     objectMode: true},     write(chunk: unknown, encoding: BufferEncoding, callback: TransformCallback) {       console.log(`Writer 1 - Received chunk: ${chunk}`);       callback();     }   }), ]; const splitter: Writable = StreamUtils.splitStreams(streams); splitter.write("a"); splitter.write("b"); splitter.write("c"); splitter.end();``````shell>> Writer 1 - Received chunk: a>> Writer 2 - Received chunk: a>> Writer 1 - Received chunk: b>> Writer 2 - Received chunk: b>> Writer 1 - Received chunk: c>> Writer 2 - Received chunk: c```
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **streams** | An array of writable streams to send the input stream. | Array.&lt;Writable&gt; |
+  | **options** | The options for the Writable stream. | WritableOptions |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | Writable | A splitter stream that sends the input stream to the provided writable streams. |
 
 

@@ -13,7 +13,7 @@ In this documentation, we will focus on the common API. This module includes the
 
 ## Job
 
-`abstract` `extends EventEmitter`
+`abstract` `extends EventEmitter` 
 
 Abstract base class for all jobs.
 
@@ -32,7 +32,7 @@ Abstract base class for all jobs.
 
 ### _steps (function)
 
-`protected` `abstract` 
+`protected` `static` `abstract` 
 
 Abstract method that most be implemented by the job in order to returns an ordered array of steps that make up the job.
 
@@ -235,7 +235,7 @@ Abstract base class for all steps.
 
 ### _reader (function)
 
-`protected` `abstract` 
+`protected` `static` `abstract` 
 
 Abstract method that must be implemented by the step in order to defined the reader stream.
 
@@ -247,7 +247,7 @@ Abstract method that must be implemented by the step in order to defined the rea
 
 ### _processors (function)
 
-`protected` `abstract` 
+`protected` `static` `abstract` 
 
 Abstract method that must be implemented by the step in order to process the data from the reader stream and push it to the writer stream.
 Processors are defined in an ordered array to be chained on the runner.
@@ -260,7 +260,7 @@ Processors are defined in an ordered array to be chained on the runner.
 
 ### _writer (function)
 
-`protected` `abstract` 
+`protected` `static` `abstract` 
 
 Abstract method that must be implemented by the step in order to defined the writer stream.
 

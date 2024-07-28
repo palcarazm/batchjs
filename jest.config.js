@@ -11,10 +11,9 @@ module.exports = {
         }],
     },
     collectCoverageFrom: [
-        "**/*.ts",
+        "src/**/*.ts",
         "!**/index.ts",
         "!**/*.d.ts",
-        "!**/node_modules/**",
     ],
     coverageThreshold: {
         global: {

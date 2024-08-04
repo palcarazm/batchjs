@@ -1,4 +1,4 @@
-import { ParallelStreamOptions, ParallelStream, PushError } from "../../../src/streams/index";
+import { ParallelStreamOptions, ParallelStream } from "../../../src/streams/index";
 
 describe("ParallelStream", () => {
     const options: ParallelStreamOptions<string,string> = {
@@ -64,11 +64,11 @@ describe("ParallelStream", () => {
         },200);
     });
 
-    test("should throw PushError when push is disabled in stream end", (done) => {
+    test("should wait for drain when push is disabled in stream end", (done) => {
         jest.spyOn(stream, "push").mockImplementation(() => false);
 
-        stream.on("error", (err) => {
-            expect(err).toBeInstanceOf(PushError);
+        stream.on("finish", () => {
+            expect(stream["buffer"].length).toBe(0);
             done();
         });
 
@@ -80,6 +80,11 @@ describe("ParallelStream", () => {
         stream.write("data1");
         stream.write("data2");
         stream.end();
+        setTimeout(()=>{
+            expect(stream["buffer"].length).toBe(2);
+            jest.spyOn(stream, "push").mockImplementation(() => true);
+            stream.emit("drain");
+        },50);
     });
 
     test("should throw Error when Async transform throws", (done) => {

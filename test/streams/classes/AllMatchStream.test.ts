@@ -1,4 +1,4 @@
-import { AllMatchStream, AllMatchStreamOptions, PushError } from "../../../src/streams/index";
+import { AllMatchStream, AllMatchStreamOptions } from "../../../src/streams/index";
 describe("AllMatchStream", () => {
     const options: AllMatchStreamOptions<string> = {
         matcher: (chunk: string) => chunk.length > 2
@@ -37,17 +37,23 @@ describe("AllMatchStream", () => {
         stream.end();
     });
 
-    test("should throw PushError when push is disabled in stream end", (done) => {
+    test("should wait for drain when push is disabled in stream end", (done) => {
         jest.spyOn(stream, "push").mockImplementation(() => false);
 
-        stream.on("error", (err) => {
-            expect(err).toBeInstanceOf(PushError);
+        stream.on("finish", () => {
+            expect(stream["pushedResult"]).toBeTruthy();
             done();
         });
 
         stream.write("first"); // match
         stream.write("second"); // match
         stream.end();
+
+        setTimeout(()=>{
+            expect(stream["pushedResult"]).toBeFalsy();
+            jest.spyOn(stream, "push").mockImplementation(() => true);
+            stream.emit("drain");
+        },50);
     });
 
     test("should emit discard event when data does not match", (done) => {     

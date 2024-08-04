@@ -1,5 +1,4 @@
 import {Readable,ReadableOptions,Writable,WritableOptions, TransformCallback} from "stream";
-import { PushError } from "../errors/PushError";
 
 /**
  * @abstract
@@ -100,16 +99,19 @@ export abstract class StreamUtils {
         const splitter:Writable = new Writable({
             ...options,
             write(chunk:unknown, encoding: BufferEncoding, callback: TransformCallback) {
-                try {
-                    streams.forEach((stream: Writable ) => {
-                        if(!stream.write(chunk)){
-                            throw new PushError();
+                const pushData = (streams: Array<Writable>)=>{
+                    while (streams.length > 0) {
+                        const stream = streams.shift() as Writable;
+                        if (!stream.write(chunk)) {
+                            streams.push(stream);
+                            stream.once("drain", ()=>{pushData(streams);});
+                            return;
                         }
-                    });
+                    }
                     callback();
-                } catch (error) {
-                    callback(error as Error);
-                }
+                };
+        
+                pushData([...streams]);
             },
             final(callback:TransformCallback) {
                 streams.forEach((stream: Writable ) => {

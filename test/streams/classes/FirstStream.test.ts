@@ -1,4 +1,4 @@
-import { FirstStream, ObjectDuplexOptions, PushError } from "../../../src/streams/index";
+import { FirstStream, ObjectDuplexOptions } from "../../../src/streams/index";
 describe("FirstStream", () => {
     const options: ObjectDuplexOptions = {};
     let stream: FirstStream<string>;
@@ -19,15 +19,15 @@ describe("FirstStream", () => {
         stream.write("third");// Discarded
 
         setTimeout(()=>{
-            expect(stream["pushedFirstChunk"]).toBeTruthy();
+            expect(stream["pushedResult"]).toBeTruthy();
             expect(chunks).toEqual(["first"]);
             done();
         },50);
     });
 
     test("should handle _final correctly", (done) => {     
-        stream.on("end", () => {
-            expect(stream["pushedFirstChunk"]).toBeTruthy();
+        stream.on("finish", () => {
+            expect(stream["pushedResult"]).toBeTruthy();
             done();
         });
 
@@ -49,16 +49,16 @@ describe("FirstStream", () => {
         stream.write("third"); // Discarded
        
         setTimeout(()=>{
-            expect(stream["pushedFirstChunk"]).toBeFalsy();
+            expect(stream["pushedResult"]).toBeFalsy();
             done();
         },200);
     });
 
-    test("should throw PushError when push is disabled in stream end", (done) => {
+    test("should wait for drain when push is disabled in stream end", (done) => {
         jest.spyOn(stream, "push").mockImplementation(() => false);
 
-        stream.on("error", (err) => {
-            expect(err).toBeInstanceOf(PushError);
+        stream.on("finish", () => {
+            expect(stream["pushedResult"]).toBeTruthy();
             done();
         });
 
@@ -71,6 +71,25 @@ describe("FirstStream", () => {
         stream.write("second"); // Discarded
         stream.write("third"); // Discarded
         stream.end();
+        setTimeout(()=>{
+            expect(stream["pushedResult"]).toBeFalsy();
+            jest.spyOn(stream, "push").mockImplementation(() => true);
+            stream.emit("drain");
+        },50);
+    });
+
+    test("should handle _final correctly when nothing to push", (done) => {
+        stream.on("finish", () => {
+            expect(stream["pushedResult"]).toBeTruthy();
+            done();
+        });
+
+        // No data should be emitted
+        stream.on("data", () => {
+            done.fail("Expected error to be thrown but data was received.");
+        });
+
+        stream.end();
     });
 
     test("should send discarded data to discard event listener", (done) => {
@@ -78,8 +97,8 @@ describe("FirstStream", () => {
             expect(chunk).toEqual("first");
         });
 
-        stream.on("end", () => {
-            expect(stream["pushedFirstChunk"]).toBeTruthy();
+        stream.on("finish", () => {
+            expect(stream["pushedResult"]).toBeTruthy();
             done();
         });
 

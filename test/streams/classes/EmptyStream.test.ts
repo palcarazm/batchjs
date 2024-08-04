@@ -1,4 +1,4 @@
-import { EmptyStream, ObjectDuplexOptions, PushError } from "../../../src/streams/index";
+import { EmptyStream, ObjectDuplexOptions } from "../../../src/streams/index";
 describe("EmptyStream", () => {
     const options: ObjectDuplexOptions = {};
     let stream: EmptyStream<string>;
@@ -31,14 +31,19 @@ describe("EmptyStream", () => {
         stream.end(); // empty
     });
 
-    test("should throw PushError when push is disabled in stream end", (done) => {
+    test("should wait for drain when push is disabled in stream end", (done) => {
         jest.spyOn(stream, "push").mockImplementation(() => false);
 
-        stream.on("error", (err) => {
-            expect(err).toBeInstanceOf(PushError);
+        stream.on("finish", () => {
+            expect(stream["pushedResult"]).toBeTruthy();
             done();
         });
 
         stream.end(); // empty
+        setTimeout(()=>{
+            expect(stream["pushedResult"]).toBeFalsy();
+            jest.spyOn(stream, "push").mockImplementation(() => true);
+            stream.emit("drain");
+        },50);
     });
 });

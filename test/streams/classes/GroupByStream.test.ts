@@ -1,4 +1,4 @@
-import { GroupByStream, GroupByStreamOptions, PushError } from "../../../src/streams/index";
+import { GroupByStream, GroupByStreamOptions } from "../../../src/streams/index";
 
 describe("GroupByStream", () => {
     const options: GroupByStreamOptions<string> = {
@@ -43,11 +43,11 @@ describe("GroupByStream", () => {
         stream.pause();
     });
 
-    test("should throw PushError when push is disabled in stream end", (done) => {
+    test("should wait for drain when push is disabled in stream end", (done) => {
         jest.spyOn(stream, "push").mockImplementation(() => false);
 
-        stream.on("error", (err) => {
-            expect(err).toBeInstanceOf(PushError);
+        stream.on("finish", () => {
+            expect (stream["buffer"].size).toBe(0);
             done();
         });
 
@@ -59,5 +59,10 @@ describe("GroupByStream", () => {
         stream.write("data1");
         stream.write("data2");
         stream.end();
+        setTimeout(()=>{
+            expect (stream["buffer"].size).toBe(1);
+            jest.spyOn(stream, "push").mockImplementation(() => true);
+            stream.emit("drain");
+        },50);
     });
 });

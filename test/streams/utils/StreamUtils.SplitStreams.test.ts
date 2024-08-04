@@ -1,5 +1,5 @@
 import {Writable} from "stream";
-import { PushError, StreamUtils } from "../../../src/streams/index";
+import { StreamUtils } from "../../../src/streams/index";
 import { buffer2String, CollectStream } from "../TestUtils";
 
 describe("StreamUtils.SplitStreams", () => {
@@ -70,7 +70,7 @@ describe("StreamUtils.SplitStreams", () => {
 
     });
 
-    test("should split streams handle PushError on write", (done) => {
+    test("should split streams handle drain on write", (done) => {
         const streams: Array<CollectStream> = [
             new CollectStream({objectMode: true}),
             new CollectStream({objectMode: true}),
@@ -82,11 +82,24 @@ describe("StreamUtils.SplitStreams", () => {
         const splitter: Writable = StreamUtils.splitStreams(streams,{objectMode: true});
 
         splitter.write("a");
-
-        splitter.once("error", (err) => {
+        splitter.end();
+        
+        setTimeout(() => {
             expect(streams.at(0)?.chunks).toEqual(["a"]);
             expect(streams.at(1)?.chunks).toEqual(["a"]);
-            expect(err).toBeInstanceOf(PushError);
+            expect(streams.at(2)?.chunks).toEqual([]);
+
+            jest.spyOn(streams.at(2) as CollectStream, "write").mockImplementation((chunk: unknown) => {
+                streams.at(2)?.chunks?.push(chunk);
+                return true;
+            });
+            streams.at(2)?.emit("drain");
+        }, 50);
+
+        splitter.once("close", () => {
+            streams.forEach((stream: CollectStream) => {
+                expect(stream.chunks).toEqual(["a"]);
+            });
             done();
         });
 

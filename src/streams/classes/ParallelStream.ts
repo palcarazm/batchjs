@@ -1,5 +1,4 @@
 import { TransformCallback  } from "stream";
-import { PushError } from "../errors/PushError";
 import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
@@ -87,19 +86,24 @@ export class ParallelStream<TInput, TOutput> extends ObjectDuplex {
      * @return {Promise<void>} A promise that resolves when the stream is finalized.
      */
     async _final(callback: TransformCallback): Promise<void> {
+        const pushData = ()=>{
+            while (this.buffer.length > 0) {
+                const chunk = this.buffer.shift() as TOutput;
+                if (!this.push(chunk)) {
+                    this.buffer.unshift(chunk);
+                    this.once("drain", pushData);
+                    return;
+                }
+            }
+            this.push(null);
+            callback();
+        };
+
         while (this.queue.length > 0 || this.pool.size > 0) {
             await new Promise(resolve => setImmediate(resolve));
         }
-        while (this.buffer.length > 0){
-            const chunk = this.buffer.shift() as TOutput;
-            if (!this.push(chunk)) {
-                this.buffer.unshift(chunk);
-                callback(new PushError());
-                return;
-            }
-        }
-        this.push(null);
-        callback();
+
+        pushData();
     }
 
     /**

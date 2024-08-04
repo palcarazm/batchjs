@@ -1,5 +1,4 @@
 import { TransformCallback } from "stream";
-import { PushError } from "../errors/PushError";
 import {  DiscardingStream, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
@@ -34,7 +33,7 @@ import {  DiscardingStream, ObjectDuplexOptions } from "../interfaces/_index";
  */
 export class FirstStream<T> extends DiscardingStream<T> {
     private firstChunk: T | undefined = undefined;
-    private pushedFirstChunk = false;
+    private pushedResult = false;
 
     /**
      * @constructor
@@ -70,16 +69,25 @@ export class FirstStream<T> extends DiscardingStream<T> {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        if (!this.pushedFirstChunk && this.firstChunk !== undefined) {
-            if (!this.push(this.firstChunk)) {
-                callback(new PushError());
-                return;
-            }else{
-                this.pushedFirstChunk = true;
+        const pushData = ()=>{
+            if (!this.pushedResult ) {
+                if(this.firstChunk !== undefined){
+                    if(this.push(this.firstChunk)){
+                        this.pushedResult = true;
+                        this.push(null);
+                        callback();
+                    }else{
+                        this.once("drain", pushData);
+                    }
+                }else{
+                    this.pushedResult = true;
+                    this.push(null);
+                    callback();
+                }
             }
-        }
-        this.push(null);
-        callback();
+        };
+
+        pushData();
     }
 
     /**
@@ -88,9 +96,9 @@ export class FirstStream<T> extends DiscardingStream<T> {
      * @return {void} This function does not return anything.
      */
     _read(): void {
-        if (!this.pushedFirstChunk && this.firstChunk !== undefined) {
+        if (!this.pushedResult && this.firstChunk !== undefined) {
             if (this.push(this.firstChunk)) {
-                this.pushedFirstChunk = true;
+                this.pushedResult = true;
             }
         }
     }

@@ -1,4 +1,4 @@
-import { FilterStream, FilterStreamOptions, PushError } from "../../../src/streams/index";
+import { FilterStream, FilterStreamOptions } from "../../../src/streams/index";
 describe("FilterStream", () => {
     const options: FilterStreamOptions<string> = {
         filter: (chunk: string) => chunk === "data1" || chunk === "data2",
@@ -56,11 +56,11 @@ describe("FilterStream", () => {
         },200);
     });
 
-    test("should throw PushError when push is disabled in stream end", (done) => {
+    test("should wait for drain when push is disabled in stream end", (done) => {
         jest.spyOn(stream, "push").mockImplementation(() => false);
 
-        stream.on("error", (err) => {
-            expect(err).toBeInstanceOf(PushError);
+        stream.on("finish", () => {
+            expect(stream["buffer"].length).toBe(0);
             done();
         });
 
@@ -73,6 +73,11 @@ describe("FilterStream", () => {
         stream.write("data2");
         stream.write("data3"); // Discarded
         stream.end();
+        setTimeout(()=>{
+            expect(stream["buffer"].length).toBe(2);
+            jest.spyOn(stream, "push").mockImplementation(() => true);
+            stream.emit("drain");
+        },50);
     });
 
     test("should send discarded data to discard event listener", (done) => {

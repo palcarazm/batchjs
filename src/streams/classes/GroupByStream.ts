@@ -1,5 +1,4 @@
 import {  TransformCallback  } from "stream";
-import { PushError } from "../errors/PushError";
 import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
@@ -74,18 +73,22 @@ export class GroupByStream<T> extends ObjectDuplex {
      * @return {void}
      */
     _final(callback: TransformCallback): void {
-        try {
-            Array.from(this.buffer.values()).forEach((group:Array<T>) => {
+        const pushData = ()=>{
+            while (this.buffer.size > 0) {
+                const groupKey = this.buffer.keys().next().value;
+                const group = this.buffer.get(groupKey) as Array<T>;
                 if (!this.push(group)) {
-                    throw new PushError();
+                    this.once("drain", pushData);
+                    return;
+                }else{
+                    this.buffer.delete(groupKey);
                 }
-            });
+            }
             this.push(null);
             callback();
-        } catch (error) {
-            const e = error as Error;
-            callback(e);
-        }
+        };
+
+        pushData();
     }
 
     /**

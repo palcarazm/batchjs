@@ -1,4 +1,4 @@
-import { CountStream, ObjectDuplexOptions, PushError } from "../../../src/streams/index";
+import { CountStream, ObjectDuplexOptions } from "../../../src/streams/index";
 
 describe("CountStream", () => {
     const options: ObjectDuplexOptions = {};
@@ -39,11 +39,6 @@ describe("CountStream", () => {
 
     test("should wait streams end to push count", (done) => {
 
-        stream.on("error", (err) => {
-            expect(err).toBeInstanceOf(PushError);
-            done();
-        });
-
         // No data should be emitted
         stream.on("data", () => {
             done.fail("Expected error to be thrown but data was received.");
@@ -56,11 +51,11 @@ describe("CountStream", () => {
         },50);
     });
 
-    test("should throw PushError when push is disabled in stream end", (done) => {
+    test("should wait for drain when push is disabled in stream end", (done) => {
         jest.spyOn(stream, "push").mockImplementation(() => false);
 
-        stream.on("error", (err) => {
-            expect(err).toBeInstanceOf(PushError);
+        stream.on("finish", () => {
+            expect(stream["pushedResult"]).toBeTruthy();
             done();
         });
 
@@ -72,5 +67,10 @@ describe("CountStream", () => {
         stream.write("data1");
         stream.write("data2");
         stream.end();
+        setTimeout(()=>{
+            expect(stream["pushedResult"]).toBeFalsy();
+            jest.spyOn(stream, "push").mockImplementation(() => true);
+            stream.emit("drain");
+        },50);
     });
 });

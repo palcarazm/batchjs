@@ -1,4 +1,4 @@
-import { SingleStream, ObjectDuplexOptions, PushError, SingleStreamError } from "../../../src/streams/index";
+import { SingleStream, ObjectDuplexOptions, SingleStreamError } from "../../../src/streams/index";
 
 describe("SingleStream", () => {
     const options: ObjectDuplexOptions = {};
@@ -65,11 +65,11 @@ describe("SingleStream", () => {
         },200);
     });
 
-    test("should throw PushError when push is disabled in stream end", (done) => {
+    test("should wait for drain when push is disabled in stream end", (done) => {
         jest.spyOn(stream, "push").mockImplementation(() => false);
 
-        stream.once("error", (err) => {
-            expect(err).toBeInstanceOf(PushError);
+        stream.once("finish", () => {
+            expect(stream["buffer"].length).toBe(0);
             done();
         });
 
@@ -80,5 +80,10 @@ describe("SingleStream", () => {
 
         stream.write("data1");
         stream.end();
+        setTimeout(()=>{
+            expect(stream["buffer"].length).toBe(1);
+            jest.spyOn(stream, "push").mockImplementation(() => true);
+            stream.emit("drain");
+        },50);
     });
 });

@@ -1,4 +1,4 @@
-import { DistinctStream, DistinctStreamOptions, PushError } from "../../../src/streams/index";
+import { DistinctStream, DistinctStreamOptions } from "../../../src/streams/index";
 describe("DistinctStream", () => {
     const options: DistinctStreamOptions<string,string> = {
         keyExtractor: (chunk: string) => chunk,
@@ -16,7 +16,7 @@ describe("DistinctStream", () => {
     });
 
     test("should write and read data correctly", (done) => {
-        stream.on("end", () => {
+        stream.on("finish", () => {
             expect(chunks).toEqual(["data1", "data2"]);
             done();
         });
@@ -28,7 +28,7 @@ describe("DistinctStream", () => {
     });
 
     test("should handle _final correctly", (done) => {     
-        stream.on("end", () => {
+        stream.on("finish", () => {
             expect(stream["buffer"].length).toBe(0);
             done();
         });
@@ -56,11 +56,11 @@ describe("DistinctStream", () => {
         },200);
     });
 
-    test("should throw PushError when push is disabled in stream end", (done) => {
+    test("should wait for drain when push is disabled in stream end", (done) => {
         jest.spyOn(stream, "push").mockImplementation(() => false);
 
-        stream.on("error", (err) => {
-            expect(err).toBeInstanceOf(PushError);
+        stream.on("finish", () => {
+            expect(stream["buffer"].length).toBe(0);
             done();
         });
 
@@ -73,10 +73,15 @@ describe("DistinctStream", () => {
         stream.write("data2");
         stream.write("data1"); //Duplicated
         stream.end();
+        setTimeout(()=>{
+            expect(stream["buffer"].length).toBe(2);
+            jest.spyOn(stream, "push").mockImplementation(() => true);
+            stream.emit("drain");
+        },50);
     });
 
     test("should send duplicated data to discard event listener", (done) => {
-        stream.on("end", () => {
+        stream.on("finish", () => {
             expect(stream["buffer"].length).toBe(0);
             done();
         });

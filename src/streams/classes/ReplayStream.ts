@@ -1,5 +1,4 @@
 import { TransformCallback, Readable } from "stream";
-import { PushError } from "../errors/PushError";
 import { NotClosedError } from "../errors/NotClosedError";
 import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
@@ -70,17 +69,21 @@ export class ReplayStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        while (this.buffer.length > this.index) {
-            const chunk = this.buffer.at(this.index) as T;
-            if (!this.push(chunk)) {
-                callback(new PushError());
-                return;
-            }else{
-                this.index++;
+        const pushData = ()=>{
+            while (this.buffer.length > this.index) {
+                const chunk = this.buffer.at(this.index) as T;
+                if (!this.push(chunk)) {
+                    this.once("drain", pushData);
+                    return;
+                }else{
+                    this.index++;
+                }
             }
-        }
-        this.push(null);
-        callback();
+            this.push(null);
+            callback();
+        };
+
+        pushData();
     }
 
     /**

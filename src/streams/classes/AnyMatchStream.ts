@@ -1,5 +1,4 @@
 import { TransformCallback } from "stream";
-import { PushError } from "../errors/PushError";
 import { DiscardingStream, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
@@ -79,16 +78,19 @@ export class AnyMatchStream<T> extends DiscardingStream<T> {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        if( !this.pushedResult){
-            if(this.push(this.anyChunkMatch)){
-                this.pushedResult = true;
-                this.push(null);
-            }else{
-                callback(new PushError());
-                return;
+        const pushData = ()=>{
+            if( !this.pushedResult){
+                if(this.push(this.anyChunkMatch)){
+                    this.pushedResult = true;
+                    this.push(null);
+                    callback();
+                }else{
+                    this.once("drain", pushData);
+                }
             }
-        }
-        callback();
+        };
+
+        pushData();
     }
 
     /**

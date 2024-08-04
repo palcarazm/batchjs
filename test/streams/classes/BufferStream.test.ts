@@ -1,4 +1,4 @@
-import { BufferStream, BufferStreamOptions, PushError } from "../../../src/streams/index";
+import { BufferStream, BufferStreamOptions } from "../../../src/streams/index";
 
 describe("BufferStream", () => {
     const options: BufferStreamOptions = {
@@ -17,7 +17,7 @@ describe("BufferStream", () => {
     });
 
     test("should write and read data correctly", (done) => {
-        stream.on("end", () => {
+        stream.on("finish", () => {
             expect(chunks).toEqual([["data1", "data2"], ["data3"]]);
             done();
         });
@@ -29,7 +29,7 @@ describe("BufferStream", () => {
     });
 
     test("should handle _final correctly", (done) => {     
-        stream.on("end", () => {
+        stream.on("finish", () => {
             expect(stream["buffer"].length).toBe(0);
             done();
         });
@@ -56,11 +56,11 @@ describe("BufferStream", () => {
         },200);
     });
 
-    test("should throw PushError when push is disabled in stream end", (done) => {
+    test("should wait for drain when push is disabled in stream end", (done) => {
         jest.spyOn(stream, "push").mockImplementation(() => false);
 
-        stream.on("error", (err) => {
-            expect(err).toBeInstanceOf(PushError);
+        stream.on("finish", () => {
+            expect(stream["buffer"].length).toBe(0);
             done();
         });
 
@@ -72,5 +72,10 @@ describe("BufferStream", () => {
         stream.write("data1");
         stream.write("data2");
         stream.end();
+        setTimeout(()=>{
+            expect(stream["buffer"].length).toBe(2);
+            jest.spyOn(stream, "push").mockImplementation(() => true);
+            stream.emit("drain");
+        },50);
     });
 });

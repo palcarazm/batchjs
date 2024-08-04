@@ -1,5 +1,5 @@
 import { TransformCallback } from "stream";
-import { PushError, SingleStreamError } from "../errors/_index";
+import { SingleStreamError } from "../errors/_index";
 import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
@@ -69,16 +69,20 @@ export class SingleStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        while (this.buffer.length > 0) {
-            const chunk = this.buffer.shift() as T;
-            if (!this.push(chunk)) {
-                this.buffer.unshift(chunk);
-                callback(new PushError());
-                return;
+        const pushData = ()=>{
+            while (this.buffer.length > 0) {
+                const chunk = this.buffer.shift() as T;
+                if (!this.push(chunk)) {
+                    this.buffer.unshift(chunk);
+                    this.once("drain", pushData);
+                    return;
+                }
             }
-        }
-        this.push(null);
-        callback();
+            this.push(null);
+            callback();
+        };
+
+        pushData();
     }
 
     /**

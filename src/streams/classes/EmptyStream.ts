@@ -1,5 +1,4 @@
 import { TransformCallback } from "stream";
-import { PushError } from "../errors/PushError";
 import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
@@ -26,7 +25,7 @@ import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  */
 export class EmptyStream<T> extends ObjectDuplex {
     private hasChunks: boolean = false;
-    private pushedHasElements: boolean = false;
+    private pushedResult: boolean = false;
 
     /**
      * @constructor
@@ -57,16 +56,19 @@ export class EmptyStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        if( !this.pushedHasElements){
-            if(this.push(!this.hasChunks)){
-                this.pushedHasElements = true;
-                this.push(null);
-            }else{
-                callback(new PushError());
-                return;
+        const pushData = ()=>{
+            if( !this.pushedResult){
+                if(this.push(!this.hasChunks)){
+                    this.pushedResult = true;
+                    this.push(null);
+                    callback();
+                }else{
+                    this.once("drain", pushData);
+                }
             }
-        }
-        callback();
+        };
+
+        pushData();
     }
 
     /**
@@ -75,9 +77,9 @@ export class EmptyStream<T> extends ObjectDuplex {
      * @return {void}
      */
     _read(): void {
-        if(this.hasChunks && !this.pushedHasElements){
+        if(this.hasChunks && !this.pushedResult){
             if(this.push(false)){
-                this.pushedHasElements = true;
+                this.pushedResult = true;
                 this.push(null);
             }
         }

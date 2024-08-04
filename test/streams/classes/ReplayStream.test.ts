@@ -1,4 +1,4 @@
-import { ReplayStream, ObjectDuplexOptions, PushError, NotClosedError } from "../../../src/streams/index";
+import { ReplayStream, ObjectDuplexOptions, NotClosedError } from "../../../src/streams/index";
 describe("ReplayStream", () => {
     const options: ObjectDuplexOptions = {};
     let stream: ReplayStream<string>;
@@ -82,11 +82,11 @@ describe("ReplayStream", () => {
         },200);
     });
 
-    test("should throw PushError when push is disabled in stream end", (done) => {
+    test("should wait fro drain when push is disabled in stream end", (done) => {
         jest.spyOn(stream, "push").mockImplementation(() => false);
 
-        stream.on("error", (err) => {
-            expect(err).toBeInstanceOf(PushError);
+        stream.on("finish", () => {
+            expect(stream["index"]).toBe(3);
             done();
         });
 
@@ -99,5 +99,10 @@ describe("ReplayStream", () => {
         stream.write("data2");
         stream.write("data3");
         stream.end();
+        setTimeout(()=>{
+            expect(stream["index"]).toBe(0);
+            jest.spyOn(stream, "push").mockImplementation(() => true);
+            stream.emit("drain");
+        },50);
     });
 });

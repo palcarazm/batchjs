@@ -1,5 +1,4 @@
 import { TransformCallback } from "stream";
-import { PushError } from "../errors/PushError";
 import { DiscardingStream, ObjectDuplexOptions } from "../interfaces/_index";
 
 
@@ -34,6 +33,7 @@ import { DiscardingStream, ObjectDuplexOptions } from "../interfaces/_index";
  */
 export class LastStream<T> extends DiscardingStream<T> {
     private lastChunk: T | undefined = undefined;
+    protected pushedResult: boolean = false;
 
     /**
      * @constructor
@@ -68,14 +68,25 @@ export class LastStream<T> extends DiscardingStream<T> {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        if ( this.lastChunk !== undefined) {
-            if (!this.push(this.lastChunk)) {
-                callback(new PushError());
-                return;
+        const pushData = ()=>{
+            if( !this.pushedResult){
+                if ( this.lastChunk !== undefined) {
+                    if (this.push(this.lastChunk)) {
+                        this.pushedResult = true;
+                        this.push(null);
+                        callback();
+                    }else{
+                        this.once("drain", pushData);
+                    }
+                }else{
+                    this.pushedResult = true;
+                    this.push(null);
+                    callback();
+                }
             }
-        }
-        this.push(null);
-        callback();
+        };
+
+        pushData();
     }
 
     /**

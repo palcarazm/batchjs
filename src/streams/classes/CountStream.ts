@@ -1,5 +1,4 @@
 import {  TransformCallback  } from "stream";
-import { PushError } from "../errors/PushError";
 import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
@@ -28,6 +27,7 @@ import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  */
 export class CountStream<T> extends ObjectDuplex {
     private count: number = 0;
+    private pushedResult:boolean = false;
 
     /**
      * @constructor
@@ -61,16 +61,19 @@ export class CountStream<T> extends ObjectDuplex {
      * @return {void}
      */
     _final(callback: TransformCallback): void {
-        try {
-            if (!this.push(this.count)) {
-                throw new PushError();
+        const pushData = ()=>{
+            if( !this.pushedResult){
+                if(this.push(this.count)){
+                    this.pushedResult = true;
+                    this.push(null);
+                    callback();
+                }else{
+                    this.once("drain", pushData);
+                }
             }
-            this.push(null);
-            callback();
-        } catch (error) {
-            const e = error as Error;
-            callback(e);
-        }
+        };
+
+        pushData();
     }
 
     /**

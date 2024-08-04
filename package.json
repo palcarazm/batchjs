@@ -1,12 +1,21 @@
 {
   "name": "batchjs",
   "version": "1.0.0",
+  "author": {
+    "name": "Pablo Alcaraz Martínez",
+    "url": "https://github.com/palcarazm/"
+  },
+  "funding": {
+    "type": "GitHub Sponsors",
+    "url": "https://github.com/sponsors/palcarazm"
+  },
   "description": "Batch processing framework for NodeJS",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/@types",
   "files": [
-    "dist"
+    "dist",
+    "docs"
   ],
   "scripts": {
     "prepack": "npm run build",
@@ -21,9 +30,24 @@
     "lint": "eslint ./src --ext .ts",
     "prepare": "husky"
   },
-  "keywords": [],
-  "author": "P. Alcaraz",
+  "keywords": [
+    "streams batch processing framework",
+    "batch processing framework",
+    "batch processing",
+    "streams processing",
+    "stream framework",
+    "batch",
+    "framework",
+    "streams"
+  ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/palcarazm/batchjs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/palcarazm/batchjs/issues"
+  },
   "devDependencies": {
     "@babel/core": "^7.24.9",
     "@babel/preset-env": "^7.24.8",

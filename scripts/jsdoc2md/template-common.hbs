@@ -1,0 +1,91 @@
+# Common API
+
+In this documentation, we will focus on the common API. This module includes the core of BatchJS. This API allows you to create your own custom jobs and steps using the common interface.
+
+------------
+
+<!--Auto generated Documentation PLEASE DO NOT MODIFY THIS FILE. MODIFY THE JSDOC INSTEAD-->
+
+{{!-- TOC --}}
+## Table of Contents
+
+{{#each (getClasses this)}}
+  - [{{name}}](#{{toLink name}})
+{{/each}}
+{{!-- Class --}}
+{{#each (getClasses this)}}
+
+## {{name}}
+
+{{#each (getTags this)}}`{{{this}}}` {{/each}}
+{{#if description}}
+
+{{stripTags description}}
+{{/if}}
+{{#each (getConstructors ../this id)}}{{!-- Constructors --}}
+
+{{#if examples}}
+  {{#if examples.length}}
+
+### Examples
+{{#each examples}}
+
+{{{this}}}
+{{/each}}
+  {{/if}}
+{{/if}}
+{{#if params}}
+  {{#if params.length}}
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  {{#each params}}
+  | **{{name}}** | {{stripTags description}} | {{toList type.names}} |
+  {{/each}}
+  {{/if}}
+{{/if}}
+{{/each}}{{!-- END Constructors --}}
+{{#each (getMethods ../this id)}}{{!-- Class methods --}}
+
+### {{name}} ({{kind}})
+
+{{#each (getTags this)}}`{{{this}}}` {{/each}}
+{{#if description}}
+
+{{stripTags description}}
+{{/if}}
+{{#if examples}}
+  {{#if examples.length}}
+
+#### Examples
+{{#each examples}}
+
+{{{this}}}
+{{/each}}
+  {{/if}}
+{{/if}}
+{{#if params}}
+  {{#if params.length}}
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  {{#each params}}
+  | **{{name}}** | {{stripTags description}} | {{toList type.names}} |
+  {{/each}}
+  {{/if}}
+{{/if}}
+{{#if returns}}
+  {{#if returns.length}}
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  {{#each returns}}
+  | {{toList type.names}} | {{#if description}}{{stripTags description}}{{/if}} |
+  {{/each}}
+  {{/if}}
+{{/if}}
+{{/each}}{{!-- END Class methods --}}
+{{/each}}{{!-- END Class --}}

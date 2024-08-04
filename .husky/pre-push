@@ -1,0 +1,4 @@
+# .husky/pre-push
+# Note that you can now have commands on multiple lines
+npm run test
+npm run build

@@ -1,0 +1,26 @@
+{
+  /**
+       ----- Linting configurations
+     */
+  // Prevent editor formatting on save for certain file types
+  "[javascript]": {
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+  },
+  "[typescript]": {
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+  },
+  // Configure eslint to report + fix errors for correct file types
+  "eslint.validate": ["javascript", "typescript"],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  // Configuration cspell
+  "cSpell.language": "en",
+  "cSpell.caseSensitive": false,
+  "cSpell.languageSettings": [
+    { "languageId": "typescript", "caseSensitive": false }
+  ],
+  "cSpell.words": []
+}

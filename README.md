@@ -1,14 +1,15 @@
 [![GitHub license](https://img.shields.io/github/license/palcarazm/batchjs.svg?color=informational)](https://github.com/palcarazm/batchjs/blob/version/v1/LICENSE)
 [![Latest release](https://img.shields.io/github/package-json/v/palcarazm/batchjs/version/v1?logo=github)](https://github.com/palcarazm/batchjs/releases)
 [![NPM Badge](https://img.shields.io/npm/dm/batchjs?logo=npm)](https://www.npmjs.com/package/batchjs)
-[![Build](https://img.shields.io/github/actions/workflow/status/palcarazm/batchjs/ci-workflow.yml?branch=version/v1&label=build&logo=npm)](https://github.com/palcarazm/batchjs/actions/workflows/ci-workflow.yml)
+[![Build](https://img.shields.io/github/actions/workflow/status/palcarazm/batchjs/ci-workflow.yml?branch=version/v1&label=build&logo=Node.js&logoColor=white)](https://github.com/palcarazm/batchjs/actions/workflows/ci-workflow.yml)
 [![Test](https://img.shields.io/github/actions/workflow/status/palcarazm/batchjs/ci-workflow.yml?branch=version/v1&label=test&logo=jest)](https://github.com/palcarazm/batchjs/actions/workflows/ci-workflow.yml)
 [![Funding](https://img.shields.io/badge/sponsor-30363D?style=flat&logo=GitHub-Sponsors&logoColor=#white)](https://github.com/sponsors/palcarazm)
 
 # BatchJS
+
 Dependencies free batch processing framework for NodeJS based on streams.
 
---- 
+---
 
 - [BatchJS](#batchjs)
 - [Download](#download)
@@ -38,75 +39,84 @@ yarn add batchjs
 ```
 
 # Usage
-``` typescript
-import { Job , Step } from 'batchjs';
 
+```typescript
+import { Job, Step } from "batchjs";
 
 // Implement a step
 class StepImplementation extends Step {
-    // Set a name to the step
-    constructor(name: string = "MockPassingStep") {
-        super(name);
-    }
+  // Set a name to the step
+  constructor(name: string = "MockPassingStep") {
+    super(name);
+  }
 
-    // Implement the reader to load step data source
-    protected _reader() {
-        return new Readable({
-            objectMode: true,
-            read() {
-                this.push("data");
-                this.push(null);
-            }
-        });
-    }
+  // Implement the reader to load step data source
+  protected _reader() {
+    return new Readable({
+      objectMode: true,
+      read() {
+        this.push("data");
+        this.push(null);
+      },
+    });
+  }
 
-   // Implement the processors to transform data sequently using our streams or your own streams
-    protected _processors() {
-        const opts: TransformOptions = {
-            objectMode: true,
-            transform(chunk: unknown, encoding: BufferEncoding, callback: TransformCallback) {
-                this.push(chunk);
-                callback();
-            }
-        };
-        return [new Transform(opts), new Transform(opts)];
-    }
+  // Implement the processors to transform data sequently using our streams or your own streams
+  protected _processors() {
+    const opts: TransformOptions = {
+      objectMode: true,
+      transform(
+        chunk: unknown,
+        encoding: BufferEncoding,
+        callback: TransformCallback
+      ) {
+        this.push(chunk);
+        callback();
+      },
+    };
+    return [new Transform(opts), new Transform(opts)];
+  }
 
-    // Implement the write to stock final step data
-    protected _writer() {
-        return new Writable({
-            objectMode: true,
-            write(chunk: unknown, encoding: BufferEncoding, callback: TransformCallback) {
-                callback();
-            }
-        });
-    }
+  // Implement the write to stock final step data
+  protected _writer() {
+    return new Writable({
+      objectMode: true,
+      write(
+        chunk: unknown,
+        encoding: BufferEncoding,
+        callback: TransformCallback
+      ) {
+        callback();
+      },
+    });
+  }
 }
 
 // Implement a Job
 class JobImplementation extends Job {
-    // Implement to set the steps to be sequently executed.
-    protected _steps() {
-        return [new StepImplementation(), new StepImplementation()];
-    }
+  // Implement to set the steps to be sequently executed.
+  protected _steps() {
+    return [new StepImplementation(), new StepImplementation()];
+  }
 }
 
 // Instance the Job
 const job = new JobImplementation("My job");
 
 // Set events listener
-job.on("stepStart", (step:step) => {
-    console.log(`Starting step ${step.name}`);
-})
+job.on("stepStart", (step: step) => {
+  console.log(`Starting step ${step.name}`);
+});
 
 // Launch the job
-job.run()
-    .then(() => {
-        console.log("Job completed successfully");
-    })
-    .catch((error) => {
-        console.log("Job completed with errors");
-    });
+job
+  .run()
+  .then(() => {
+    console.log("Job completed successfully");
+  })
+  .catch((error) => {
+    console.log("Job completed with errors");
+  });
 ```
 
 # Documentation

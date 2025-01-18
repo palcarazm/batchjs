@@ -73,20 +73,22 @@ export class GroupByStream<T> extends ObjectDuplex {
      * @return {void}
      */
     _final(callback: TransformCallback): void {
-        const pushData = ()=>{
+        const pushData = () => {
             while (this.buffer.size > 0) {
-                const groupKey = this.buffer.keys().next().value;
-                const group = this.buffer.get(groupKey) as Array<T>;
-                if (!this.push(group)) {
-                    this.once("drain", pushData);
-                    return;
-                }else{
+                const groupEntry = this.buffer.entries().next().value;
+                if (groupEntry) {
+                    const [groupKey, group] = groupEntry;
+                    if (!this.push(group)) {
+                        this.once("drain", pushData);
+                        return;
+                    }
                     this.buffer.delete(groupKey);
                 }
             }
             this.push(null);
             callback();
         };
+        
 
         pushData();
     }

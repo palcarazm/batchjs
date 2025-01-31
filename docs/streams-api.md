@@ -25,6 +25,8 @@ In this documentation, we will focus on the streams API. This module includes so
   - [SingleStream](#singlestream)
   - [DiscardingStream](#discardingstream)
   - [ObjectDuplex](#objectduplex)
+  - [ObjectReadable](#objectreadable)
+  - [ObjectWritable](#objectwritable)
   - [StreamUtils](#streamutils)
 
 ## AllMatchStream
@@ -1156,6 +1158,38 @@ Abstract class that handle data in a stream in object mode.
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **options** | The options for the ObjectDuplex. | ObjectDuplexOptions |
+  | **options.objectMode** | Whether the stream should operate in object mode. | true |
+
+
+
+## ObjectReadable
+
+`abstract` `extends Readable` 
+
+Abstract class that handle data in a stream in object mode.
+
+
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **options** | The options for the ObjectReadable. | ObjectReadableOptions |
+  | **options.objectMode** | Whether the stream should operate in object mode. | true |
+
+
+
+## ObjectWritable
+
+`abstract` `extends Writable` 
+
+Abstract class that handle data in a stream in object mode.
+
+
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **options** | The options for the ObjectWritable. | ObjectWritableOptions |
   | **options.objectMode** | Whether the stream should operate in object mode. | true |
 
 

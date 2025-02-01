@@ -1,8 +1,8 @@
 [![GitHub license](https://img.shields.io/github/license/palcarazm/batchjs.svg?color=informational)](https://github.com/palcarazm/batchjs/blob/version/v1/LICENSE)
 [![Latest release](https://img.shields.io/github/package-json/v/palcarazm/batchjs/version/v1?logo=github)](https://github.com/palcarazm/batchjs/releases)
 [![NPM Badge](https://img.shields.io/npm/dm/batchjs?logo=npm)](https://www.npmjs.com/package/batchjs)
-[![Build](https://img.shields.io/github/actions/workflow/status/palcarazm/batchjs/ci-workflow.yml?branch=version/v1&label=build&logo=Node.js&logoColor=white)](https://github.com/palcarazm/batchjs/actions/workflows/ci-workflow.yml)
-[![Test](https://img.shields.io/github/actions/workflow/status/palcarazm/batchjs/ci-workflow.yml?branch=version/v1&label=test&logo=jest)](https://github.com/palcarazm/batchjs/actions/workflows/ci-workflow.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/palcarazm/batchjs/ci-workflow.yml?branch=version/v1&label=CI&logo=Node.js&logoColor=white)](https://github.com/palcarazm/batchjs/actions/workflows/ci-workflow.yml)
+[![Coverage](https://coveralls.io/repos/github/palcarazm/batchjs/badge.svg)](https://coveralls.io/github/palcarazm/batchjs)
 [![Funding](https://img.shields.io/badge/sponsor-30363D?style=flat&logo=GitHub-Sponsors&logoColor=#white)](https://github.com/sponsors/palcarazm)
 
 # BatchJS
@@ -17,6 +17,7 @@ Dependencies free batch processing framework for NodeJS based on streams.
   - [Yarn](#yarn)
 - [Usage](#usage)
 - [Documentation](#documentation)
+- [Collaborators welcome!](#collaborators-welcome)
 
 ---
 
@@ -124,15 +125,15 @@ job
 - [Core API](./docs/common-api.md)
 - [Stream API](./docs/streams-api.md)
 
-# Collaborators welcom!
+# Collaborators welcome!
 
 - ¿Do you like the project? Give us a :star: in [GitHub](https://github.com/palcarazm/batchjs).
 - :sos: ¿Do you need some help? Open a discussion in [GitHub help wanted](https://github.com/palcarazm/batchjs/discussions/new?category=q-a)
 - :bug: ¿Do you find a bug? Open a issue in [GitHub bug report](https://github.com/palcarazm/batchjs/issues/new?assignees=&labels=bug&projects=&template=01-BUG_REPORT.yml)
 - :bulb: ¿Do you have a great idea? Open a issue in [GitHub feature request](https://github.com/palcarazm/batchjs/issues/new?assignees=&labels=feature&projects=&template=02-FEATURE_REQUEST.yml)
-- :computer: ¿Do you know how to fix a bug? Open a pull request in [GitHub pull repuest](https://github.com/palcarazm/batchjs/compare).
+- :computer: ¿Do you know how to fix a bug? Open a pull request in [GitHub pull request](https://github.com/palcarazm/batchjs/compare).
 - ¿Do you know a security issue? Take a read to our [security strategy](https://github.com/palcarazm/batchjs/blob/version/v1/SECURITY.md).
 
 [![GitHub Contributors](https://contrib.rocks/image?repo=palcarazm/batchjs)](https://github.com/palcarazm/batchjs/graphs/contributors)
 
-[Suscribe our code of conduct](https://github.com/palcarazm/batchjs/blob/version/v1/CODE_OF_CONDUCT.md) and follow the [Contribution Guidelines](https://github.com/palcarazm/batchjs/blob/version/v1/CONTRIBUTING.md).
+[Subscribe our code of conduct](https://github.com/palcarazm/batchjs/blob/version/v1/CODE_OF_CONDUCT.md) and follow the [Contribution Guidelines](https://github.com/palcarazm/batchjs/blob/version/v1/CONTRIBUTING.md).

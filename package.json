@@ -43,7 +43,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/palcarazm/batchjs.git"
+    "url": "git+https://github.com/palcarazm/batchjs.git"
   },
   "bugs": {
     "url": "https://github.com/palcarazm/batchjs/issues"

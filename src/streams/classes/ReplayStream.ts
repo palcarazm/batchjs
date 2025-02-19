@@ -93,11 +93,15 @@ export class ReplayStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _read(size: number): void {
+        const handleDrain = () => this._read(size);
+
         while (this.buffer.length > this.index && size > 0) {
             const chunk = this.buffer.at(this.index) as T;
-            if (this.push(chunk)) {
-                this.index++;
+            if (!this.push(chunk)) {
+                this.once("drain", handleDrain);
+                return;
             }
+            this.index++;
             size--;
         }
     }

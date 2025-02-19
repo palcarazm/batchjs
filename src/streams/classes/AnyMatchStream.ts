@@ -64,6 +64,9 @@ export class AnyMatchStream<T> extends DiscardingStream<T> {
         if(this.anyChunkMatch === undefined || this.anyChunkMatch){
             this.anyChunkMatch = !matcherResult;
         }
+        if(!this.anyChunkMatch){
+            this._read();
+        }
         if(matcherResult){
             this.emit("discard", chunk);
         }

@@ -45,6 +45,7 @@ export class HasElementsStream<T> extends ObjectDuplex {
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         this.hasChunks = true;
+        this._read();
         callback();
     }
 

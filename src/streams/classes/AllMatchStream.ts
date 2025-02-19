@@ -65,6 +65,7 @@ export class AllMatchStream<T> extends DiscardingStream<T> {
             this.allChunksMatch = matcherResult;
         }
         if(!matcherResult){
+            this._read();
             this.emit("discard", chunk);
         }
         callback();

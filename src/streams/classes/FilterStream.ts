@@ -66,6 +66,7 @@ export class FilterStream<T> extends DiscardingStream<T> {
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         if(this._filter(chunk)){
             this.buffer.push(chunk);
+            this._read(1);
         }else{
             this.emit("discard", chunk);
         }
@@ -103,10 +104,14 @@ export class FilterStream<T> extends DiscardingStream<T> {
      * @return {void} This function does not return anything.
      */
     _read(size: number): void {
+        const handleDrain = () => this._read(size);
+
         while (this.buffer.length > 0 && size > 0) {
             const chunk = this.buffer.shift() as T;
             if (!this.push(chunk)) {
                 this.buffer.unshift(chunk);
+                this.once("drain", handleDrain);
+                return;
             }
             size--;
         }

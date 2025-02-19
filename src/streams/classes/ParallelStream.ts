@@ -113,10 +113,14 @@ export class ParallelStream<TInput, TOutput> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _read(size: number): void {
+        const handleDrain = () => this._read(size);
+
         while (this.buffer.length > 0 && size > 0) {
             const chunk = this.buffer.shift() as TOutput;
             if (!this.push(chunk)) {
                 this.buffer.unshift(chunk);
+                this.once("drain", handleDrain);
+                return;
             }
             size--;
         }
@@ -131,6 +135,7 @@ export class ParallelStream<TInput, TOutput> extends ObjectDuplex {
             const promise = this.transform(chunk)
                 .then((result: TOutput) => {
                     this.buffer.push(result);
+                    this._read(1);
                 })
                 .catch((err: Error) => {
                     this.emit("error", err);

@@ -60,6 +60,9 @@ export class BufferStream<T> extends ObjectDuplex {
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         this.buffer.push(chunk);
+        if (this.buffer.length >= this.batchSize) {
+            this._read(1);
+        }
         callback();
     }
 
@@ -94,10 +97,14 @@ export class BufferStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _read(size: number): void {
-        while (this.buffer.length > 0 && size > 0) {
+        const handleDrain = () => this._read(size);
+
+        while (this.buffer.length >= this.batchSize && size > 0) {
             const batch = this.buffer.splice(0, this.batchSize);
             if (!this.push(batch)) {
                 this.buffer.unshift(...batch);
+                this.once("drain", handleDrain);
+                return;
             }
             size--;
         }

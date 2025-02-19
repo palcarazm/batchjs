@@ -53,6 +53,7 @@ export class SingleStream<T> extends ObjectDuplex {
         if (this.isFirstChunk) {
             this.isFirstChunk = false;
             this.buffer.push(chunk);
+            this._read(1);
         } else {
             const error = new SingleStreamError();
             this.emit("error", error);

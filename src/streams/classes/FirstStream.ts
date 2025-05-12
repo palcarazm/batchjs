@@ -54,7 +54,6 @@ export class FirstStream<T> extends DiscardingStream<T> {
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         if(this.firstChunk === undefined){
             this.firstChunk = chunk;
-            this._read();
         }else{
             this.emit("discard", chunk);
         }

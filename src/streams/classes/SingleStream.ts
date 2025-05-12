@@ -53,7 +53,6 @@ export class SingleStream<T> extends ObjectDuplex {
         if (this.isFirstChunk) {
             this.isFirstChunk = false;
             this.buffer.push(chunk);
-            this._read(1);
         } else {
             const error = new SingleStreamError();
             this.emit("error", error);
@@ -70,19 +69,12 @@ export class SingleStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        const pushData = ()=>{
-            while (this.buffer.length > 0) {
-                const chunk = this.buffer.shift() as T;
-                if (!this.push(chunk)) {
-                    this.once("drain", pushData);
-                    return;
-                }
-            }
-            this.push(null);
-            callback();
-        };
-
-        pushData();
+        while (this.buffer.length > 0) {
+            const chunk = this.buffer.shift() as T;
+            this.push(chunk);
+        }
+        this.push(null);
+        callback();
     }
 
     /**

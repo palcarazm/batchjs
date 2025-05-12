@@ -48,7 +48,6 @@ export class FlatStream<T> extends ObjectDuplex {
      */
     _write(chunk: Array<T>, encoding: BufferEncoding, callback: TransformCallback): void {
         this.buffer.push(...chunk);
-        this._read(chunk.length);
         callback();
     }
 
@@ -60,19 +59,12 @@ export class FlatStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        const pushData = ()=>{
-            while (this.buffer.length > 0) {
-                const chunk = this.buffer.shift() as T;
-                if (!this.push(chunk)) {
-                    this.once("drain", pushData);
-                    return;
-                }
-            }
-            this.push(null);
-            callback();
-        };
-
-        pushData();
+        while (this.buffer.length > 0) {
+            const chunk = this.buffer.shift() as T;
+            this.push(chunk);
+        }
+        this.push(null);
+        callback();
     }
 
     /**
@@ -82,14 +74,11 @@ export class FlatStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _read(size: number): void {
-        const handleDrain = () => this._read(size);
-
         while (this.buffer.length > 0 && size > 0) {
             const chunk = this.buffer.shift() as T;
-            if (!this.push(chunk)) {
-                this.once("drain", handleDrain);
+            if(!this.push(chunk)){
                 return;
-            }
+            };
             size--;
         }
     }

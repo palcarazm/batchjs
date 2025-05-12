@@ -86,23 +86,16 @@ export class ParallelStream<TInput, TOutput> extends ObjectDuplex {
      * @return {Promise<void>} A promise that resolves when the stream is finalized.
      */
     async _final(callback: TransformCallback): Promise<void> {
-        const pushData = ()=>{
-            while (this.buffer.length > 0) {
-                const chunk = this.buffer.shift() as TOutput;
-                if (!this.push(chunk)) {
-                    this.once("drain", pushData);
-                    return;
-                }
-            }
-            this.push(null);
-            callback();
-        };
-
         while (this.queue.length > 0 || this.pool.size > 0) {
             await new Promise(resolve => setImmediate(resolve));
         }
 
-        pushData();
+        while (this.buffer.length > 0) {
+            const chunk = this.buffer.shift() as TOutput;
+            this.push(chunk);
+        }
+        this.push(null);
+        callback();
     }
 
     /**
@@ -112,12 +105,9 @@ export class ParallelStream<TInput, TOutput> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _read(size: number): void {
-        const handleDrain = () => this._read(size);
-
         while (this.buffer.length > 0 && size > 0) {
             const chunk = this.buffer.shift() as TOutput;
             if (!this.push(chunk)) {
-                this.once("drain", handleDrain);
                 return;
             }
             size--;
@@ -133,7 +123,6 @@ export class ParallelStream<TInput, TOutput> extends ObjectDuplex {
             const promise = this.transform(chunk)
                 .then((result: TOutput) => {
                     this.buffer.push(result);
-                    this._read(1);
                 })
                 .catch((err: Error) => {
                     this.emit("error", err);

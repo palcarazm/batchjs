@@ -69,20 +69,13 @@ export class ReplayStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        const pushData = ()=>{
-            while (this.buffer.length > this.index) {
-                const chunk = this.buffer.at(this.index) as T;
-                this.index++;
-                if (!this.push(chunk)) {
-                    this.once("drain", pushData);
-                    return;
-                }
-            }
-            this.push(null);
-            callback();
-        };
-
-        pushData();
+        while (this.buffer.length > this.index) {
+            const chunk = this.buffer.at(this.index) as T;
+            this.index++;
+            this.push(chunk);
+        }
+        this.push(null);
+        callback();
     }
 
     /**
@@ -92,13 +85,10 @@ export class ReplayStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _read(size: number): void {
-        const handleDrain = () => this._read(size);
-
         while (this.buffer.length > this.index && size > 0) {
             const chunk = this.buffer.at(this.index) as T;
             this.index++;
             if (!this.push(chunk)) {
-                this.once("drain", handleDrain);
                 return;
             }
             size--;

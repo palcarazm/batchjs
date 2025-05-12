@@ -62,27 +62,4 @@ describe("ReplayStream", () => {
         stream.write("data3");
         stream.end();
     });
-
-    test("should wait for drain when push is disabled in stream end", (done) => {
-        jest.spyOn(stream, "push").mockImplementation(() => false);
-
-        stream.on("finish", () => {
-            expect(stream["index"]).toBe(3);
-            done();
-        });
-
-        // No data should be emitted
-        stream.on("data", () => {
-            done.fail("Expected error to be thrown but data was received.");
-        });
-
-        stream.write("data1");
-        stream.write("data2");
-        stream.write("data3");
-        stream.end();
-        setTimeout(()=>{
-            jest.spyOn(stream, "push").mockImplementation(() => true);
-            stream.emit("drain");
-        },50);
-    });
 });

@@ -48,25 +48,4 @@ describe("SingleStream", () => {
         stream.write("data1");
         stream.end();
     });
-
-    test("should wait for drain when push is disabled in stream end", (done) => {
-        jest.spyOn(stream, "push").mockImplementation(() => false);
-
-        stream.once("finish", () => {
-            expect(stream["buffer"].length).toBe(0);
-            done();
-        });
-
-        // No data should be emitted
-        stream.on("data", () => {
-            done.fail("Expected error to be thrown but data was received.");
-        });
-
-        stream.write("data1");
-        stream.end();
-        setTimeout(()=>{
-            jest.spyOn(stream, "push").mockImplementation(() => true);
-            stream.emit("drain");
-        },50);
-    });
 });

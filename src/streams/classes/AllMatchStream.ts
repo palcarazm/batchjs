@@ -79,19 +79,12 @@ export class AllMatchStream<T> extends DiscardingStream<T> {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        const pushData = ()=>{
-            if( !this.pushedResult){
-                if(this.push(this.allChunksMatch)){
-                    this.pushedResult = true;
-                    this.push(null);
-                    callback();
-                }else{
-                    this.once("drain", pushData);
-                }
-            }
-        };
-
-        pushData();
+        if( !this.pushedResult){
+            this.push(this.allChunksMatch);
+            this.pushedResult = true;
+            this.push(null);
+            callback();
+        }
     }
 
     /**

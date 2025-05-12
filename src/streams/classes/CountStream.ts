@@ -61,19 +61,12 @@ export class CountStream<T> extends ObjectDuplex {
      * @return {void}
      */
     _final(callback: TransformCallback): void {
-        const pushData = ()=>{
-            if( !this.pushedResult){
-                if(this.push(this.count)){
-                    this.pushedResult = true;
-                    this.push(null);
-                    callback();
-                }else{
-                    this.once("drain", pushData);
-                }
-            }
-        };
-
-        pushData();
+        if( !this.pushedResult){
+            this.push(this.count);
+            this.pushedResult = true;
+            this.push(null);
+            callback();
+        }
     }
 
     /**

@@ -37,24 +37,6 @@ describe("AnyMatchStream", () => {
         stream.end();
     });
 
-    test("should wait for drain when push is disabled in stream end", (done) => {
-        jest.spyOn(stream, "push").mockImplementation(() => false);
-
-        stream.on("finish", () => {
-            expect(stream["pushedResult"]).toBeTruthy();
-            done();
-        });
-
-        stream.write("1"); // not match
-        stream.write("2"); // not match
-        stream.end();
-        setTimeout(()=>{
-            expect(stream["pushedResult"]).toBeFalsy();
-            jest.spyOn(stream, "push").mockImplementation(() => true);
-            stream.emit("drain");
-        },50);
-    });
-
     test("should emit discard event when data does not match", (done) => {     
         const matched : Array<string> =[];
 

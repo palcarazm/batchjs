@@ -70,21 +70,14 @@ export class FirstStream<T> extends DiscardingStream<T> {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        const pushData = ()=>{
-            if (!this.pushedResult ) {
-                if(this.firstChunk !== undefined){
-                    if(!this.push(this.firstChunk)){
-                        this.once("drain", pushData);
-                        return;
-                    }
-                }
-                this.pushedResult = true;
-                this.push(null);
+        if (!this.pushedResult ) {
+            if(this.firstChunk !== undefined){
+                this.push(this.firstChunk);
             }
-            callback();
-        };
-
-        pushData();
+            this.pushedResult = true;
+            this.push(null);
+        }
+        callback();
     }
 
     /**
@@ -94,9 +87,9 @@ export class FirstStream<T> extends DiscardingStream<T> {
      */
     _read(): void {
         if (!this.pushedResult && this.firstChunk !== undefined) {
-            if (this.push(this.firstChunk)) {
-                this.pushedResult = true;
-            }
+            this.push(this.firstChunk);
+            this.pushedResult = true;
+            this.push(null);
         }
     }
 }

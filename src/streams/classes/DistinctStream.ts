@@ -46,7 +46,7 @@ export interface DistinctStreamOptions<TInput,TKey> extends ObjectDuplexOptions 
  */
 export class DistinctStream<TInput,TKey> extends DiscardingStream<TInput> {
     protected buffer: Array<TInput> = [];
-    private keySet: Set<TKey> = new Set();
+    private readonly keySet: Set<TKey> = new Set();
     private readonly _keyExtractor: (chunk: TInput) => TKey;
 
     /**
@@ -92,7 +92,6 @@ export class DistinctStream<TInput,TKey> extends DiscardingStream<TInput> {
             while (this.buffer.length > 0) {
                 const chunk = this.buffer.shift() as TInput;
                 if (!this.push(chunk)) {
-                    this.buffer.unshift(chunk);
                     this.once("drain", pushData);
                     return;
                 }
@@ -116,7 +115,6 @@ export class DistinctStream<TInput,TKey> extends DiscardingStream<TInput> {
         while (this.buffer.length > 0 && size > 0) {
             const chunk = this.buffer.shift() as TInput;
             if (!this.push(chunk)) {
-                this.buffer.unshift(chunk);
                 this.once("drain", handleDrain);
                 return;
             }

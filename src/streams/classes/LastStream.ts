@@ -68,25 +68,14 @@ export class LastStream<T> extends DiscardingStream<T> {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        const pushData = ()=>{
-            if( !this.pushedResult){
-                if ( this.lastChunk !== undefined) {
-                    if (this.push(this.lastChunk)) {
-                        this.pushedResult = true;
-                        this.push(null);
-                        callback();
-                    }else{
-                        this.once("drain", pushData);
-                    }
-                }else{
-                    this.pushedResult = true;
-                    this.push(null);
-                    callback();
-                }
+        if( !this.pushedResult){
+            if ( this.lastChunk !== undefined) {
+                this.push(this.lastChunk);
             }
-        };
-
-        pushData();
+            this.pushedResult = true;
+            this.push(null);
+            callback();
+        }
     }
 
     /**

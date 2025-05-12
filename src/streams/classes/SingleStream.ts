@@ -74,7 +74,6 @@ export class SingleStream<T> extends ObjectDuplex {
             while (this.buffer.length > 0) {
                 const chunk = this.buffer.shift() as T;
                 if (!this.push(chunk)) {
-                    this.buffer.unshift(chunk);
                     this.once("drain", pushData);
                     return;
                 }
@@ -95,9 +94,7 @@ export class SingleStream<T> extends ObjectDuplex {
     _read(size: number): void {
         while (this.buffer.length > 0 && size > 0) {
             const chunk = this.buffer.shift() as T;
-            if (!this.push(chunk)) {
-                this.buffer.unshift(chunk);
-            }
+            this.push(chunk);
             size--;
         }
     }

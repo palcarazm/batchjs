@@ -60,7 +60,6 @@ describe("GroupByStream", () => {
         stream.write("data2");
         stream.end();
         setTimeout(()=>{
-            expect (stream["buffer"].size).toBe(1);
             jest.spyOn(stream, "push").mockImplementation(() => true);
             stream.emit("drain");
         },50);

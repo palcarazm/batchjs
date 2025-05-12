@@ -72,11 +72,10 @@ export class ReplayStream<T> extends ObjectDuplex {
         const pushData = ()=>{
             while (this.buffer.length > this.index) {
                 const chunk = this.buffer.at(this.index) as T;
+                this.index++;
                 if (!this.push(chunk)) {
                     this.once("drain", pushData);
                     return;
-                }else{
-                    this.index++;
                 }
             }
             this.push(null);
@@ -97,11 +96,11 @@ export class ReplayStream<T> extends ObjectDuplex {
 
         while (this.buffer.length > this.index && size > 0) {
             const chunk = this.buffer.at(this.index) as T;
+            this.index++;
             if (!this.push(chunk)) {
                 this.once("drain", handleDrain);
                 return;
             }
-            this.index++;
             size--;
         }
     }

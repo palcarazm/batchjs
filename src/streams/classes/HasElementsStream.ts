@@ -57,19 +57,12 @@ export class HasElementsStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        const pushData = ()=>{
-            if( !this.pushedResult){
-                if(this.push(this.hasChunks)){
-                    this.pushedResult = true;
-                    this.push(null);
-                    callback();
-                }else{
-                    this.once("drain", pushData);
-                }
-            }
-        };
-
-        pushData();
+        if( !this.pushedResult){
+            this.push(this.hasChunks);
+            this.pushedResult = true;
+            this.push(null);
+            callback();
+        }
     }
 
     /**
@@ -79,10 +72,9 @@ export class HasElementsStream<T> extends ObjectDuplex {
      */
     _read(): void {
         if(this.hasChunks && !this.pushedResult){
-            if(this.push(true)){
-                this.pushedResult = true;
-                this.push(null);
-            }
+            this.push(true);
+            this.pushedResult = true;
+            this.push(null);
         }
     }
 }

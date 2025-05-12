@@ -38,7 +38,7 @@ export interface BufferStreamOptions extends ObjectDuplexOptions {
  */
 export class BufferStream<T> extends ObjectDuplex {
     protected buffer: T[] = [];
-    private batchSize: number;
+    private readonly batchSize: number;
 
     /**
      * @constructor
@@ -78,7 +78,6 @@ export class BufferStream<T> extends ObjectDuplex {
             while (this.buffer.length > 0) {
                 const batch = this.buffer.splice(0, this.batchSize);
                 if (!this.push(batch)) {
-                    this.buffer.unshift(...batch);
                     this.once("drain", pushData);
                     return;
                 }
@@ -102,7 +101,6 @@ export class BufferStream<T> extends ObjectDuplex {
         while (this.buffer.length >= this.batchSize && size > 0) {
             const batch = this.buffer.splice(0, this.batchSize);
             if (!this.push(batch)) {
-                this.buffer.unshift(...batch);
                 this.once("drain", handleDrain);
                 return;
             }

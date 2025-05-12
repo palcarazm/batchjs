@@ -86,7 +86,6 @@ export class FilterStream<T> extends DiscardingStream<T> {
             while (this.buffer.length > 0) {
                 const chunk = this.buffer.shift() as T;
                 if (!this.push(chunk)) {
-                    this.buffer.unshift(chunk);
                     this.once("drain", pushData);
                     return;
                 }
@@ -109,7 +108,6 @@ export class FilterStream<T> extends DiscardingStream<T> {
         while (this.buffer.length > 0 && size > 0) {
             const chunk = this.buffer.shift() as T;
             if (!this.push(chunk)) {
-                this.buffer.unshift(chunk);
                 this.once("drain", handleDrain);
                 return;
             }

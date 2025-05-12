@@ -40,30 +40,6 @@ describe("LastStream", () => {
         stream.end();
     });
 
-    test("should wait for drain when push is disabled in stream end", (done) => {
-        jest.spyOn(stream, "push").mockImplementation(() => false);
-
-        stream.on("finish", () => {
-            expect(stream["pushedResult"]).toBeTruthy();
-            done();
-        });
-
-        // No data should be emitted
-        stream.on("data", () => {
-            done.fail("Expected error to be thrown but data was received.");
-        });
-
-        stream.write("first");// Discarded
-        stream.write("second");// Discarded
-        stream.write("third");
-        stream.end();
-        setTimeout(()=>{
-            expect(stream["pushedResult"]).toBeFalsy();
-            jest.spyOn(stream, "push").mockImplementation(() => true);
-            stream.emit("drain");
-        },50);
-    });
-
     test("should handle _final correctly when nothing to push", (done) => {
         stream.on("finish", () => {
             expect(stream["pushedResult"]).toBeTruthy();

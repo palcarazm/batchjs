@@ -78,11 +78,11 @@ export class GroupByStream<T> extends ObjectDuplex {
                 const groupEntry = this.buffer.entries().next().value;
                 if (groupEntry) {
                     const [groupKey, group] = groupEntry;
+                    this.buffer.delete(groupKey);
                     if (!this.push(group)) {
                         this.once("drain", pushData);
                         return;
                     }
-                    this.buffer.delete(groupKey);
                 }
             }
             this.push(null);

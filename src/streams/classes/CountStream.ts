@@ -1,10 +1,10 @@
 import {  TransformCallback  } from "stream";
-import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
+import { SingleObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @class
  * Class that allows you to count the number of chunks in a stream.
- * @extends ObjectDuplex
+ * @extends SingleObjectDuplex
  * @template T
  * @example
  * ```typescript
@@ -25,9 +25,8 @@ import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  * >> Received chunks: 3
  * ```
  */
-export class CountStream<T> extends ObjectDuplex {
-    private count: number = 0;
-    private pushedResult:boolean = false;
+export class CountStream<T> extends SingleObjectDuplex<number> {
+    protected result: number = 0; 
 
     /**
      * @constructor
@@ -48,30 +47,15 @@ export class CountStream<T> extends ObjectDuplex {
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         if (chunk !== null) {
-            this.count++;
+            this.result++;
         }
         callback();
-    }
-
- 
-    /**
-     * Finalize the stream by draining the buffer and pushing the count of chunks to the stream.
-     *
-     * @param {TransformCallback} callback - The callback to be called when the stream is finalized.
-     * @return {void}
-     */
-    _final(callback: TransformCallback): void {
-        if( !this.pushedResult){
-            this.push(this.count);
-            this.pushedResult = true;
-            this.push(null);
-            callback();
-        }
     }
 
     /**
      * Reading is not supported since writer finishes first.
      *
+     * @override
      * @return {void}
      */
     _read(): void {

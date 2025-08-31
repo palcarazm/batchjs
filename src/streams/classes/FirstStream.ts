@@ -1,10 +1,10 @@
 import { TransformCallback } from "stream";
-import {  DiscardingStream, ObjectDuplexOptions } from "../interfaces/_index";
+import {  DiscardingSingleObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @class
  * Class that allows you to emit only the first chunk in a stream and discard the rest.
- * @extends DiscardingStream
+ * @extends DiscardingSingleObjectDuplex
  * @template T
  * @example
  * ```typescript
@@ -31,9 +31,7 @@ import {  DiscardingStream, ObjectDuplexOptions } from "../interfaces/_index";
  * >> Discarded chunk: third
  * ```
  */
-export class FirstStream<T> extends DiscardingStream<T> {
-    private firstChunk: T | undefined = undefined;
-    private pushedResult = false;
+export class FirstStream<T> extends DiscardingSingleObjectDuplex<T,T> {
 
     /**
      * @constructor
@@ -52,43 +50,11 @@ export class FirstStream<T> extends DiscardingStream<T> {
      * @return {void} This function does not return anything.
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
-        if(this.firstChunk === undefined){
-            this.firstChunk = chunk;
+        if(this.result === undefined){
+            this.result = chunk;
         }else{
             this.emit("discard", chunk);
         }
         callback();
-    }
-
-
-    /**
-     * Finalizes the stream by pushing the first chunk if it exists and not pushed, handling errors,
-     * and executing the final callback.
-     *
-     * @param {TransformCallback} callback - The callback function to be executed after finalizing the stream.
-     * @return {void} This function does not return anything.
-     */
-    _final(callback: TransformCallback): void {
-        if (!this.pushedResult ) {
-            if(this.firstChunk !== undefined){
-                this.push(this.firstChunk);
-            }
-            this.pushedResult = true;
-            this.push(null);
-        }
-        callback();
-    }
-
-    /**
-     * Pushes the first chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
-     *
-     * @return {void} This function does not return anything.
-     */
-    _read(): void {
-        if (!this.pushedResult && this.firstChunk !== undefined) {
-            this.push(this.firstChunk);
-            this.pushedResult = true;
-            this.push(null);
-        }
     }
 }

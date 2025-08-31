@@ -13,7 +13,7 @@ describe("FirstStream", () => {
         });
     });
 
-    test("should write and read data correctly", (done) => {
+    test("should send only the first chunk", (done) => {
         stream.write("first");
         stream.write("second");// Discarded
         stream.write("third");// Discarded
@@ -23,17 +23,6 @@ describe("FirstStream", () => {
             expect(chunks).toEqual(["first"]);
             done();
         },50);
-    });
-
-    test("should handle _final correctly", (done) => {     
-        stream.on("finish", () => {
-            expect(stream["pushedResult"]).toBeTruthy();
-            done();
-        });
-
-        stream.write("first");
-        stream.write("second"); // Discarded
-        stream.end();
     });
 
     test("should handle _final correctly when nothing to push", (done) => {

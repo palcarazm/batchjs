@@ -14,7 +14,7 @@ describe("CountStream", () => {
         });
     });
 
-    test("should write and read data correctly", (done) => {
+    test("should count the amount of chunks", (done) => {
         stream.on("end", () => {
             expect(chunks).toEqual([3]);
             done();
@@ -26,18 +26,7 @@ describe("CountStream", () => {
         stream.end();
     });
 
-    test("should handle _final correctly", (done) => {     
-        stream.on("end", () => {
-            expect(chunks).toEqual([2]);
-            done();
-        });
-
-        stream.write("data1");
-        stream.write("data2");
-        stream.end();
-    });
-
-    test("should wait streams end to push count", (done) => {
+    test("should wait write end to push count", (done) => {
 
         // No data should be emitted
         stream.on("data", () => {

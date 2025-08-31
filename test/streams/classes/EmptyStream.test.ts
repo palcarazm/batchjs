@@ -13,7 +13,7 @@ describe("EmptyStream", () => {
         });
     });
 
-    test("should write and read data correctly", (done) => {
+    test("should send false if not empty", (done) => {
         stream.write("first"); // not empty
 
         setTimeout(()=>{
@@ -22,7 +22,7 @@ describe("EmptyStream", () => {
         },50);
     });
 
-    test("should handle _final correctly", (done) => {     
+    test("should send true if empty", (done) => {     
         stream.on("end", () => {
             expect(chunks).toEqual([true]);
             done();

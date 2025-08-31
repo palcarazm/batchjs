@@ -1,10 +1,10 @@
 import { TransformCallback } from "stream";
-import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
+import { SingleObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @class
  * Class that allows you to validate that a stream is empty.
- * @extends Duplex
+ * @extends SingleObjectDuplex
  * @template T
  * @example
  * ```typescript
@@ -23,10 +23,8 @@ import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  * >> Result: false
  * ```
  */
-export class EmptyStream<T> extends ObjectDuplex {
-    private hasChunks: boolean = false;
-    private pushedResult: boolean = false;
-
+export class EmptyStream<T> extends SingleObjectDuplex<boolean> {
+    protected result = true;
     /**
      * @constructor
      * @param {ObjectDuplexOptions} options - The options for the EmptyStream.
@@ -44,36 +42,17 @@ export class EmptyStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
-        this.hasChunks = true;
+        this.result = false;
         callback();
-    }
-
-
-    /**
-     * Finalizes the stream by pushing the true if the stream is empty and false otherwise, if not already pushed.
-     *
-     * @param {TransformCallback} callback - The callback function to be executed after finalizing the stream.
-     * @return {void} This function does not return anything.
-     */
-    _final(callback: TransformCallback): void {
-        if( !this.pushedResult){
-            this.push(!this.hasChunks);
-            this.pushedResult = true;
-            this.push(null);
-            callback();
-        }
     }
 
     /**
      * Push once false if at least one chunk has been received.
      *
+     * @override
      * @return {void}
      */
     _read(): void {
-        if(this.hasChunks && !this.pushedResult){
-            this.push(false);
-            this.pushedResult = true;
-            this.push(null);
-        }
+        if(!this.result) super._read();
     }
 }

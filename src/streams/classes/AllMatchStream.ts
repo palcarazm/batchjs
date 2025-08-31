@@ -1,5 +1,5 @@
 import { TransformCallback } from "stream";
-import { ObjectDuplexOptions, DiscardingStream } from "../interfaces/_index";
+import { ObjectDuplexOptions, DiscardingSingleObjectDuplex } from "../interfaces/_index";
 
 /**
  * @interface
@@ -14,7 +14,7 @@ export interface AllMatchStreamOptions<T> extends ObjectDuplexOptions {
 /**
  * @class
  * Class that allows you to validate that all elements in a stream match a given condition.
- * @extends DiscardingStream
+ * @extends DiscardingSingleObjectDuplex
  * @template T
  * @example
  * ```typescript
@@ -36,9 +36,7 @@ export interface AllMatchStreamOptions<T> extends ObjectDuplexOptions {
  * >> Result: false
  * ```
  */
-export class AllMatchStream<T> extends DiscardingStream<T> {
-    private allChunksMatch: boolean|undefined = undefined;
-    private pushedResult: boolean = false;
+export class AllMatchStream<T> extends DiscardingSingleObjectDuplex<T,boolean> {
     private readonly _matcher: (chunk: T) => boolean;
 
     /**
@@ -61,8 +59,8 @@ export class AllMatchStream<T> extends DiscardingStream<T> {
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         const matcherResult = this._matcher(chunk);
-        if(this.allChunksMatch === undefined || this.allChunksMatch){
-            this.allChunksMatch = matcherResult;
+        if(this.result === undefined || this.result){
+            this.result = matcherResult;
         }
         if(!matcherResult){
             this.emit("discard", chunk);
@@ -70,33 +68,13 @@ export class AllMatchStream<T> extends DiscardingStream<T> {
         callback();
     }
 
-
-    /**
-     * Finalizes the stream by pushing the true if all chunks match the condition and false otherwise, if not already pushed.
-     *
-     * @param {TransformCallback} callback - The callback function to be executed after finalizing the stream.
-     * @return {void} This function does not return anything.
-     */
-    _final(callback: TransformCallback): void {
-        if( !this.pushedResult){
-            this.push(this.allChunksMatch);
-            this.pushedResult = true;
-            this.push(null);
-            callback();
-        }
-    }
-
     /**
      * Push once false if at least one chunk has not matched.
      *
+     * @override
      * @return {void}
      */
     _read(): void {
-        if(this.allChunksMatch === false && !this.pushedResult){
-            if(this.push(this.allChunksMatch)){
-                this.pushedResult = true;
-                this.push(null);
-            }
-        }
+        if(this.result === false) super._read();
     }
 }

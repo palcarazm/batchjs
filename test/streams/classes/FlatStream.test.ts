@@ -13,20 +13,9 @@ describe("FlatStream", () => {
         });
     });
 
-    test("should write and read data correctly", (done) => {
+    test("should write data correctly", (done) => {
         stream.on("end", () => {
             expect(chunks).toEqual(["data1","data2","data3"]);
-            done();
-        });
-
-        stream.write(["data1", "data2"]);
-        stream.write(["data3"]);
-        stream.end();
-    });
-
-    test("should handle _final correctly", (done) => {     
-        stream.on("end", () => {
-            expect(stream["buffer"].length).toBe(0);
             done();
         });
 

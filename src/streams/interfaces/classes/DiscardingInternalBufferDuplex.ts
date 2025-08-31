@@ -1,15 +1,16 @@
 import { DiscardingStreamEventEmitters, DiscardingStreamEventHandlers } from "../events/_index";
-import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
+import { InternalBufferDuplex } from "./InternalBufferDuplex";
+import {  ObjectDuplexOptions } from "./ObjectDuplex";
 
 /**
  * @abstract
  * @class
- * Abstract class that allows you to emit discarded data in a stream adding support to discard events.
- * @extends ObjectDuplex
+ * Abstract class that allows you to emit discarded data in a stream adding support to discard events implementing an internal buffer.
+ * @extends InternalBufferDuplex    
  * @template T
  * @example
  * ```typescript
- * class DiscardingStreamImplementation<T> extends DiscardingStream<T> {
+ * class DiscardingStreamImplementation<T> extends DiscardingInternalBufferDuplex<T> {
  *     constructor(){
  *         super({objectMode: true});
  *     }
@@ -43,7 +44,7 @@ import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
  * >> Discarded chunk: data3
  * ```
  */
-export abstract class DiscardingStream<T> extends ObjectDuplex {
+export abstract class DiscardingInternalBufferDuplex<T> extends InternalBufferDuplex<T> {
     /**
      * @constructor
      * @param options {ObjectDuplexOptions}

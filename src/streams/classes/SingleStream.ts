@@ -1,11 +1,11 @@
 import { TransformCallback } from "stream";
 import { SingleStreamError } from "../errors/_index";
-import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
+import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @class
  * Class that allows you to verify that a stream contains only one chunk.
- * @extends ObjectDuplex
+ * @extends InternalBufferDuplex
  * @template T
  * @example
  * ```typescript
@@ -29,8 +29,7 @@ import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  * >> Error: Expected only one chunk in the stream
  * ```
  */
-export class SingleStream<T> extends ObjectDuplex {
-    protected buffer: T[] = [];
+export class SingleStream<T> extends InternalBufferDuplex<T> {
     private isFirstChunk = true;
 
     /**
@@ -58,36 +57,5 @@ export class SingleStream<T> extends ObjectDuplex {
             this.emit("error", error);
         }
         callback();
-    }
-
-    
-    /**
-     * Finalizes the stream by pushing remaining data, handling errors,
-     * and executing the final callback.
-     *
-     * @param {TransformCallback} callback - The callback function to be executed after finalizing the stream.
-     * @return {void} This function does not return anything.
-     */
-    _final(callback: TransformCallback): void {
-        while (this.buffer.length > 0) {
-            const chunk = this.buffer.shift() as T;
-            this.push(chunk);
-        }
-        this.push(null);
-        callback();
-    }
-
-    /**
-     * Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
-     *
-     * @param {number} size - The size parameter for controlling the read operation.
-     * @return {void} This function does not return anything.
-     */
-    _read(size: number): void {
-        while (this.buffer.length > 0 && size > 0) {
-            const chunk = this.buffer.shift() as T;
-            this.push(chunk);
-            size--;
-        }
     }
 }

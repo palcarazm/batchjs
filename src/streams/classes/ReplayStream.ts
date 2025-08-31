@@ -1,6 +1,6 @@
 import { TransformCallback, Readable } from "stream";
 import { NotClosedError } from "../errors/NotClosedError";
-import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
+import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @class
@@ -35,8 +35,8 @@ import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  * >> Replayed chunk: data3
  * ```
  */
-export class ReplayStream<T> extends ObjectDuplex {
-    private buffer: T[] = [];
+export class ReplayStream<T> extends InternalBufferDuplex<T> {
+    private memory: T[] = [];
     private index:number = 0;
 
     /**
@@ -58,41 +58,8 @@ export class ReplayStream<T> extends ObjectDuplex {
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         this.buffer.push(chunk);
+        this.memory.push(chunk);
         callback();
-    }
-
-    /**
-     * Finalizes the stream by pushing remaining data, handling errors,
-     * and executing the final callback.
-     *
-     * @param {TransformCallback} callback - The callback function to be executed after finalizing the stream.
-     * @return {void} This function does not return anything.
-     */
-    _final(callback: TransformCallback): void {
-        while (this.buffer.length > this.index) {
-            const chunk = this.buffer.at(this.index) as T;
-            this.index++;
-            this.push(chunk);
-        }
-        this.push(null);
-        callback();
-    }
-
-    /**
-     * Pushes the ready chunks to the consumer stream since all the buffer is pushed or the size limit is reached.
-     *
-     * @param {number} size - The size parameter for controlling the read operation.
-     * @return {void} This function does not return anything.
-     */
-    _read(size: number): void {
-        while (this.buffer.length > this.index && size > 0) {
-            const chunk = this.buffer.at(this.index) as T;
-            this.index++;
-            if (!this.push(chunk)) {
-                return;
-            }
-            size--;
-        }
     }
 
     /**
@@ -102,7 +69,7 @@ export class ReplayStream<T> extends ObjectDuplex {
      */
     replay(): Readable {
         if (this.closed) {
-            return Readable.from(this.buffer,{objectMode: true});
+            return Readable.from(this.memory,{objectMode: true});
         }else{
             throw new NotClosedError();
         }

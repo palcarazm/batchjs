@@ -1,5 +1,5 @@
 import { TransformCallback } from "stream";
-import { DiscardingStream, ObjectDuplexOptions } from "../interfaces/_index";
+import { DiscardingInternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @interface
@@ -14,7 +14,7 @@ export interface FilterStreamOptions<T> extends ObjectDuplexOptions {
 /**
  * @class
  * Class that allows you to filter data in a stream.
- * @extends DiscardingStream
+ * @extends DiscardingInternalBufferDuplex
  * @template T
  * @example
  * ```typescript
@@ -41,8 +41,7 @@ export interface FilterStreamOptions<T> extends ObjectDuplexOptions {
  * >> Discarded chunk: data3
  * ```
  */
-export class FilterStream<T> extends DiscardingStream<T> {
-    protected buffer: T[] = [];
+export class FilterStream<T> extends DiscardingInternalBufferDuplex<T> {
     private readonly _filter: (chunk: T) => boolean;
 
     /**
@@ -70,38 +69,5 @@ export class FilterStream<T> extends DiscardingStream<T> {
             this.emit("discard", chunk);
         }
         callback();
-    }
-
-
-    /**
-     * Finalizes the stream by pushing remaining data, handling errors,
-     * and executing the final callback.
-     *
-     * @param {TransformCallback} callback - The callback function to be executed after finalizing the stream.
-     * @return {void} This function does not return anything.
-     */
-    _final(callback: TransformCallback): void {
-        while (this.buffer.length > 0) {
-            const chunk = this.buffer.shift() as T;
-            this.push(chunk);
-        }
-        this.push(null);
-        callback();
-    }
-
-    /**
-     * Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
-     *
-     * @param {number} size - The size parameter for controlling the read operation.
-     * @return {void} This function does not return anything.
-     */
-    _read(size: number): void {
-        while (this.buffer.length > 0 && size > 0) {
-            const chunk = this.buffer.shift() as T;
-            if(!this.push(chunk)){
-                return;
-            };
-            size--;
-        }
     }
 }

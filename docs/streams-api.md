@@ -23,7 +23,9 @@ In this documentation, we will focus on the streams API. This module includes so
   - [ParallelStream](#parallelstream)
   - [ReplayStream](#replaystream)
   - [SingleStream](#singlestream)
+  - [DiscardingInternalBufferDuplex](#discardinginternalbufferduplex)
   - [DiscardingStream](#discardingstream)
+  - [InternalBufferDuplex](#internalbufferduplex)
   - [ObjectDuplex](#objectduplex)
   - [ObjectReadable](#objectreadable)
   - [ObjectWritable](#objectwritable)
@@ -309,7 +311,7 @@ Reading is not supported since writer finishes first.
 
 ## DistinctStream
 
-`extends DiscardingStream` 
+`extends DiscardingInternalBufferDuplex` 
 
 Class that allows you to discard repeated data in a stream in base on a key.
 Data with duplicated key will be emitted through the discard event.
@@ -451,7 +453,7 @@ Push once false if at least one chunk has been received.
 
 ## FilterStream
 
-`extends DiscardingStream` 
+`extends DiscardingInternalBufferDuplex` 
 
 Class that allows you to filter data in a stream.
 
@@ -593,7 +595,7 @@ Pushes the first chunk, if it exists and not pushed, to the consumer stream and 
 
 ## FlatStream
 
-`extends ObjectDuplex` 
+`extends InternalBufferDuplex` 
 
 Class that allows you to transform an array stream into a flat stream.
 
@@ -666,7 +668,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## GroupByStream
 
-`extends ObjectDuplex` 
+`extends InternalBufferDuplex` 
 
 Class that allows you to group data in a stream.
 
@@ -721,18 +723,6 @@ Finalize the stream by draining the buffer and pushing any remaining chunks to t
   | void |  |
 
 
-### _read (function)
-
-
-
-Reading is not supported since writer finishes first.
-
-  #### Returns
-  | Type       | Description                             |
-  |------------|-----------------------------------------|
-  | void |  |
-
-
 ### _groupBy (function)
 
 
@@ -748,6 +738,57 @@ Groups a chunk of data based on the provided groupBy function and stores it in t
   | Type       | Description                             |
   |------------|-----------------------------------------|
   | void | This function does not return anything. |
+
+
+### _final (function)
+
+
+
+Finalize the stream by draining the buffer and pushing any remaining chunks to the stream.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **callback** | The callback to be called when the stream is finalized. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
+
+
+### _read (function)
+
+
+
+Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **size** | The size parameter for controlling the read operation. | number |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _final (function)
+
+
+
+Finalize the stream by draining the buffer and pushing any remaining chunks to the stream.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **callback** | The callback to be called when the stream is finalized. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
 
 
 ## HasElementsStream
@@ -887,7 +928,7 @@ Reading is not supported since writer finishes first.
 
 ## ParallelStream
 
-`extends ObjectDuplex` 
+`extends InternalBufferDuplex` 
 
 Class that allows you to transform and stream data in parallel.
 
@@ -944,6 +985,32 @@ into the buffer and a PushError is passed to the callback.
   | Promise.&lt;void&gt; | A promise that resolves when the stream is finalized. |
 
 
+### _transform (function)
+
+
+
+Loop through the pool and queue to process chunks, adding promises to the pool.
+
+
+### _final (function)
+
+
+
+Asynchronously finalizes the stream by draining the queue and buffer, pushing any remaining chunks to the stream,
+and calling the provided callback when complete. If the stream is unable to push a chunk, the chunk is placed back
+into the buffer and a PushError is passed to the callback.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **callback** | The callback to be called when the stream is finalized. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | Promise.&lt;void&gt; | A promise that resolves when the stream is finalized. |
+
+
 ### _read (function)
 
 
@@ -961,11 +1028,23 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
   | void | This function does not return anything. |
 
 
-### _transform (function)
+### _final (function)
 
 
 
-Loop through the pool and queue to process chunks, adding promises to the pool.
+Asynchronously finalizes the stream by draining the queue and buffer, pushing any remaining chunks to the stream,
+and calling the provided callback when complete. If the stream is unable to push a chunk, the chunk is placed back
+into the buffer and a PushError is passed to the callback.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **callback** | The callback to be called when the stream is finalized. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | Promise.&lt;void&gt; | A promise that resolves when the stream is finalized. |
 
 
 ## ReplayStream
@@ -1007,41 +1086,6 @@ A method to write data to the stream, push the chunk to the buffer, and execute 
   | void | This function does not return anything. |
 
 
-### _final (function)
-
-
-
-Finalizes the stream by pushing remaining data, handling errors,
-and executing the final callback.
-
-  #### Parameters
-  | Name       | Description                             | Type                         |
-  |------------|-----------------------------------------|------------------------------|
-  | **callback** | The callback function to be executed after finalizing the stream. | TransformCallback |
-
-  #### Returns
-  | Type       | Description                             |
-  |------------|-----------------------------------------|
-  | void | This function does not return anything. |
-
-
-### _read (function)
-
-
-
-Pushes the ready chunks to the consumer stream since all the buffer is pushed or the size limit is reached.
-
-  #### Parameters
-  | Name       | Description                             | Type                         |
-  |------------|-----------------------------------------|------------------------------|
-  | **size** | The size parameter for controlling the read operation. | number |
-
-  #### Returns
-  | Type       | Description                             |
-  |------------|-----------------------------------------|
-  | void | This function does not return anything. |
-
-
 ### replay (function)
 
 
@@ -1056,7 +1100,7 @@ Creates a readable stream from the buffer to replay the data that have been push
 
 ## SingleStream
 
-`extends ObjectDuplex` 
+`extends InternalBufferDuplex` 
 
 Class that allows you to verify that a stream contains only one chunk.
 
@@ -1127,6 +1171,60 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
   | void | This function does not return anything. |
 
 
+## DiscardingInternalBufferDuplex
+
+`abstract` `extends InternalBufferDuplex` 
+
+Abstract class that allows you to emit discarded data in a stream adding support to discard events implementing an internal buffer.
+
+
+
+### Examples
+
+```typescriptclass DiscardingStreamImplementation<T> extends DiscardingInternalBufferDuplex<T> {    constructor(){        super({objectMode: true});    }    _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {        this.emit("discard", chunk);        callback();    }    _final(callback: TransformCallback): void {        this.push(null);        callback();    }    _read(): void {}}const stream:DiscardingStreamImplementation<string> = new DiscardingStreamImplementation();stream.write("data1"); //Discardedstream.write("data2"); //Discardedstream.write("data3"); //Discardedstream.end();stream.on("discard", (chunk: string) => {    console.log(``Discarded chunk: ${chunk}```);});``````shell>> Discarded chunk: data1>> Discarded chunk: data2>> Discarded chunk: data3```
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **options** |  | ObjectDuplexOptions |
+
+
+
+### _final (function)
+
+
+
+Finalizes the stream by pushing remaining data, handling errors,
+and executing the final callback.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **callback** | The callback function to be executed after finalizing the stream. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _read (function)
+
+
+
+Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **size** | The size parameter for controlling the read operation. | number |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
 ## DiscardingStream
 
 `abstract` `extends ObjectDuplex` 
@@ -1142,8 +1240,58 @@ Abstract class that allows you to emit discarded data in a stream adding support
   ### Constructor
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **options** | The options for the GroupBy. | ObjectDuplexOptions |
+  | **options** |  | ObjectDuplexOptions |
 
+
+
+## InternalBufferDuplex
+
+`abstract` `extends ObjectDuplex` 
+
+Abstract class that implements an stream that buffers data internally.
+
+
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **options** | The options for the InternalBufferDuplex. | ObjectDuplexOptions |
+
+
+
+### _final (function)
+
+
+
+Finalizes the stream by pushing remaining data, handling errors,
+and executing the final callback.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **callback** | The callback function to be executed after finalizing the stream. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _read (function)
+
+
+
+Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **size** | The size parameter for controlling the read operation. | number |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
 
 
 ## ObjectDuplex

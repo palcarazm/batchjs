@@ -14,7 +14,7 @@ describe("SingleStream", () => {
         });
     });
 
-    test("should write and read data correctly", (done) => {
+    test("should write data correctly", (done) => {
         stream.on("end", () => {
             expect(chunks).toEqual(["data1"]);
             done();
@@ -37,15 +37,5 @@ describe("SingleStream", () => {
             stream.write("data2"); // This should launch error
             stream.end();
         },50);
-    });
-
-    test("should handle _final correctly", (done) => {     
-        stream.on("end", () => {
-            expect(stream["buffer"].length).toBe(0);
-            done();
-        });
-
-        stream.write("data1");
-        stream.end();
     });
 });

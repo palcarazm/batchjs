@@ -1,5 +1,5 @@
 import {  TransformCallback  } from "stream";
-import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
+import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @interface
@@ -14,7 +14,7 @@ export interface GroupByStreamOptions<T> extends ObjectDuplexOptions {
 /**
  * @class
  * Class that allows you to group data in a stream.
- * @extends ObjectDuplex
+ * @extends InternalBufferDuplex
  * @template T
  * @example
  * ```typescript
@@ -37,8 +37,8 @@ export interface GroupByStreamOptions<T> extends ObjectDuplexOptions {
  * >> Pushed chunk: ["data3"]
  * ```
  */
-export class GroupByStream<T> extends ObjectDuplex {
-    protected buffer: Map<string,Array<T>> = new Map();
+export class GroupByStream<T> extends InternalBufferDuplex<T[]> {
+    protected groups: Map<string,Array<T>> = new Map();
     private readonly groupBy: (chunk: T) => string;
 
     /**
@@ -68,30 +68,14 @@ export class GroupByStream<T> extends ObjectDuplex {
  
     /**
      * Finalize the stream by draining the buffer and pushing any remaining chunks to the stream.
-     *
+     * 
+     * @override
      * @param {TransformCallback} callback - The callback to be called when the stream is finalized.
      * @return {void}
      */
     _final(callback: TransformCallback): void {
-        while (this.buffer.size > 0) {
-            const groupEntry = this.buffer.entries().next().value;
-            if (groupEntry) {
-                const [groupKey, group] = groupEntry;
-                this.push(group);
-                this.buffer.delete(groupKey);
-            }
-        }
-        this.push(null);
-        callback();
-    }
-
-    /**
-     * Reading is not supported since writer finishes first.
-     *
-     * @return {void}
-     */
-    _read(): void {
-        return;
+        this.buffer = Array.from(this.groups.values());
+        super._final(callback);
     }
 
     /**
@@ -102,8 +86,8 @@ export class GroupByStream<T> extends ObjectDuplex {
      */
     private _groupBy(chunk: T): void {
         const groupKey = this.groupBy(chunk);
-        const group = this.buffer.get(groupKey) ?? [];
+        const group = this.groups.get(groupKey) ?? [];
         group.push(chunk);
-        this.buffer.set(groupKey, group);
+        this.groups.set(groupKey, group);
     }
 }

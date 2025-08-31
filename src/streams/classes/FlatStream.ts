@@ -1,10 +1,10 @@
 import { TransformCallback } from "stream";
-import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
+import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @class
  * Class that allows you to transform an array stream into a flat stream.
- * @extends ObjectDuplex
+ * @extends InternalBufferDuplex
  * @template T
  * @example
  * ```typescript
@@ -27,9 +27,7 @@ import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  * >> Pushed chunk: data3
  * ```
  */
-export class FlatStream<T> extends ObjectDuplex {
-    protected buffer: T[] = [];
-
+export class FlatStream<T> extends InternalBufferDuplex<T> {
     /**
      * @constructor
      * @param {ObjectDuplexOptions} options - The options for the FlatStream.
@@ -49,37 +47,5 @@ export class FlatStream<T> extends ObjectDuplex {
     _write(chunk: Array<T>, encoding: BufferEncoding, callback: TransformCallback): void {
         this.buffer.push(...chunk);
         callback();
-    }
-
-    /**
-     * Finalizes the stream by pushing remaining data, handling errors,
-     * and executing the final callback.
-     *
-     * @param {TransformCallback} callback - The callback function to be executed after finalizing the stream.
-     * @return {void} This function does not return anything.
-     */
-    _final(callback: TransformCallback): void {
-        while (this.buffer.length > 0) {
-            const chunk = this.buffer.shift() as T;
-            this.push(chunk);
-        }
-        this.push(null);
-        callback();
-    }
-
-    /**
-     * Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
-     *
-     * @param {number} size - The size parameter for controlling the read operation.
-     * @return {void} This function does not return anything.
-     */
-    _read(size: number): void {
-        while (this.buffer.length > 0 && size > 0) {
-            const chunk = this.buffer.shift() as T;
-            if(!this.push(chunk)){
-                return;
-            };
-            size--;
-        }
     }
 }

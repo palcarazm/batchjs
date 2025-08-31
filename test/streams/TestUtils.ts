@@ -24,6 +24,25 @@ export class CollectStream extends Writable {
     }
 }
 
+/**
+ * Writes chunks to the stream with a delay
+ */
+export class SlowWritable<T> extends Writable {
+    public chunks: Array<T> = [];
+    constructor(options: WritableOptions = {}) {
+        const chunks: Array<T> = [];;
+        super({...options,
+            objectMode: true,
+            highWaterMark: 1,
+            write(chunk: T, encoding, callback) {
+              chunks.push(chunk);
+              setTimeout(callback, 30);
+            }
+        }); 
+        this.chunks = chunks;
+    }
+}
+
 export function buffer2String(buffer: Array<Buffer>, encoding: BufferEncoding = "utf8"): Array<string> {
     return buffer.map((chunk) => chunk.toString(encoding));
 }

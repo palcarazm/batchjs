@@ -19,7 +19,7 @@ describe("ParallelStream", () => {
         });
     });
 
-    test("should write and read data correctly", (done) => {
+    test("should write data correctly", (done) => {
         stream.on("end", () => {
             expect(chunks).toEqual(["DATA1", "DATA2","DATA3"]);
             done();
@@ -31,7 +31,7 @@ describe("ParallelStream", () => {
         stream.end();
     });
 
-    test("should handle _final correctly", (done) => {     
+    test("should await all data been processed to finish", (done) => {     
         stream.on("end", () => {
             expect(stream["queue"].length).toBe(0);
             expect(stream["buffer"].length).toBe(0);

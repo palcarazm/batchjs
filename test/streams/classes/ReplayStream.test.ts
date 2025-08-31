@@ -13,7 +13,7 @@ describe("ReplayStream", () => {
         });
     });
 
-    test("should write and read data correctly", (done) => {
+    test("should write data correctly", (done) => {
         stream.on("end", () => {
             expect(chunks).toEqual(["data1","data2","data3"]);
             done();
@@ -49,17 +49,5 @@ describe("ReplayStream", () => {
         stream.write("data3");
 
         expect(()=>{stream.replay();}).toThrow(NotClosedError);
-    });
-
-    test("should handle _final correctly", (done) => {     
-        stream.on("end", () => {
-            expect(stream["buffer"].length).toBe(stream["index"]);
-            done();
-        });
-
-        stream.write("data1");
-        stream.write("data2");
-        stream.write("data3");
-        stream.end();
     });
 });

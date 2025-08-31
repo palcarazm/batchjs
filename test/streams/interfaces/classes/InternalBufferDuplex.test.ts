@@ -1,27 +1,35 @@
-import { BufferStream, BufferStreamOptions } from "../../../src/streams/index";
-import { SlowWritable } from "../TestUtils";
+import { TransformCallback } from "stream";
+import { InternalBufferDuplex } from "../../../../src/streams/interfaces/_index";
+import { SlowWritable } from "../../TestUtils";
 
-describe("BufferStream", () => {
-    const options: BufferStreamOptions = {
-        batchSize: 2,
-    };
-    let stream: BufferStream<string>;
+describe("InternalBufferDuplex", () => {
+class InternalBufferDuplexImplementation extends InternalBufferDuplex<string> {
+        constructor(){
+            super({objectMode: true});
+        }
+
+        _write(chunk: string, encoding: BufferEncoding, callback: TransformCallback): void {
+            this.buffer.push(chunk);
+            callback();
+        }
+    }
+    let stream: InternalBufferDuplexImplementation;
     let slowWritable: SlowWritable<string>;
-    let  chunks: Array<Array<string>>;
+    let chunks: Array<string>;
 
     beforeEach(() => {
-        stream = new BufferStream(options);
+        stream = new InternalBufferDuplexImplementation();
         slowWritable = new SlowWritable<string>({highWaterMark: 1});
 
         chunks = [];
-        stream.on("data", (chunk: Array<string>) => {
+        stream.on("data", (chunk: string) => {
             chunks.push(chunk);
         });
     });
 
-    test("should write and read data correctly", (done) => {
-        stream.on("finish", () => {
-            expect(chunks).toEqual([["data1", "data2"], ["data3"]]);
+    test("should handle _read data correctly", (done) => {
+        stream.on("end", () => {
+            expect(chunks).toEqual(["data1","data2","data3"]);
             done();
         });
 
@@ -65,7 +73,7 @@ describe("BufferStream", () => {
         stream.pipe(slowWritable);
     
         // Write data
-        for (let i = 1; i <= 20; i++) {
+        for (let i = 1; i <= 10; i++) {
             stream.write(`${i}`);
         }
     
@@ -78,7 +86,7 @@ describe("BufferStream", () => {
           expect(endCallbackCalled).toBe(true);
           expect(drainCalled).toBe(true);
           expect(slowWritable.chunks).toEqual([
-            ["1","2"],["3","4"],["5","6"],["7","8"],["9","10"],["11","12"],["13","14"],["15","16"],["17","18"],["19","20"]
+            "1","2","3","4","5","6","7","8","9","10"
           ]);
           done();
         });

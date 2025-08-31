@@ -16,7 +16,7 @@ describe("GroupByStream", () => {
         });
     });
 
-    test("should write and read data correctly", (done) => {
+    test("should write data correctly", (done) => {
         stream.on("end", () => {
             expect(chunks).toEqual([["DATA1", "DATA2"], ["data3"]]);
             done();
@@ -40,6 +40,7 @@ describe("GroupByStream", () => {
 
         stream.write("data1");
         stream.write("data2");
+        stream.read();
         stream.pause();
     });
 });

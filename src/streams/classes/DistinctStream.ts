@@ -1,5 +1,5 @@
 import { TransformCallback } from "stream";
-import { DiscardingStream, ObjectDuplexOptions } from "../interfaces/_index";
+import { DiscardingInternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @interface
@@ -16,7 +16,7 @@ export interface DistinctStreamOptions<TInput,TKey> extends ObjectDuplexOptions 
  * @class
  * Class that allows you to discard repeated data in a stream in base on a key.
  * Data with duplicated key will be emitted through the discard event.
- * @extends DiscardingStream
+ * @extends DiscardingInternalBufferDuplex
  * @template TInput
  * @template TKey
  * @example
@@ -44,8 +44,7 @@ export interface DistinctStreamOptions<TInput,TKey> extends ObjectDuplexOptions 
  * >> Duplicated chunk: data1
  * ```
  */
-export class DistinctStream<TInput,TKey> extends DiscardingStream<TInput> {
-    protected buffer: Array<TInput> = [];
+export class DistinctStream<TInput,TKey> extends DiscardingInternalBufferDuplex<TInput> {
     private readonly keySet: Set<TKey> = new Set();
     private readonly _keyExtractor: (chunk: TInput) => TKey;
 
@@ -76,38 +75,5 @@ export class DistinctStream<TInput,TKey> extends DiscardingStream<TInput> {
             this.emit("discard", chunk);
         }
         callback();
-    }
-
-
-    /**
-     * Finalizes the stream by pushing remaining data, handling errors,
-     * and executing the final callback.
-     *
-     * @param {TransformCallback} callback - The callback function to be executed after finalizing the stream.
-     * @return {void} This function does not return anything.
-     */
-    _final(callback: TransformCallback): void {
-        while (this.buffer.length > 0) {
-            const chunk = this.buffer.shift() as TInput;
-            this.push(chunk);
-        }
-        this.push(null);
-        callback();
-    }
-
-    /**
-     * Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
-     *
-     * @param {number} size - The size parameter for controlling the read operation.
-     * @return {void} This function does not return anything.
-     */
-    _read(size: number): void {
-        while (this.buffer.length > 0 && size > 0) {
-            const chunk = this.buffer.shift() as TInput;
-            if(!this.push(chunk)){
-                return;
-            };
-            size--;
-        }
     }
 }

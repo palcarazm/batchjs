@@ -1,5 +1,5 @@
 import { TransformCallback  } from "stream";
-import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
+import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @interface
@@ -16,7 +16,7 @@ export interface ParallelStreamOptions<TInput, TOutput> extends ObjectDuplexOpti
 /**
  * @class
  * Class that allows you to transform and stream data in parallel.
- * @extends ObjectDuplex
+ * @extends InternalBufferDuplex
  * @template TInput The type of the input data.
  * @template TOutput The type of the output data.
  * @example
@@ -44,9 +44,8 @@ export interface ParallelStreamOptions<TInput, TOutput> extends ObjectDuplexOpti
  * >> Pushed chunk: DATA3
  * ```
  */
-export class ParallelStream<TInput, TOutput> extends ObjectDuplex {
+export class ParallelStream<TInput, TOutput> extends InternalBufferDuplex<TOutput> {
     private queue: Array<TInput> = [];
-    private buffer: Array<TOutput> = [];
     private pool: Set<Promise<void>> = new Set();
     private readonly maxConcurrent: number;
     private readonly transform: (chunk: TInput) => Promise<TOutput>;
@@ -82,36 +81,20 @@ export class ParallelStream<TInput, TOutput> extends ObjectDuplex {
      * and calling the provided callback when complete. If the stream is unable to push a chunk, the chunk is placed back
      * into the buffer and a PushError is passed to the callback.
      *
+     * @override
      * @param {TransformCallback} callback - The callback to be called when the stream is finalized.
      * @return {Promise<void>} A promise that resolves when the stream is finalized.
      */
-    async _final(callback: TransformCallback): Promise<void> {
-        while (this.queue.length > 0 || this.pool.size > 0) {
-            await new Promise(resolve => setImmediate(resolve));
-        }
-
-        while (this.buffer.length > 0) {
-            const chunk = this.buffer.shift() as TOutput;
-            this.push(chunk);
-        }
-        this.push(null);
-        callback();
-    }
-
-    /**
-     * Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
-     *
-     * @param {number} size - The size parameter for controlling the read operation.
-     * @return {void} This function does not return anything.
-     */
-    _read(size: number): void {
-        while (this.buffer.length > 0 && size > 0) {
-            const chunk = this.buffer.shift() as TOutput;
-            if (!this.push(chunk)) {
-                return;
+    _final(callback: TransformCallback): void{
+        const awaitAllProcessed =  () => {
+            if(this.queue.length > 0 || this.pool.size > 0){
+                setImmediate(awaitAllProcessed);
+            }else{
+                super._final(callback);
             }
-            size--;
-        }
+        };
+        
+        awaitAllProcessed();
     }
 
     /**

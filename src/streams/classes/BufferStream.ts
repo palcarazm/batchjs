@@ -71,12 +71,27 @@ export class BufferStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        while (this.buffer.length > 0) {
+        /**
+         * Pushes the next batch of elements from the buffer to the stream, handling backpressure.
+         *
+         * @return {void} This function does not return anything.
+         */
+        const pushNext = () => {
+            if (this.buffer.length === 0) {
+                callback();
+                this.push(null);
+                return;
+            }
+    
             const batch = this.buffer.splice(0, this.batchSize);
-            this.push(batch);
-        }
-        this.push(null);
-        callback();
+            if (!this.push(batch)) {
+                this.once("drain", pushNext);
+            } else {
+                setImmediate(pushNext);
+            }
+        };
+    
+        pushNext();
     }
 
     /**
@@ -88,9 +103,9 @@ export class BufferStream<T> extends ObjectDuplex {
     _read(size: number): void {
         while (this.buffer.length >= this.batchSize && size > 0) {
             const batch = this.buffer.splice(0, this.batchSize);
-            if(!this.push(batch)){
+            if (!this.push(batch)) {
                 return;
-            };
+            }
             size--;
         }
     }

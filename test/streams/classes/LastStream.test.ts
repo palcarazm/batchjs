@@ -13,7 +13,7 @@ describe("LastStream", () => {
         });
     });
 
-    test("should write and read data correctly", (done) => {
+    test("should wait until write end to send last chunk", (done) => {
         // No data should be emitted
         stream.on("data", () => {
             done.fail("Expected error to be thrown but data was received.");
@@ -28,7 +28,7 @@ describe("LastStream", () => {
         },50);
     });
 
-    test("should handle _final correctly", (done) => {     
+    test("should send the last chunk", (done) => {     
         stream.on("end", () => {
             expect(chunks).toEqual(["third"]);
             done();

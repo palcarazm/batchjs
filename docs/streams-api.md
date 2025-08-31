@@ -24,16 +24,18 @@ In this documentation, we will focus on the streams API. This module includes so
   - [ReplayStream](#replaystream)
   - [SingleStream](#singlestream)
   - [DiscardingInternalBufferDuplex](#discardinginternalbufferduplex)
+  - [DiscardingSingleObjectDuplex](#discardingsingleobjectduplex)
   - [DiscardingStream](#discardingstream)
   - [InternalBufferDuplex](#internalbufferduplex)
   - [ObjectDuplex](#objectduplex)
   - [ObjectReadable](#objectreadable)
   - [ObjectWritable](#objectwritable)
+  - [SingleObjectDuplex](#singleobjectduplex)
   - [StreamUtils](#streamutils)
 
 ## AllMatchStream
 
-`extends DiscardingStream` 
+`extends DiscardingSingleObjectDuplex` 
 
 Class that allows you to validate that all elements in a stream match a given condition.
 
@@ -70,11 +72,24 @@ A method to write data to the stream, filter the chunk and push it to the buffer
   | void | This function does not return anything. |
 
 
+### _read (function)
+
+
+
+Push once false if at least one chunk has not matched.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
+
+
 ### _final (function)
 
 
 
-Finalizes the stream by pushing the true if all chunks match the condition and false otherwise, if not already pushed.
+Finalizes the stream by pushing the result chunk if it exists and not pushed, handling errors,
+and executing the final callback.
 
   #### Parameters
   | Name       | Description                             | Type                         |
@@ -99,9 +114,21 @@ Push once false if at least one chunk has not matched.
   | void |  |
 
 
+### _read (function)
+
+
+
+Push once false if at least one chunk has not matched.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
+
+
 ## AnyMatchStream
 
-`extends DiscardingStream` 
+`extends DiscardingSingleObjectDuplex` 
 
 Class that allows you to validate that all elements in a stream match a given condition.
 
@@ -138,11 +165,24 @@ A method to write data to the stream, filter the chunk and push it to the buffer
   | void | This function does not return anything. |
 
 
+### _read (function)
+
+
+
+Push once false if at least one chunk has matched.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
+
+
 ### _final (function)
 
 
 
-Finalizes the stream by pushing the true if any chunk match the condition and false otherwise, if not already pushed.
+Finalizes the stream by pushing the result chunk if it exists and not pushed, handling errors,
+and executing the final callback.
 
   #### Parameters
   | Name       | Description                             | Type                         |
@@ -153,6 +193,18 @@ Finalizes the stream by pushing the true if any chunk match the condition and fa
   | Type       | Description                             |
   |------------|-----------------------------------------|
   | void | This function does not return anything. |
+
+
+### _read (function)
+
+
+
+Push once false if at least one chunk has matched.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
 
 
 ### _read (function)
@@ -243,7 +295,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## CountStream
 
-`extends ObjectDuplex` 
+`extends SingleObjectDuplex` 
 
 Class that allows you to count the number of chunks in a stream.
 
@@ -280,16 +332,41 @@ and executes the callback.
   | void |  |
 
 
+### _read (function)
+
+
+
+Reading is not supported since writer finishes first.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
+
+
 ### _final (function)
 
 
 
-Finalize the stream by draining the buffer and pushing the count of chunks to the stream.
+Finalizes the stream by pushing the result chunk if it exists and not pushed, handling errors,
+and executing the final callback.
 
   #### Parameters
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
-  | **callback** | The callback to be called when the stream is finalized. | TransformCallback |
+  | **callback** | The callback function to be executed after finalizing the stream. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _read (function)
+
+
+
+Reading is not supported since writer finishes first.
 
   #### Returns
   | Type       | Description                             |
@@ -386,7 +463,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## EmptyStream
 
-`extends Duplex` 
+`extends SingleObjectDuplex` 
 
 Class that allows you to validate that a stream is empty.
 
@@ -422,11 +499,24 @@ A method to write data to the stream, setting the hasChunks flag to true, and ex
   | void | This function does not return anything. |
 
 
+### _read (function)
+
+
+
+Push once false if at least one chunk has been received.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
+
+
 ### _final (function)
 
 
 
-Finalizes the stream by pushing the true if the stream is empty and false otherwise, if not already pushed.
+Finalizes the stream by pushing the result chunk if it exists and not pushed, handling errors,
+and executing the final callback.
 
   #### Parameters
   | Name       | Description                             | Type                         |
@@ -437,6 +527,18 @@ Finalizes the stream by pushing the true if the stream is empty and false otherw
   | Type       | Description                             |
   |------------|-----------------------------------------|
   | void | This function does not return anything. |
+
+
+### _read (function)
+
+
+
+Push once false if at least one chunk has been received.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
 
 
 ### _read (function)
@@ -527,7 +629,7 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
 
 ## FirstStream
 
-`extends DiscardingStream` 
+`extends DiscardingSingleObjectDuplex` 
 
 Class that allows you to emit only the first chunk in a stream and discard the rest.
 
@@ -567,7 +669,7 @@ A method to write data to the stream, save first chunk and discard the rest, and
 
 
 
-Finalizes the stream by pushing the first chunk if it exists and not pushed, handling errors,
+Finalizes the stream by pushing the result chunk if it exists and not pushed, handling errors,
 and executing the final callback.
 
   #### Parameters
@@ -585,7 +687,7 @@ and executing the final callback.
 
 
 
-Pushes the first chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
+Pushes the result chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
 
   #### Returns
   | Type       | Description                             |
@@ -793,7 +895,7 @@ Finalize the stream by draining the buffer and pushing any remaining chunks to t
 
 ## HasElementsStream
 
-`extends ObjectDuplex` 
+`extends SingleObjectDuplex` 
 
 Class that allows you to validate that a stream has elements.
 
@@ -829,11 +931,24 @@ A method to write data to the stream, setting the hasChunks flag to true, and ex
   | void | This function does not return anything. |
 
 
+### _read (function)
+
+
+
+Push once true if at least one chunk has been received.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
+
+
 ### _final (function)
 
 
 
-Finalizes the stream by pushing the true if the stream has elements and false otherwise, if not already pushed.
+Finalizes the stream by pushing the result chunk if it exists and not pushed, handling errors,
+and executing the final callback.
 
   #### Parameters
   | Name       | Description                             | Type                         |
@@ -858,9 +973,21 @@ Push once true if at least one chunk has been received.
   | void |  |
 
 
+### _read (function)
+
+
+
+Push once true if at least one chunk has been received.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
+
+
 ## LastStream
 
-`extends DiscardingStream` 
+`extends DiscardingSingleObjectDuplex` 
 
 Class that allows you to emit only the last chunk in a stream and discard the rest.
 
@@ -896,11 +1023,23 @@ A method to write data to the stream, save last chunk and discard the rest, and 
   | void | This function does not return anything. |
 
 
+### _read (function)
+
+
+
+Reading is not supported since writer finishes first.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
+
+
 ### _final (function)
 
 
 
-Finalizes the stream by pushing the last chunk if it exists, handling errors,
+Finalizes the stream by pushing the result chunk if it exists and not pushed, handling errors,
 and executing the final callback.
 
   #### Parameters
@@ -912,6 +1051,18 @@ and executing the final callback.
   | Type       | Description                             |
   |------------|-----------------------------------------|
   | void | This function does not return anything. |
+
+
+### _read (function)
+
+
+
+Reading is not supported since writer finishes first.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void |  |
 
 
 ### _read (function)
@@ -1225,6 +1376,55 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
   | void | This function does not return anything. |
 
 
+## DiscardingSingleObjectDuplex
+
+`abstract` `extends SingleObjectDuplex` 
+
+Abstract class that allows you to emit discarded data in a single data stream adding support to discard events.
+
+
+
+### Examples
+
+```typescriptclass DiscardingStreamImplementation<TInput> extends DiscardingSingleObjectDuplex<TInput> {    constructor(){        super({objectMode: true});    }    _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {        this.emit("discard", chunk);        callback();    }    _final(callback: TransformCallback): void {        this.push(null);        callback();    }    _read(): void {}}const stream:DiscardingStreamImplementation<string> = new DiscardingStreamImplementation();stream.write("data1"); //Discardedstream.write("data2"); //Discardedstream.write("data3"); //Discardedstream.end();stream.on("discard", (chunk: string) => {    console.log(``Discarded chunk: ${chunk}```);});``````shell>> Discarded chunk: data1>> Discarded chunk: data2>> Discarded chunk: data3```
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **options** |  | ObjectDuplexOptions |
+
+
+
+### _final (function)
+
+
+
+Finalizes the stream by pushing the result chunk if it exists and not pushed, handling errors,
+and executing the final callback.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **callback** | The callback function to be executed after finalizing the stream. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _read (function)
+
+
+
+Pushes the result chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
 ## DiscardingStream
 
 `abstract` `extends ObjectDuplex` 
@@ -1340,6 +1540,51 @@ Abstract class that handle data in a stream in object mode.
   | **options** | The options for the ObjectWritable. | ObjectWritableOptions |
   | **options.objectMode** | Whether the stream should operate in object mode. | true |
 
+
+
+## SingleObjectDuplex
+
+`abstract` `extends ObjectDuplex` 
+
+Abstract class that allows you to emit a single data in a stream.
+
+
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **options** |  | ObjectDuplexOptions |
+
+
+
+### _final (function)
+
+
+
+Finalizes the stream by pushing the result chunk if it exists and not pushed, handling errors,
+and executing the final callback.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **callback** | The callback function to be executed after finalizing the stream. | TransformCallback |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _read (function)
+
+
+
+Pushes the result chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
 
 
 ## StreamUtils

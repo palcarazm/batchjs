@@ -15,7 +15,7 @@ describe("AllMatchStream", () => {
         });
     });
 
-    test("should write and read data correctly", (done) => {
+    test("should send false if one not match", (done) => {
         stream.write("first"); // match
         stream.write("second"); // match
         stream.write("3"); // not match
@@ -26,7 +26,7 @@ describe("AllMatchStream", () => {
         },50);
     });
 
-    test("should handle _final correctly", (done) => {     
+    test("should send true if all match", (done) => {     
         stream.on("end", () => {
             expect(chunks).toEqual([true]);
             done();

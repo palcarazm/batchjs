@@ -72,18 +72,6 @@ A method to write data to the stream, filter the chunk and push it to the buffer
   | void | This function does not return anything. |
 
 
-### _read (function)
-
-
-
-Push once false if at least one chunk has not matched.
-
-  #### Returns
-  | Type       | Description                             |
-  |------------|-----------------------------------------|
-  | void |  |
-
-
 ### _final (function)
 
 
@@ -106,24 +94,25 @@ and executing the final callback.
 
 
 
-Push once false if at least one chunk has not matched.
+Pushes the result chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
 
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void |  |
+  | void | This function does not return anything. |
 
 
-### _read (function)
+### _flush (function)
 
+`private` 
 
-
-Push once false if at least one chunk has not matched.
+Flushes the buffer by pushing its content to the consumer stream. If the consumer stream is not ready to receive data, it waits for the drain event and flushes the buffer again when it is emitted.
+This function is recursive and will keep flushing the buffer until it is empty.
 
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void |  |
+  | void | This function does not return anything. |
 
 
 ## AnyMatchStream
@@ -165,18 +154,6 @@ A method to write data to the stream, filter the chunk and push it to the buffer
   | void | This function does not return anything. |
 
 
-### _read (function)
-
-
-
-Push once false if at least one chunk has matched.
-
-  #### Returns
-  | Type       | Description                             |
-  |------------|-----------------------------------------|
-  | void |  |
-
-
 ### _final (function)
 
 
@@ -199,24 +176,25 @@ and executing the final callback.
 
 
 
-Push once false if at least one chunk has matched.
+Pushes the result chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
 
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void |  |
+  | void | This function does not return anything. |
 
 
-### _read (function)
+### _flush (function)
 
+`private` 
 
-
-Push once false if at least one chunk has matched.
+Flushes the buffer by pushing its content to the consumer stream. If the consumer stream is not ready to receive data, it waits for the drain event and flushes the buffer again when it is emitted.
+This function is recursive and will keep flushing the buffer until it is empty.
 
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void |  |
+  | void | This function does not return anything. |
 
 
 ## BufferStream
@@ -293,6 +271,18 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
   | void | This function does not return anything. |
 
 
+### _flush (function)
+
+`protected` 
+
+Pushes the next batch of elements from the buffer to the stream, handling backpressure.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
 ## CountStream
 
 `extends SingleObjectDuplex` 
@@ -332,18 +322,6 @@ and executes the callback.
   | void |  |
 
 
-### _read (function)
-
-
-
-Reading is not supported since writer finishes first.
-
-  #### Returns
-  | Type       | Description                             |
-  |------------|-----------------------------------------|
-  | void |  |
-
-
 ### _final (function)
 
 
@@ -366,24 +344,25 @@ and executing the final callback.
 
 
 
-Reading is not supported since writer finishes first.
+Pushes the result chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
 
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void |  |
+  | void | This function does not return anything. |
 
 
-### _read (function)
+### _flush (function)
 
+`private` 
 
-
-Reading is not supported since writer finishes first.
+Flushes the buffer by pushing its content to the consumer stream. If the consumer stream is not ready to receive data, it waits for the drain event and flushes the buffer again when it is emitted.
+This function is recursive and will keep flushing the buffer until it is empty.
 
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void |  |
+  | void | This function does not return anything. |
 
 
 ## DistinctStream
@@ -461,6 +440,18 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
   | void | This function does not return anything. |
 
 
+### _flush (function)
+
+`protected` 
+
+Pushes the next batch of elements from the buffer to the stream, handling backpressure.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
 ## EmptyStream
 
 `extends SingleObjectDuplex` 
@@ -499,18 +490,6 @@ A method to write data to the stream, setting the hasChunks flag to true, and ex
   | void | This function does not return anything. |
 
 
-### _read (function)
-
-
-
-Push once false if at least one chunk has been received.
-
-  #### Returns
-  | Type       | Description                             |
-  |------------|-----------------------------------------|
-  | void |  |
-
-
 ### _final (function)
 
 
@@ -533,24 +512,25 @@ and executing the final callback.
 
 
 
-Push once false if at least one chunk has been received.
+Pushes the result chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
 
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void |  |
+  | void | This function does not return anything. |
 
 
-### _read (function)
+### _flush (function)
 
+`private` 
 
-
-Push once false if at least one chunk has been received.
+Flushes the buffer by pushing its content to the consumer stream. If the consumer stream is not ready to receive data, it waits for the drain event and flushes the buffer again when it is emitted.
+This function is recursive and will keep flushing the buffer until it is empty.
 
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void |  |
+  | void | This function does not return anything. |
 
 
 ## FilterStream
@@ -627,6 +607,18 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
   | void | This function does not return anything. |
 
 
+### _flush (function)
+
+`protected` 
+
+Pushes the next batch of elements from the buffer to the stream, handling backpressure.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
 ## FirstStream
 
 `extends DiscardingSingleObjectDuplex` 
@@ -688,6 +680,19 @@ and executing the final callback.
 
 
 Pushes the result chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _flush (function)
+
+`private` 
+
+Flushes the buffer by pushing its content to the consumer stream. If the consumer stream is not ready to receive data, it waits for the drain event and flushes the buffer again when it is emitted.
+This function is recursive and will keep flushing the buffer until it is empty.
 
   #### Returns
   | Type       | Description                             |
@@ -761,6 +766,18 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **size** | The size parameter for controlling the read operation. | number |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _flush (function)
+
+`protected` 
+
+Pushes the next batch of elements from the buffer to the stream, handling backpressure.
 
   #### Returns
   | Type       | Description                             |
@@ -876,6 +893,18 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
   | void | This function does not return anything. |
 
 
+### _flush (function)
+
+`protected` 
+
+Pushes the next batch of elements from the buffer to the stream, handling backpressure.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
 ### _final (function)
 
 
@@ -931,18 +960,6 @@ A method to write data to the stream, setting the hasChunks flag to true, and ex
   | void | This function does not return anything. |
 
 
-### _read (function)
-
-
-
-Push once true if at least one chunk has been received.
-
-  #### Returns
-  | Type       | Description                             |
-  |------------|-----------------------------------------|
-  | void |  |
-
-
 ### _final (function)
 
 
@@ -965,24 +982,25 @@ and executing the final callback.
 
 
 
-Push once true if at least one chunk has been received.
+Pushes the result chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
 
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void |  |
+  | void | This function does not return anything. |
 
 
-### _read (function)
+### _flush (function)
 
+`private` 
 
-
-Push once true if at least one chunk has been received.
+Flushes the buffer by pushing its content to the consumer stream. If the consumer stream is not ready to receive data, it waits for the drain event and flushes the buffer again when it is emitted.
+This function is recursive and will keep flushing the buffer until it is empty.
 
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void |  |
+  | void | This function does not return anything. |
 
 
 ## LastStream
@@ -1023,18 +1041,6 @@ A method to write data to the stream, save last chunk and discard the rest, and 
   | void | This function does not return anything. |
 
 
-### _read (function)
-
-
-
-Reading is not supported since writer finishes first.
-
-  #### Returns
-  | Type       | Description                             |
-  |------------|-----------------------------------------|
-  | void |  |
-
-
 ### _final (function)
 
 
@@ -1057,24 +1063,25 @@ and executing the final callback.
 
 
 
-Reading is not supported since writer finishes first.
+Pushes the result chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
 
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void |  |
+  | void | This function does not return anything. |
 
 
-### _read (function)
+### _flush (function)
 
+`private` 
 
-
-Reading is not supported since writer finishes first.
+Flushes the buffer by pushing its content to the consumer stream. If the consumer stream is not ready to receive data, it waits for the drain event and flushes the buffer again when it is emitted.
+This function is recursive and will keep flushing the buffer until it is empty.
 
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void |  |
+  | void | This function does not return anything. |
 
 
 ## ParallelStream
@@ -1172,6 +1179,18 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **size** | The size parameter for controlling the read operation. | number |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _flush (function)
+
+`protected` 
+
+Pushes the next batch of elements from the buffer to the stream, handling backpressure.
 
   #### Returns
   | Type       | Description                             |
@@ -1322,6 +1341,18 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
   | void | This function does not return anything. |
 
 
+### _flush (function)
+
+`protected` 
+
+Pushes the next batch of elements from the buffer to the stream, handling backpressure.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
 ## DiscardingInternalBufferDuplex
 
 `abstract` `extends InternalBufferDuplex` 
@@ -1376,6 +1407,18 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
   | void | This function does not return anything. |
 
 
+### _flush (function)
+
+`protected` 
+
+Pushes the next batch of elements from the buffer to the stream, handling backpressure.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
 ## DiscardingSingleObjectDuplex
 
 `abstract` `extends SingleObjectDuplex` 
@@ -1392,6 +1435,7 @@ Abstract class that allows you to emit discarded data in a single data stream ad
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **options** |  | ObjectDuplexOptions |
+  | **canEarlyFlush** | A function that returns a boolean indicating whether the stream can early flush. | function |
 
 
 
@@ -1418,6 +1462,19 @@ and executing the final callback.
 
 
 Pushes the result chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _flush (function)
+
+`private` 
+
+Flushes the buffer by pushing its content to the consumer stream. If the consumer stream is not ready to receive data, it waits for the drain event and flushes the buffer again when it is emitted.
+This function is recursive and will keep flushing the buffer until it is empty.
 
   #### Returns
   | Type       | Description                             |
@@ -1494,6 +1551,18 @@ Pushes the ready chunks to the consumer stream since the buffer is empty or the 
   | void | This function does not return anything. |
 
 
+### _flush (function)
+
+`protected` 
+
+Pushes the next batch of elements from the buffer to the stream, handling backpressure.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
 ## ObjectDuplex
 
 `abstract` `extends Duplex` 
@@ -1554,6 +1623,7 @@ Abstract class that allows you to emit a single data in a stream.
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **options** |  | ObjectDuplexOptions |
+  | **canEarlyFlush** | A function that returns a boolean indicating whether the stream can early flush. | function |
 
 
 
@@ -1580,6 +1650,19 @@ and executing the final callback.
 
 
 Pushes the result chunk, if it exists and not pushed, to the consumer stream and marks it as pushed.
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | void | This function does not return anything. |
+
+
+### _flush (function)
+
+`private` 
+
+Flushes the buffer by pushing its content to the consumer stream. If the consumer stream is not ready to receive data, it waits for the drain event and flushes the buffer again when it is emitted.
+This function is recursive and will keep flushing the buffer until it is empty.
 
   #### Returns
   | Type       | Description                             |

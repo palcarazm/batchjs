@@ -38,7 +38,7 @@ export class FirstStream<T> extends DiscardingSingleObjectDuplex<T,T> {
      * @param {ObjectDuplexOptions} options - The options for the FirstStream.
      */
     constructor(options: ObjectDuplexOptions) {
-        super(options);
+        super(options,()=>true);
     }
 
     /**
@@ -52,6 +52,7 @@ export class FirstStream<T> extends DiscardingSingleObjectDuplex<T,T> {
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         if(this.result === undefined){
             this.result = chunk;
+            this._flush();
         }else{
             this.emit("discard", chunk);
         }

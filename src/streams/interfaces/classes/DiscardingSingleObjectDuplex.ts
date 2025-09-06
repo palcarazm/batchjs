@@ -49,9 +49,10 @@ export abstract class DiscardingSingleObjectDuplex<TInput,TOutput> extends Singl
     /**
      * @constructor
      * @param options {ObjectDuplexOptions}
+     * @param {Function} canEarlyFlush - A function that returns a boolean indicating whether the stream can early flush.
      */
-    constructor(options:ObjectDuplexOptions) {
-        super(options);
+    constructor(options:ObjectDuplexOptions, canEarlyFlush:()=>boolean) {
+        super(options, canEarlyFlush);
     }
 
     addListener<U extends keyof DiscardingStreamEventHandlers<TInput>>(event: U, listener: DiscardingStreamEventHandlers<TInput>[U]): this {

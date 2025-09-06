@@ -1,18 +1,16 @@
 import { TransformCallback } from "stream";
 import { DiscardingSingleObjectDuplex } from "../../../../src/streams/index";
 
-describe("DiscardingStream", () => {
+describe("DiscardingSingleObjectDuplex", () => {
     class DiscardingStreamImplementation extends DiscardingSingleObjectDuplex<string, string> {
         constructor(){
-            super({objectMode: true});
+            super({objectMode: true},()=>false);
         }
 
         _write(chunk: string, encoding: BufferEncoding, callback: TransformCallback): void {
             this.emit("discard", chunk);
             callback();
         }
-
-        _read(): void {return}
     }
     let stream: DiscardingStreamImplementation;
     let chunks: Array<string>;

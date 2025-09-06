@@ -45,7 +45,7 @@ export class AnyMatchStream<T> extends DiscardingSingleObjectDuplex<T,boolean> {
      * @param [options.matcher] {Function} - The function that will be used to validate the chunk.
      */
     constructor(options: AnyMatchStreamOptions<T>) {
-        super(options);
+        super(options,()=>this.result === false);
         this._matcher = options.matcher;
     }
 
@@ -61,20 +61,11 @@ export class AnyMatchStream<T> extends DiscardingSingleObjectDuplex<T,boolean> {
         const matcherResult = this._matcher(chunk);
         if(this.result === undefined || this.result){
             this.result = !matcherResult;
+            this._flush();
         }
         if(matcherResult){
             this.emit("discard", chunk);
         }
         callback();
-    }
-
-    /**
-     * Push once false if at least one chunk has matched.
-     *
-     * @override
-     * @return {void}
-     */
-    _read(): void {
-        if(this.result === false && !this.pushedResult) super._read();
     }
 }

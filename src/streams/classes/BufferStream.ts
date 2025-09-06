@@ -38,6 +38,8 @@ export interface BufferStreamOptions extends ObjectDuplexOptions {
  */
 export class BufferStream<T> extends ObjectDuplex {
     protected buffer: T[] = [];
+    private isAwaitingDrain: boolean = false;
+    private finalCallback?: TransformCallback;
     private readonly batchSize: number;
 
     /**
@@ -60,6 +62,7 @@ export class BufferStream<T> extends ObjectDuplex {
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         this.buffer.push(chunk);
+        this._flush();
         callback();
     }
 
@@ -71,27 +74,8 @@ export class BufferStream<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        /**
-         * Pushes the next batch of elements from the buffer to the stream, handling backpressure.
-         *
-         * @return {void} This function does not return anything.
-         */
-        const pushNext = () => {
-            if (this.buffer.length === 0) {
-                callback();
-                this.push(null);
-                return;
-            }
-    
-            const batch = this.buffer.splice(0, this.batchSize);
-            if (!this.push(batch)) {
-                this.once("drain", pushNext);
-            } else {
-                setImmediate(pushNext);
-            }
-        };
-    
-        pushNext();
+        this.finalCallback = callback;
+        this._flush();
     }
 
     /**
@@ -100,13 +84,33 @@ export class BufferStream<T> extends ObjectDuplex {
      * @param {number} size - The size parameter for controlling the read operation.
      * @return {void} This function does not return anything.
      */
-    _read(size: number): void {
-        while (this.buffer.length >= this.batchSize && size > 0) {
+    _read(): void {
+        this._flush();
+    }
+
+    /**
+     * Pushes the next batch of elements from the buffer to the stream, handling backpressure.
+     * @protected
+     * @return {void} This function does not return anything.
+     */
+    protected _flush(): void {
+        if (this.isAwaitingDrain) return;
+
+        while (this.buffer.length >= this.batchSize || (this.finalCallback && this.buffer.length > 0)) {
             const batch = this.buffer.splice(0, this.batchSize);
-            if (!this.push(batch)) {
+            if(!this.push(batch)){
+                this.isAwaitingDrain = true;
+                this.once("drain", () => {
+                    this.isAwaitingDrain = false;
+                    this._flush();
+                });
                 return;
-            }
-            size--;
+            };
+        }
+
+        if(this.finalCallback){
+            this.push(null);
+            this.finalCallback();
         }
     }
 }

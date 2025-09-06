@@ -11,13 +11,17 @@ import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
 export abstract class SingleObjectDuplex<T> extends ObjectDuplex {
     protected result: T | undefined = undefined;
     protected pushedResult = false;
+    private readonly canEarlyFlush:()=>boolean;
+    private finalCallback?: TransformCallback;
 
     /**
      * @constructor
      * @param {ObjectDuplexOptions} options 
+     * @param {Function} canEarlyFlush - A function that returns a boolean indicating whether the stream can early flush.
      */
-    constructor(options: ObjectDuplexOptions) {
+    constructor(options: ObjectDuplexOptions, canEarlyFlush:()=>boolean) {
         super(options);
+        this.canEarlyFlush = canEarlyFlush;
     }
 
 
@@ -29,14 +33,8 @@ export abstract class SingleObjectDuplex<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        if (!this.pushedResult ) {
-            if(this.result !== undefined){
-                this.push(this.result);
-            }
-            this.pushedResult = true;
-            this.push(null);
-        }
-        callback();
+        this.finalCallback = callback;
+        this._flush();
     }
 
     /**
@@ -45,10 +43,32 @@ export abstract class SingleObjectDuplex<T> extends ObjectDuplex {
      * @return {void} This function does not return anything.
      */
     _read(): void {
-        if (!this.pushedResult && this.result !== undefined) {
-            this.push(this.result);
-            this.pushedResult = true;
-            this.push(null);
+        this._flush();
+    }
+
+    /**
+     * Flushes the buffer by pushing its content to the consumer stream. If the consumer stream is not ready to receive data, it waits for the drain event and flushes the buffer again when it is emitted.
+     * This function is recursive and will keep flushing the buffer until it is empty.
+     *
+     * @private
+     * @return {void} This function does not return anything.
+     */
+    protected _flush(): void {
+        if(!this.finalCallback){
+            if (!this.pushedResult && this.result !== undefined && this.canEarlyFlush()) {
+                this.push(this.result);
+                this.pushedResult = true;
+                this.push(null);
+            }
+        }else{
+            if (!this.pushedResult ) {
+                if(this.result !== undefined){
+                    this.push(this.result);
+                }
+                this.pushedResult = true;
+                this.push(null);
+            }
+            this.finalCallback();
         }
     }
 }

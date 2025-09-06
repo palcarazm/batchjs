@@ -7,10 +7,11 @@ import {  ObjectDuplexOptions } from "./ObjectDuplex";
  * @class
  * Abstract class that allows you to emit discarded data in a stream adding support to discard events implementing an internal buffer.
  * @extends InternalBufferDuplex    
- * @template T
+ * @template Tin
+ * @template Tout
  * @example
  * ```typescript
- * class DiscardingStreamImplementation<T> extends DiscardingInternalBufferDuplex<T> {
+ * class DiscardingStreamImplementation<Tin> extends DiscardingInternalBufferDuplex<T,T> {
  *     constructor(){
  *         super({objectMode: true});
  *     }
@@ -44,7 +45,7 @@ import {  ObjectDuplexOptions } from "./ObjectDuplex";
  * >> Discarded chunk: data3
  * ```
  */
-export abstract class DiscardingInternalBufferDuplex<T> extends InternalBufferDuplex<T> {
+export abstract class DiscardingInternalBufferDuplex<Tin,Tout> extends InternalBufferDuplex<Tin,Tout> {
     /**
      * @constructor
      * @param options {ObjectDuplexOptions}
@@ -53,31 +54,31 @@ export abstract class DiscardingInternalBufferDuplex<T> extends InternalBufferDu
         super(options);
     }
 
-    addListener<U extends keyof DiscardingStreamEventHandlers<T>>(event: U, listener: DiscardingStreamEventHandlers<T>[U]): this {
+    addListener<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.addListener(event, listener);
     }
 
-    emit<U extends keyof DiscardingStreamEventEmitters<T>>(event: U, ...args: Array<DiscardingStreamEventEmitters<T>[U]>): boolean {
+    emit<U extends keyof DiscardingStreamEventEmitters<Tin>>(event: U, ...args: Array<DiscardingStreamEventEmitters<Tin>[U]>): boolean {
         return super.emit(event, ...args);
     }
 
-    on<U extends keyof DiscardingStreamEventHandlers<T>>(event: U, listener: DiscardingStreamEventHandlers<T>[U]): this {
+    on<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.on(event, listener);
     }
 
-    once<U extends keyof DiscardingStreamEventHandlers<T>>(event: U, listener: DiscardingStreamEventHandlers<T>[U]): this {
+    once<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.once(event, listener);
     }
 
-    prependListener<U extends keyof DiscardingStreamEventHandlers<T>>(event: U, listener: DiscardingStreamEventHandlers<T>[U]): this {
+    prependListener<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.prependListener(event, listener);
     }
 
-    prependOnceListener<U extends keyof DiscardingStreamEventHandlers<T>>(event: U, listener: DiscardingStreamEventHandlers<T>[U]): this {
+    prependOnceListener<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.prependOnceListener(event, listener);
     }
 
-    removeListener<U extends keyof DiscardingStreamEventHandlers<T>>(event: U, listener: DiscardingStreamEventHandlers<T>[U]): this {
+    removeListener<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.removeListener(event, listener);
     }
 }

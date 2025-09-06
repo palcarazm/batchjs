@@ -44,7 +44,7 @@ export interface DistinctStreamOptions<TInput,TKey> extends ObjectDuplexOptions 
  * >> Duplicated chunk: data1
  * ```
  */
-export class DistinctStream<TInput,TKey> extends DiscardingInternalBufferDuplex<TInput> {
+export class DistinctStream<TInput,TKey> extends DiscardingInternalBufferDuplex<TInput,TInput> {
     private readonly keySet: Set<TKey> = new Set();
     private readonly _keyExtractor: (chunk: TInput) => TKey;
 

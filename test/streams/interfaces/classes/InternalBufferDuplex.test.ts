@@ -3,7 +3,7 @@ import { InternalBufferDuplex } from "../../../../src/streams/interfaces/_index"
 import { SlowWritable } from "../../TestUtils";
 
 describe("InternalBufferDuplex", () => {
-class InternalBufferDuplexImplementation extends InternalBufferDuplex<string> {
+class InternalBufferDuplexImplementation extends InternalBufferDuplex<string,string> {
         constructor(){
             super({objectMode: true});
         }

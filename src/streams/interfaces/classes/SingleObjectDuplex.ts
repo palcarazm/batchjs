@@ -8,8 +8,8 @@ import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
  * @extends ObjectDuplex
  * @template T
  */
-export abstract class SingleObjectDuplex<T> extends ObjectDuplex {
-    protected result: T | undefined = undefined;
+export abstract class SingleObjectDuplex<Tin,Tout> extends ObjectDuplex<Tin,Tout> {
+    protected result: Tout | undefined = undefined;
     protected pushedResult = false;
     private readonly canEarlyFlush:()=>boolean;
     private finalCallback?: TransformCallback;

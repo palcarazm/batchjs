@@ -35,7 +35,7 @@ import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index"
  * >> Replayed chunk: data3
  * ```
  */
-export class ReplayStream<T> extends InternalBufferDuplex<T> {
+export class ReplayStream<T> extends InternalBufferDuplex<T,T> {
     private memory: T[] = [];
     private index:number = 0;
 

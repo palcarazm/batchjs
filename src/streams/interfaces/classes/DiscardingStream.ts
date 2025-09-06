@@ -43,7 +43,7 @@ import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
  * >> Discarded chunk: data3
  * ```
  */
-export abstract class DiscardingStream<T> extends ObjectDuplex {
+export abstract class DiscardingStream<T> extends ObjectDuplex<T,T> {
     /**
      * @constructor
      * @param options {ObjectDuplexOptions}

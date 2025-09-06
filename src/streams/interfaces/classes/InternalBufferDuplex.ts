@@ -6,10 +6,11 @@ import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
  * @class
  * Abstract class that implements an stream that buffers data internally.
  * @extends ObjectDuplex
- * @template T
+ * @template Tin
+ * @template Tout
  */
-export abstract class InternalBufferDuplex<T> extends ObjectDuplex {
-    protected buffer: T[] = [];
+export abstract class InternalBufferDuplex<Tin,Tout> extends ObjectDuplex<Tin,Tout> {
+    protected buffer: Tout[] = [];
     private isAwaitingDrain: boolean = false;
     private finalCallback?: TransformCallback;
 
@@ -57,7 +58,7 @@ export abstract class InternalBufferDuplex<T> extends ObjectDuplex {
         if (this.isAwaitingDrain) return;
 
         while (this.buffer.length > 0) {
-            const chunk = this.buffer.shift() as T;
+            const chunk = this.buffer.shift() as Tout;
             if(!this.push(chunk)){
                 this.isAwaitingDrain = true;
                 this.once("drain", () => {

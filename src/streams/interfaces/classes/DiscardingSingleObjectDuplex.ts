@@ -7,11 +7,11 @@ import {  ObjectDuplexOptions } from "./ObjectDuplex";
  * @class
  * Abstract class that allows you to emit discarded data in a single data stream adding support to discard events.
  * @extends SingleObjectDuplex    
- * @template TInput
- * @template TOutput
+ * @template Tin
+ * @template Tout
  * @example
  * ```typescript
- * class DiscardingStreamImplementation<TInput> extends DiscardingSingleObjectDuplex<TInput> {
+ * class DiscardingStreamImplementation<Tin> extends DiscardingSingleObjectDuplex<Tin> {
  *     constructor(){
  *         super({objectMode: true});
  *     }
@@ -45,7 +45,7 @@ import {  ObjectDuplexOptions } from "./ObjectDuplex";
  * >> Discarded chunk: data3
  * ```
  */
-export abstract class DiscardingSingleObjectDuplex<TInput,TOutput> extends SingleObjectDuplex<TOutput> {
+export abstract class DiscardingSingleObjectDuplex<Tin,Tout> extends SingleObjectDuplex<Tin,Tout> {
     /**
      * @constructor
      * @param options {ObjectDuplexOptions}
@@ -55,31 +55,31 @@ export abstract class DiscardingSingleObjectDuplex<TInput,TOutput> extends Singl
         super(options, canEarlyFlush);
     }
 
-    addListener<U extends keyof DiscardingStreamEventHandlers<TInput>>(event: U, listener: DiscardingStreamEventHandlers<TInput>[U]): this {
+    addListener<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.addListener(event, listener);
     }
 
-    emit<U extends keyof DiscardingStreamEventEmitters<TInput>>(event: U, ...args: Array<DiscardingStreamEventEmitters<TInput>[U]>): boolean {
+    emit<U extends keyof DiscardingStreamEventEmitters<Tin>>(event: U, ...args: Array<DiscardingStreamEventEmitters<Tin>[U]>): boolean {
         return super.emit(event, ...args);
     }
 
-    on<U extends keyof DiscardingStreamEventHandlers<TInput>>(event: U, listener: DiscardingStreamEventHandlers<TInput>[U]): this {
+    on<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.on(event, listener);
     }
 
-    once<U extends keyof DiscardingStreamEventHandlers<TInput>>(event: U, listener: DiscardingStreamEventHandlers<TInput>[U]): this {
+    once<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.once(event, listener);
     }
 
-    prependListener<U extends keyof DiscardingStreamEventHandlers<TInput>>(event: U, listener: DiscardingStreamEventHandlers<TInput>[U]): this {
+    prependListener<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.prependListener(event, listener);
     }
 
-    prependOnceListener<U extends keyof DiscardingStreamEventHandlers<TInput>>(event: U, listener: DiscardingStreamEventHandlers<TInput>[U]): this {
+    prependOnceListener<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.prependOnceListener(event, listener);
     }
 
-    removeListener<U extends keyof DiscardingStreamEventHandlers<TInput>>(event: U, listener: DiscardingStreamEventHandlers<TInput>[U]): this {
+    removeListener<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.removeListener(event, listener);
     }
 }

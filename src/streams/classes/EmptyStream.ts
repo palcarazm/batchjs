@@ -23,7 +23,7 @@ import { SingleObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  * >> Result: false
  * ```
  */
-export class EmptyStream<T> extends SingleObjectDuplex<boolean> {
+export class EmptyStream<T> extends SingleObjectDuplex<T,boolean> {
     protected result = true;
     /**
      * @constructor

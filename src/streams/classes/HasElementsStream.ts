@@ -23,7 +23,7 @@ import { SingleObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  * >> Result: false
  * ```
  */
-export class HasElementsStream<T> extends SingleObjectDuplex<boolean> {
+export class HasElementsStream<T> extends SingleObjectDuplex<T,boolean> {
     protected result: boolean = false;
 
     /**

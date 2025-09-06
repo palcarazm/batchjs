@@ -36,7 +36,7 @@ export interface BufferStreamOptions extends ObjectDuplexOptions {
  * >> Pushed chunk: ["data3"]
  * ```
  */
-export class BufferStream<T> extends ObjectDuplex {
+export class BufferStream<T> extends ObjectDuplex<T,T[]> {
     protected buffer: T[] = [];
     private isAwaitingDrain: boolean = false;
     private finalCallback?: TransformCallback;

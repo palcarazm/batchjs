@@ -37,7 +37,7 @@ export interface GroupByStreamOptions<T> extends ObjectDuplexOptions {
  * >> Pushed chunk: ["data3"]
  * ```
  */
-export class GroupByStream<T> extends InternalBufferDuplex<T[]> {
+export class GroupByStream<T> extends InternalBufferDuplex<T,T[]> {
     protected groups: Map<string,Array<T>> = new Map();
     private readonly groupBy: (chunk: T) => string;
 

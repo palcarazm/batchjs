@@ -18,8 +18,10 @@ const defaultOptions = {
  * @class
  * Abstract class that handle data in a stream in object mode.
  * @extends Readable
+ * @template Tout
  */
-export abstract class ObjectReadable extends Readable {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export abstract class ObjectReadable<Tout=any> extends Readable {
 
     /**
      * @constructor
@@ -29,6 +31,15 @@ export abstract class ObjectReadable extends Readable {
     constructor(options: ObjectReadableOptions) {
         const opts = {...defaultOptions, ...options};
         super(opts);
+    }
+
+    /**
+     * Implementation of the Readable interface.
+     * @param {number} [size] - If specified, the maximum number of bytes to read.
+     * @returns {Tout|null} - The object read or null if the stream has ended.
+     */
+    read(size?: number):Tout|null {
+        return super.read(size);
     }
 }
 

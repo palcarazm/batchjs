@@ -27,7 +27,7 @@ import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index"
  * >> Pushed chunk: data3
  * ```
  */
-export class FlatStream<T> extends InternalBufferDuplex<T> {
+export class FlatStream<T> extends InternalBufferDuplex<T[],T> {
     /**
      * @constructor
      * @param {ObjectDuplexOptions} options - The options for the FlatStream.

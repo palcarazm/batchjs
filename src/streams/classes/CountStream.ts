@@ -25,7 +25,7 @@ import { SingleObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  * >> Received chunks: 3
  * ```
  */
-export class CountStream<T> extends SingleObjectDuplex<number> {
+export class CountStream<T> extends SingleObjectDuplex<T,number> {
     protected result: number = 0; 
 
     /**

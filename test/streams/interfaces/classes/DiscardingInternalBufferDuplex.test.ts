@@ -2,7 +2,7 @@ import { TransformCallback } from "stream";
 import { DiscardingInternalBufferDuplex } from "../../../../src/streams/index";
 
 describe("DiscardingInternalBufferDuplex", () => {
-    class DiscardingStreamImplementation extends DiscardingInternalBufferDuplex<string> {
+    class DiscardingStreamImplementation extends DiscardingInternalBufferDuplex<string,string> {
         constructor(){
             super({objectMode: true});
         }

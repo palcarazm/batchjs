@@ -41,7 +41,7 @@ export interface FilterStreamOptions<T> extends ObjectDuplexOptions {
  * >> Discarded chunk: data3
  * ```
  */
-export class FilterStream<T> extends DiscardingInternalBufferDuplex<T> {
+export class FilterStream<T> extends DiscardingInternalBufferDuplex<T,T> {
     private readonly _filter: (chunk: T) => boolean;
 
     /**

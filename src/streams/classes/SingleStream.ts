@@ -29,7 +29,7 @@ import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index"
  * >> Error: Expected only one chunk in the stream
  * ```
  */
-export class SingleStream<T> extends InternalBufferDuplex<T> {
+export class SingleStream<T> extends InternalBufferDuplex<T,T> {
     private isFirstChunk = true;
 
     /**

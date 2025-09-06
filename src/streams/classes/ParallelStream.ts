@@ -44,7 +44,7 @@ export interface ParallelStreamOptions<TInput, TOutput> extends ObjectDuplexOpti
  * >> Pushed chunk: DATA3
  * ```
  */
-export class ParallelStream<TInput, TOutput> extends InternalBufferDuplex<TOutput> {
+export class ParallelStream<TInput, TOutput> extends InternalBufferDuplex<TInput, TOutput> {
     private queue: Array<TInput> = [];
     private pool: Set<Promise<void>> = new Set();
     private readonly maxConcurrent: number;

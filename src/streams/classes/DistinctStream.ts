@@ -69,7 +69,8 @@ export class DistinctStream<TInput,TKey> extends DiscardingInternalBufferDuplex<
     _write(chunk: TInput, encoding: BufferEncoding, callback: TransformCallback): void {
         const key = this._keyExtractor(chunk);
         if(!this.keySet.has(key)){
-            this.buffer.push(chunk);
+            this.push(chunk);
+            this._flush();
             this.keySet.add(key);
         }else{
             this.emit("discard", chunk);

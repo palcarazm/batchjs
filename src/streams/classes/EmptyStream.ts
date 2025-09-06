@@ -30,7 +30,7 @@ export class EmptyStream<T> extends SingleObjectDuplex<boolean> {
      * @param {ObjectDuplexOptions} options - The options for the EmptyStream.
      */
     constructor(options: ObjectDuplexOptions) {
-        super(options);
+        super(options,()=>!this.result);
     }
 
     /**
@@ -43,16 +43,7 @@ export class EmptyStream<T> extends SingleObjectDuplex<boolean> {
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         this.result = false;
+        this._flush();
         callback();
-    }
-
-    /**
-     * Push once false if at least one chunk has been received.
-     *
-     * @override
-     * @return {void}
-     */
-    _read(): void {
-        if(!this.result) super._read();
     }
 }

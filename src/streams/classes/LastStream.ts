@@ -38,7 +38,7 @@ export class LastStream<T> extends DiscardingSingleObjectDuplex<T,T> {
      * @param {ObjectDuplexOptions} options - The options for the LastStream.
      */
     constructor(options: ObjectDuplexOptions) {
-        super(options);
+        super(options,()=>false);
     }
 
     /**
@@ -55,15 +55,5 @@ export class LastStream<T> extends DiscardingSingleObjectDuplex<T,T> {
         }
         this.result = chunk;
         callback();
-    }
-
-    /**
-     * Reading is not supported since writer finishes first.
-     *
-     * @override
-     * @return {void}
-     */
-    _read(): void {
-        return;
     }
 }

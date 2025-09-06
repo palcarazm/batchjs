@@ -52,6 +52,7 @@ export class SingleStream<T> extends InternalBufferDuplex<T> {
         if (this.isFirstChunk) {
             this.isFirstChunk = false;
             this.buffer.push(chunk);
+            this._flush();
         } else {
             const error = new SingleStreamError();
             this.emit("error", error);

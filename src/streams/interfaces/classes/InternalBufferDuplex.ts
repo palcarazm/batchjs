@@ -10,6 +10,8 @@ import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
  */
 export abstract class InternalBufferDuplex<T> extends ObjectDuplex {
     protected buffer: T[] = [];
+    private isAwaitingDrain: boolean = false;
+    private finalCallback?: TransformCallback;
 
     /**
      * @constructor
@@ -32,22 +34,8 @@ export abstract class InternalBufferDuplex<T> extends ObjectDuplex {
          *
          * @return {void} This function does not return anything.
          */
-        const pushNext = () => {
-            if (this.buffer.length === 0) {
-                callback();
-                this.push(null);
-                return;
-            }
-    
-            const chunk = this.buffer.shift() as T;
-            if (!this.push(chunk)) {
-                this.once("drain", pushNext);
-            } else {
-                setImmediate(pushNext);
-            }
-        };
-    
-        pushNext();
+        this.finalCallback = callback;
+        this._flush();
     }
 
     /**
@@ -56,13 +44,33 @@ export abstract class InternalBufferDuplex<T> extends ObjectDuplex {
      * @param {number} size - The size parameter for controlling the read operation.
      * @return {void} This function does not return anything.
      */
-    _read(size: number): void {
-        while (this.buffer.length > 0 && size > 0) {
+    _read(): void {
+        this._flush();
+    }
+
+    /**
+     * Pushes the next batch of elements from the buffer to the stream, handling backpressure.
+     * @protected
+     * @return {void} This function does not return anything.
+     */
+    protected _flush(): void {
+        if (this.isAwaitingDrain) return;
+
+        while (this.buffer.length > 0) {
             const chunk = this.buffer.shift() as T;
             if(!this.push(chunk)){
+                this.isAwaitingDrain = true;
+                this.once("drain", () => {
+                    this.isAwaitingDrain = false;
+                    this._flush();
+                });
                 return;
             };
-            size--;
+        }
+
+        if(this.finalCallback){
+            this.push(null);
+            this.finalCallback();
         }
     }
 }

@@ -31,7 +31,7 @@ export class HasElementsStream<T> extends SingleObjectDuplex<boolean> {
      * @param {ObjectDuplexOptions} options - The options for the HasElementsStream.
      */
     constructor(options: ObjectDuplexOptions) {
-        super(options);
+        super(options,()=>this.result);
     }
 
     /**
@@ -44,16 +44,7 @@ export class HasElementsStream<T> extends SingleObjectDuplex<boolean> {
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         this.result = true;
+        this._flush();
         callback();
-    }
-
-    /**
-     * Push once true if at least one chunk has been received.
-     *
-     * @override
-     * @return {void}
-     */
-    _read(): void {
-        if(this.result) super._read();
     }
 }

@@ -33,7 +33,7 @@ export class CountStream<T> extends SingleObjectDuplex<number> {
      * @param {ObjectDuplexOptions} options - The options for the GroupBy.
      */
     constructor(options: ObjectDuplexOptions) {
-        super(options);
+        super(options,()=>false);
     }
 
     /**
@@ -50,15 +50,5 @@ export class CountStream<T> extends SingleObjectDuplex<number> {
             this.result++;
         }
         callback();
-    }
-
-    /**
-     * Reading is not supported since writer finishes first.
-     *
-     * @override
-     * @return {void}
-     */
-    _read(): void {
-        return;
     }
 }

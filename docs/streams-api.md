@@ -1363,7 +1363,7 @@ Abstract class that allows you to emit discarded data in a stream adding support
 
 ### Examples
 
-```typescriptclass DiscardingStreamImplementation<T> extends DiscardingInternalBufferDuplex<T> {    constructor(){        super({objectMode: true});    }    _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {        this.emit("discard", chunk);        callback();    }    _final(callback: TransformCallback): void {        this.push(null);        callback();    }    _read(): void {}}const stream:DiscardingStreamImplementation<string> = new DiscardingStreamImplementation();stream.write("data1"); //Discardedstream.write("data2"); //Discardedstream.write("data3"); //Discardedstream.end();stream.on("discard", (chunk: string) => {    console.log(``Discarded chunk: ${chunk}```);});``````shell>> Discarded chunk: data1>> Discarded chunk: data2>> Discarded chunk: data3```
+```typescriptclass DiscardingStreamImplementation<Tin> extends DiscardingInternalBufferDuplex<T,T> {    constructor(){        super({objectMode: true});    }    _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {        this.emit("discard", chunk);        callback();    }    _final(callback: TransformCallback): void {        this.push(null);        callback();    }    _read(): void {}}const stream:DiscardingStreamImplementation<string> = new DiscardingStreamImplementation();stream.write("data1"); //Discardedstream.write("data2"); //Discardedstream.write("data3"); //Discardedstream.end();stream.on("discard", (chunk: string) => {    console.log(``Discarded chunk: ${chunk}```);});``````shell>> Discarded chunk: data1>> Discarded chunk: data2>> Discarded chunk: data3```
 
   ### Constructor
   | Name       | Description                             | Type                         |
@@ -1429,7 +1429,7 @@ Abstract class that allows you to emit discarded data in a single data stream ad
 
 ### Examples
 
-```typescriptclass DiscardingStreamImplementation<TInput> extends DiscardingSingleObjectDuplex<TInput> {    constructor(){        super({objectMode: true});    }    _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {        this.emit("discard", chunk);        callback();    }    _final(callback: TransformCallback): void {        this.push(null);        callback();    }    _read(): void {}}const stream:DiscardingStreamImplementation<string> = new DiscardingStreamImplementation();stream.write("data1"); //Discardedstream.write("data2"); //Discardedstream.write("data3"); //Discardedstream.end();stream.on("discard", (chunk: string) => {    console.log(``Discarded chunk: ${chunk}```);});``````shell>> Discarded chunk: data1>> Discarded chunk: data2>> Discarded chunk: data3```
+```typescriptclass DiscardingStreamImplementation<Tin> extends DiscardingSingleObjectDuplex<Tin> {    constructor(){        super({objectMode: true});    }    _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {        this.emit("discard", chunk);        callback();    }    _final(callback: TransformCallback): void {        this.push(null);        callback();    }    _read(): void {}}const stream:DiscardingStreamImplementation<string> = new DiscardingStreamImplementation();stream.write("data1"); //Discardedstream.write("data2"); //Discardedstream.write("data3"); //Discardedstream.end();stream.on("discard", (chunk: string) => {    console.log(``Discarded chunk: ${chunk}```);});``````shell>> Discarded chunk: data1>> Discarded chunk: data2>> Discarded chunk: data3```
 
   ### Constructor
   | Name       | Description                             | Type                         |
@@ -1593,6 +1593,25 @@ Abstract class that handle data in a stream in object mode.
   | **options** | The options for the ObjectReadable. | ObjectReadableOptions |
   | **options.objectMode** | Whether the stream should operate in object mode. | true |
 
+
+
+### read (function)
+
+
+
+Implementation of the Readable interface.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **size** | If specified, the maximum number of bytes to read. | number |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  | Tout, null | 
+The object read or null if the stream has ended.
+ |
 
 
 ## ObjectWritable

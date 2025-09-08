@@ -1,11 +1,11 @@
-import { Job } from "../../../../src/common/index";
+import { Job, JobOptions } from "../../../../src/common/index";
 import { MockPassingStep } from "../_index";
 
 export class MockPassingJob extends Job {
-    constructor(){
-        super("MockPassingJob");
+    constructor(options?:JobOptions){
+        super("MockPassingJob",{},options);
     }
     protected _steps() {
-        return [new MockPassingStep(), new MockPassingStep()];
+        return [new MockPassingStep("step1"), new MockPassingStep("step2")];
     }
 }

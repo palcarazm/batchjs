@@ -57,4 +57,4 @@ export abstract class ObjectWritable<Tin=any> extends Writable {
     }
 }
 
-export type WriteCallback = (error: Error | null | undefined) => void;
+export type WriteCallback = (error?: Error | null | undefined) => void;

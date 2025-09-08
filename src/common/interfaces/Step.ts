@@ -1,4 +1,5 @@
 import { Readable, Duplex, Writable } from "stream";
+import { RunnableStatus } from "./RunnableStatus";
 
 /**
  * @abstract
@@ -55,14 +56,29 @@ import { Readable, Duplex, Writable } from "stream";
  * ```
  */
 export abstract class Step {
-    readonly name:string;
+    public readonly name:string;
+    public readonly params:object;
+    private _status:RunnableStatus;
 
     /**
      * @constructor
      * @param {string} name - The name to assign to the Step.
+     * @param {object} params - The parameters to pass to the step.
      */
-    constructor(name:string) {
+    constructor(name:string,params:object={}) {
         this.name = name;
+        this.params = params;
+        this._status = RunnableStatus.CREATED;
+    }
+
+    /**
+     * The current status of the step.
+     * @readonly
+     * @type {RunnableStatus}
+     * @memberof Step
+     */
+    get status():RunnableStatus {
+        return this._status;
     }
     
     /**
@@ -105,7 +121,8 @@ export abstract class Step {
      * @return {Promise<void>} A Promise that resolves when the step execution is completed, and rejects if an error occurs.
      */
     public run():Promise<void>{
-        return new Promise((resolve, reject) => {
+        this._status = RunnableStatus.RUNNING;
+        return new Promise<void>((resolve, reject) => {
             // Reader
             const reader = this._reader();
             reader.once("error", (error) => {
@@ -130,8 +147,12 @@ export abstract class Step {
             // Assembly writer
             assembly.pipe(writer)
                 .on("finish", () => {
+                    this._status = RunnableStatus.COMPLETED;
                     resolve();
                 });
+        }).catch((error) => {
+            this._status = RunnableStatus.FAILED;
+            return Promise.reject(error as Error);
         });
     }
 }

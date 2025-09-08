@@ -9,6 +9,10 @@ In this documentation, we will focus on the common API. This module includes the
 ## Table of Contents
 
   - [Job](#job)
+  - [JobListener](#joblistener)
+  - [JobLogger](#joblogger)
+  - [JobMeter](#jobmeter)
+  - [JobTimer](#jobtimer)
   - [Step](#step)
 
 ## Job
@@ -27,6 +31,8 @@ Abstract base class for all jobs.
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **name** | The name to assign to the Step. | string |
+  | **params** | The parameters to pass to the job. | object |
+  | **options** | An optional options object. | JobOptions |
 
 
 
@@ -180,6 +186,253 @@ Removes an event listener to the specified event type.
   | this | allowing to chain |
 
 
+## JobListener
+
+
+
+Class responsible for listening to the events of a job and dispatching them to handle timers, metrics and logging.
+
+
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **job** | The job to listen to. |  |
+  | **logger** | The logger to use for logging. If not given, no logging will be done. |  |
+
+
+
+## JobLogger
+
+
+
+Class responsible for logging the events of a job.
+
+
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **logger** | The logger to use for logging. | Logger |
+  | **jobName** | The name of the job to log. | string |
+
+
+
+### start (function)
+
+
+
+Log the start of a job.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **jobParams** | The parameters passed to the job. |  |
+
+
+### finish (function)
+
+
+
+Log the end of a job.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **jobStatus** | The final status of the job. |  |
+  | **duration** | The duration of the job in milliseconds. |  |
+
+
+### StepStart (function)
+
+
+
+Log the start of a step.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **stepName** | The name of the step that started. |  |
+  | **stepParams** | The parameters passed to the step. |  |
+
+
+### StepError (function)
+
+
+
+Log an error that occurred in a step.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **stepName** | The name of the step that produced the error. |  |
+  | **stepStatus** | The status of the step that produced the error. |  |
+  | **error** | The error that occurred. |  |
+
+
+### StepFinish (function)
+
+
+
+Log the end of a step.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **stepName** | The name of the step that finished. |  |
+  | **stepStatus** | The status of the step that finished. |  |
+  | **duration** | The duration of the step in milliseconds. |  |
+
+
+## JobMeter
+
+
+
+Class responsible for keeping track of the metrics of a job.
+
+
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **jobName** | The name to assign to the Job. | string |
+  | **jobStatus** | The status to assign to the Job. | RunnableStatus |
+
+
+
+### start (function)
+
+
+
+Start a job by setting its status to the given jobStatus.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **jobStatus** | The status to set the job to. |  |
+
+
+### finish (function)
+
+
+
+Finish a job by setting its status to the given jobStatus and its duration to the given duration.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **jobStatus** | The status to set the job to. |  |
+  | **duration** | The duration of the job in milliseconds. |  |
+
+
+### StepStart (function)
+
+
+
+Start a step by adding a new entry to the list of steps with the given stepName and stepStatus.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **stepName** | The name to assign to the step. |  |
+  | **stepStatus** | The status to assign to the step. |  |
+
+
+### StepFinish (function)
+
+
+
+Finish a step by finding the entry in the list of steps with the given stepName and setting its status to the given stepStatus and its duration to the given duration.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **stepName** | The name of the step to finish. |  |
+  | **stepStatus** | The status to set the step to. |  |
+  | **duration** | The duration of the step in milliseconds. |  |
+
+
+## JobTimer
+
+
+
+Class responsible for keeping track of the timers of a job.
+
+
+
+  ### Constructor
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **jobName** | The name of the job. |  |
+
+
+
+### nsFrom (function)
+
+`protected` 
+
+Convert a nanosecond duration to milliseconds.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **start** | starting time in nanoseconds |  |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  |  | time in milliseconds |
+
+
+### getKey (function)
+
+`protected` 
+
+Generates a key for the timer Map.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **type** | Is it a job or a step? |  |
+  | **name** | The name of the job or step |  |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  |  | A key that can be used to identify the timer |
+
+
+### start (function)
+
+
+
+Start a timer for a job or step.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **type** | Is it a job or a step? |  |
+  | **name** | The name of the job or step |  |
+
+
+### stop (function)
+
+
+
+Stop a timer for a job or step.
+
+  #### Parameters
+  | Name       | Description                             | Type                         |
+  |------------|-----------------------------------------|------------------------------|
+  | **type** | Is it a job or a step? |  |
+  | **name** | The name of the job or step |  |
+
+  #### Returns
+  | Type       | Description                             |
+  |------------|-----------------------------------------|
+  |  | The time taken to run the job or step in milliseconds, or 0 if the timer was not started. |
+
+
 ## Step
 
 `abstract` 
@@ -230,6 +483,7 @@ Abstract base class for all steps.
   | Name       | Description                             | Type                         |
   |------------|-----------------------------------------|------------------------------|
   | **name** | The name to assign to the Step. | string |
+  | **params** | The parameters to pass to the step. | object |
 
 
 

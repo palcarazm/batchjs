@@ -1,6 +1,6 @@
-import { Step } from "../../../src/common/interfaces/_index";
-import { MockPassingStep, MockReaderFailingStep } from "../mocks/_index";
-import { MockPassingJob } from "../mocks/jobs/_index";
+import { Step } from "../../../../src/common/interfaces/_index";
+import { MockPassingStep, MockReaderFailingStep } from "../../mocks/_index";
+import { MockPassingJob } from "../../mocks/jobs/_index";
 
 
 describe("DiscardingStream", () => {

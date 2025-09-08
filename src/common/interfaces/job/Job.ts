@@ -1,6 +1,18 @@
 import { EventEmitter } from "events";
-import { Step } from "./Step";
+import { Logger } from "../Logger";
+import { Step } from "../Step";
 import { JobEventEmitters, JobEventHandlers } from "./JobEvents";
+import { JobListener } from "./JobListener";
+import { RunnableStatus } from "../RunnableStatus";
+import { JobMetrics } from "./JobMeter";
+
+/**
+ * @interface
+ * Options for the Job constructor.
+ */
+export interface JobOptions {
+   logger?: Logger;
+}
 
 /**
  * @abstract
@@ -34,15 +46,45 @@ import { JobEventEmitters, JobEventHandlers } from "./JobEvents";
  * ```
  */
 export abstract class Job extends EventEmitter {
-    readonly name:string;
+    public readonly name:string;
+    protected _status:RunnableStatus;
+    public readonly params:object;
+    protected readonly options?:JobOptions;
+    private readonly JobListener:JobListener;
 
     /**
      * @constructor
      * @param {string} name - The name to assign to the Step.
+     * @param {object} params - The parameters to pass to the job.
+     * @param {JobOptions} options - An optional options object.
      */
-    constructor(name:string) {
+    constructor(name:string, params:object={}, options?:JobOptions) {
         super();
+        this._status = RunnableStatus.CREATED;
         this.name = name;
+        this.params = params;
+        if (options) this.options = options;
+        this.JobListener = new JobListener(this, options?.logger);
+    }
+
+    /**
+     * The current status of the job.
+     * @readonly
+     * @type {RunnableStatus}
+     * @memberof Job
+     */
+    get status():RunnableStatus {
+        return this._status;
+    }
+
+    /**
+     * The current metrics of the job.
+     * @readonly
+     * @type {JobMetrics}
+     * @memberof Job
+     */
+    get metrics():JobMetrics {
+        return this.JobListener.metrics;
     }
 
     /**
@@ -61,18 +103,26 @@ export abstract class Job extends EventEmitter {
      * @return {Promise<void>} A Promise that resolves when all steps are successfully executed or rejects if an error occurs.
      */
     public async run():Promise<void>{
+        this._status = RunnableStatus.RUNNING;
         this.emit("start");
         const steps = this._steps();
         try {
             for (const step of steps) {
                 this.emit("stepStart", step);
-                await step.run();
+                await step.run().catch((e) => { 
+                    const error = e as Error;
+                    this.emit("stepError",{step, error});
+                    return Promise.reject(error);
+                });
                 this.emit("stepEnd", step);
             }
+            this._status = RunnableStatus.COMPLETED;
             this.emit("end");
             return Promise.resolve();
         } catch (e) {
             const error = e as Error;
+            this._status = RunnableStatus.FAILED;
+            this.emit("error", error );
             return Promise.reject(error);
         }
     }

@@ -1,4 +1,4 @@
-import { MockProcessorFailingStepJob,MockPassingJob } from "../mocks/jobs/_index";
+import { MockProcessorFailingStepJob,MockPassingJob } from "../../mocks/jobs/_index";
 
 describe("Job", () => {
     test("should run all steps successfully", async () => {

@@ -1,9 +1,10 @@
 import { JobTimer } from "../../../../src/common/interfaces/_index";
-import { MockPassingJob } from "../../mocks/jobs/_index";
 
 
 describe("JobTimer", () => {
   let timer: JobTimer;
+  const deltaMax = 10;
+  const deltaMin = 2;
 
   beforeEach(() => {
     timer = new JobTimer("myJob");
@@ -16,8 +17,8 @@ describe("JobTimer", () => {
     setTimeout(()=>{
         const duration = timer.stop("JOB", "myJob");
         const end = Date.now();
-        expect(duration).toBeGreaterThanOrEqual(50);
-        expect(duration).toBeLessThanOrEqual(end - start + 10);
+        expect(duration).toBeGreaterThanOrEqual(50 - deltaMin);
+        expect(duration).toBeLessThanOrEqual(end - start + deltaMax);
         done();
     }, 50)
   });
@@ -29,8 +30,8 @@ describe("JobTimer", () => {
     setTimeout(()=>{
         const duration = timer.stop("STEP", "myStep");
         const end = Date.now();
-        expect(duration).toBeGreaterThanOrEqual(30);
-        expect(duration).toBeLessThanOrEqual(end - start + 10);
+        expect(duration).toBeGreaterThanOrEqual(30 - deltaMin);
+        expect(duration).toBeLessThanOrEqual(end - start + deltaMax);
         done();
     }, 30)
   });

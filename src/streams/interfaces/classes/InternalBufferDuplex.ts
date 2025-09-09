@@ -11,8 +11,6 @@ import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
  */
 export abstract class InternalBufferDuplex<Tin,Tout> extends ObjectDuplex<Tin,Tout> {
     protected buffer: Tout[] = [];
-    private isAwaitingDrain: boolean = false;
-    private finalCallback?: TransformCallback;
 
     /**
      * @constructor
@@ -30,13 +28,11 @@ export abstract class InternalBufferDuplex<Tin,Tout> extends ObjectDuplex<Tin,To
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        /**
-         * Pushes the next batch of elements from the buffer to the stream, handling backpressure.
-         *
-         * @return {void} This function does not return anything.
-         */
-        this.finalCallback = callback;
-        this._flush();
+        this._flush()
+            .then(()=>{
+                this.push(null);
+                callback();
+            }).catch(e=>callback(e));
     }
 
     /**
@@ -52,26 +48,17 @@ export abstract class InternalBufferDuplex<Tin,Tout> extends ObjectDuplex<Tin,To
     /**
      * Pushes the next batch of elements from the buffer to the stream, handling backpressure.
      * @protected
-     * @return {void} This function does not return anything.
+     * @return {Promise<void>} This function does not return anything.
      */
-    protected _flush(): void {
-        if (this.isAwaitingDrain) return;
-
+    protected  async _flush(): Promise<void> {
         while (this.buffer.length > 0) {
             const chunk = this.buffer.shift() as Tout;
-            if(!this.push(chunk)){
-                this.isAwaitingDrain = true;
-                this.once("drain", () => {
-                    this.isAwaitingDrain = false;
-                    this._flush();
+            if(!this.push(chunk)){   
+                await new Promise<void>((resolve) => {  
+                    this.once("drain", () => resolve());
                 });
-                return;
-            };
+            }
         }
-
-        if(this.finalCallback){
-            this.push(null);
-            this.finalCallback();
-        }
+        return Promise.resolve();
     }
 }

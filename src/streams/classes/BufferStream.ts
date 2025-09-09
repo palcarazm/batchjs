@@ -38,8 +38,6 @@ export interface BufferStreamOptions extends ObjectDuplexOptions {
  */
 export class BufferStream<T> extends ObjectDuplex<T,T[]> {
     protected buffer: T[] = [];
-    private isAwaitingDrain: boolean = false;
-    private finalCallback?: TransformCallback;
     private readonly batchSize: number;
 
     /**
@@ -62,8 +60,9 @@ export class BufferStream<T> extends ObjectDuplex<T,T[]> {
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         this.buffer.push(chunk);
-        this._flush();
-        callback();
+        this._flush(false)
+            .then(()=>callback())
+            .catch((e)=>callback(e));
     }
 
     /**
@@ -74,8 +73,11 @@ export class BufferStream<T> extends ObjectDuplex<T,T[]> {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        this.finalCallback = callback;
-        this._flush();
+        this._flush(true)
+            .then(()=>{
+                this.push(null);
+                callback();
+            }).catch(e=>callback(e));
     }
 
     /**
@@ -85,32 +87,23 @@ export class BufferStream<T> extends ObjectDuplex<T,T[]> {
      * @return {void} This function does not return anything.
      */
     _read(): void {
-        this._flush();
+        this._flush(false);
     }
 
     /**
      * Pushes the next batch of elements from the buffer to the stream, handling backpressure.
      * @protected
-     * @return {void} This function does not return anything.
+     * @return {Promise<void>} This function does not return anything.
      */
-    protected _flush(): void {
-        if (this.isAwaitingDrain) return;
-
-        while (this.buffer.length >= this.batchSize || (this.finalCallback && this.buffer.length > 0)) {
+    protected async _flush(final:boolean): Promise<void> {
+        while (this.buffer.length >= this.batchSize || (final && this.buffer.length > 0)) {
             const batch = this.buffer.splice(0, this.batchSize);
             if(!this.push(batch)){
-                this.isAwaitingDrain = true;
-                this.once("drain", () => {
-                    this.isAwaitingDrain = false;
-                    this._flush();
+                await new Promise<void>((resolve) => {  
+                    this.once("drain", () => resolve());
                 });
-                return;
             };
         }
-
-        if(this.finalCallback){
-            this.push(null);
-            this.finalCallback();
-        }
+        return Promise.resolve();
     }
 }

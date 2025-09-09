@@ -280,7 +280,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void | This function does not return anything. |
+  | Promise.&lt;void&gt; | This function does not return anything. |
 
 
 ## CountStream
@@ -449,7 +449,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void | This function does not return anything. |
+  | Promise.&lt;void&gt; | This function does not return anything. |
 
 
 ## EmptyStream
@@ -616,7 +616,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void | This function does not return anything. |
+  | Promise.&lt;void&gt; | This function does not return anything. |
 
 
 ## FirstStream
@@ -782,7 +782,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void | This function does not return anything. |
+  | Promise.&lt;void&gt; | This function does not return anything. |
 
 
 ## GroupByStream
@@ -902,7 +902,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void | This function does not return anything. |
+  | Promise.&lt;void&gt; | This function does not return anything. |
 
 
 ### _final (function)
@@ -1195,7 +1195,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void | This function does not return anything. |
+  | Promise.&lt;void&gt; | This function does not return anything. |
 
 
 ### _final (function)
@@ -1350,7 +1350,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void | This function does not return anything. |
+  | Promise.&lt;void&gt; | This function does not return anything. |
 
 
 ## DiscardingInternalBufferDuplex
@@ -1416,7 +1416,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void | This function does not return anything. |
+  | Promise.&lt;void&gt; | This function does not return anything. |
 
 
 ## DiscardingSingleObjectDuplex
@@ -1560,7 +1560,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | void | This function does not return anything. |
+  | Promise.&lt;void&gt; | This function does not return anything. |
 
 
 ## ObjectDuplex

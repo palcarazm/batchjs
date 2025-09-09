@@ -59,8 +59,9 @@ export class ReplayStream<T> extends InternalBufferDuplex<T,T> {
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         this.memory.push(chunk);
         this.buffer.push(chunk);
-        this._flush();
-        callback();
+        this._flush()
+            .then(()=>callback())
+            .catch((e)=>callback(e));
     }
 
     /**

@@ -30,7 +30,11 @@ export abstract class InternalBufferDuplex<Tin,Tout> extends ObjectDuplex<Tin,To
     _final(callback: TransformCallback): void {
         const finalize = (callback: TransformCallback)=>{
             if(this._flush()){
-                this.once("drain", ()=>finalize(callback));
+                const timer = setTimeout(()=>this.emit("drain"), this.drainTimeout);
+                this.once("drain", () => {
+                    clearTimeout(timer);
+                    finalize(callback);
+                });
             }else{
                 this.push(null);
                 callback();

@@ -8,10 +8,12 @@ import { WriteCallback } from "./ObjectWritable";
  */
 export interface ObjectDuplexOptions extends DuplexOptions {
     objectMode?:true;
+    drainTimeout?: number;
 }
 
 const defaultOptions = {
-    objectMode: true
+    objectMode: true,
+    drainTimeout: 50
 };
 
 /**
@@ -24,15 +26,18 @@ const defaultOptions = {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export abstract class ObjectDuplex<Tin=any,Tout=any> extends Duplex {
+    readonly drainTimeout: number;
 
     /**
      * @constructor
      * @param {ObjectDuplexOptions} options - The options for the ObjectDuplex.
      * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
+     * @param [options.drainTimeout=50] {number} - Milliseconds until the stream is considered drained.
      */
     constructor(options: ObjectDuplexOptions) {
         const opts = {...defaultOptions, ...options};
         super(opts);
+        this.drainTimeout = opts.drainTimeout;
     }
     
     write(chunk: Tin, callback?: WriteCallback): boolean;

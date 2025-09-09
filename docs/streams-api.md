@@ -1576,6 +1576,7 @@ Abstract class that handle data in a stream in object mode.
   |------------|-----------------------------------------|------------------------------|
   | **options** | The options for the ObjectDuplex. | ObjectDuplexOptions |
   | **options.objectMode** | Whether the stream should operate in object mode. | true |
+  | **options.drainTimeout** | Milliseconds until the stream is considered drained. | number |
 
 
 

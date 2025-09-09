@@ -25,7 +25,7 @@ import { SingleObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  * >> Received chunks: 3
  * ```
  */
-export class CountStream<T> extends SingleObjectDuplex<T,number> {
+export class CountStream<T extends NonNullable<unknown>> extends SingleObjectDuplex<T,number> {
     protected result: number = 0; 
 
     /**
@@ -46,9 +46,7 @@ export class CountStream<T> extends SingleObjectDuplex<T,number> {
      * @return {void}
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
-        if (chunk !== null) {
-            this.result++;
-        }
+        this.result++;
         callback();
     }
 }

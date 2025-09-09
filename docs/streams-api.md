@@ -1593,6 +1593,7 @@ Abstract class that handle data in a stream in object mode.
   |------------|-----------------------------------------|------------------------------|
   | **options** | The options for the ObjectReadable. | ObjectReadableOptions |
   | **options.objectMode** | Whether the stream should operate in object mode. | true |
+  | **options.drainTimeout** | Milliseconds until the stream is considered drained. | number |
 
 
 
@@ -1628,6 +1629,7 @@ Abstract class that handle data in a stream in object mode.
   |------------|-----------------------------------------|------------------------------|
   | **options** | The options for the ObjectWritable. | ObjectWritableOptions |
   | **options.objectMode** | Whether the stream should operate in object mode. | true |
+  | **options.drainTimeout** | Milliseconds until the stream is considered drained. | number |
 
 
 

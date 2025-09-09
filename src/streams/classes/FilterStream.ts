@@ -65,6 +65,7 @@ export class FilterStream<T> extends DiscardingInternalBufferDuplex<T,T> {
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         if(this._filter(chunk)){
             this.buffer.push(chunk);
+            this._flush();
         }else{
             this.emit("discard", chunk);
         }

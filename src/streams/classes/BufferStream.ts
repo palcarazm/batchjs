@@ -63,6 +63,7 @@ export class BufferStream<T> extends InternalBufferDuplex<T,T[]> {
         if(this.prebuffer.length === this.batchSize){
             const batch = this.prebuffer.splice(0, this.batchSize);
             this.buffer.push(batch);
+            this._flush();
         }
         callback();
     }

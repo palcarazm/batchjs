@@ -46,6 +46,7 @@ export class FlatStream<T> extends InternalBufferDuplex<T[],T> {
      */
     _write(chunk: Array<T>, encoding: BufferEncoding, callback: TransformCallback): void {
         this.buffer.push(...chunk);
+        this._flush();
         callback();
     }
 }

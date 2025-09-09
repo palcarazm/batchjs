@@ -36,8 +36,7 @@ import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index"
  * ```
  */
 export class ReplayStream<T> extends InternalBufferDuplex<T,T> {
-    private memory: T[] = [];
-    private index:number = 0;
+    private readonly memory: T[] = [];
 
     /**
      * @constructor
@@ -59,6 +58,7 @@ export class ReplayStream<T> extends InternalBufferDuplex<T,T> {
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
         this.memory.push(chunk);
         this.buffer.push(chunk);
+        this._flush();
         callback();
     }
 

@@ -7,10 +7,12 @@ import { Writable, WritableOptions } from "stream";
  */
 export interface ObjectWritableOptions extends WritableOptions {
     objectMode?:true;
+    drainTimeout?: number;
 }
 
 const defaultOptions = {
-    objectMode: true
+    objectMode: true,
+    drainTimeout: 50
 };
 
 /**
@@ -22,15 +24,17 @@ const defaultOptions = {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export abstract class ObjectWritable<Tin=any> extends Writable {
-
+    readonly drainTimeout: number;
     /**
      * @constructor
      * @param {ObjectWritableOptions} options - The options for the ObjectWritable.
      * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
+     * @param [options.drainTimeout=50] {number} - Milliseconds until the stream is considered drained.
      */
     constructor(options: ObjectWritableOptions) {
         const opts = {...defaultOptions, ...options};
         super(opts);
+        this.drainTimeout = opts.drainTimeout;
     }
     
     write(chunk: Tin, callback?: WriteCallback): boolean;

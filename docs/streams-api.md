@@ -199,7 +199,7 @@ This function is recursive and will keep flushing the buffer until it is empty.
 
 ## BufferStream
 
-`extends ObjectDuplex` 
+`extends InternalBufferDuplex` 
 
 Class that allows you  stream data in batches of a specified size.
 
@@ -280,7 +280,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | Promise.&lt;void&gt; | This function does not return anything. |
+  | boolean | Needs drains |
 
 
 ## CountStream
@@ -449,7 +449,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | Promise.&lt;void&gt; | This function does not return anything. |
+  | boolean | Needs drains |
 
 
 ## EmptyStream
@@ -616,7 +616,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | Promise.&lt;void&gt; | This function does not return anything. |
+  | boolean | Needs drains |
 
 
 ## FirstStream
@@ -782,7 +782,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | Promise.&lt;void&gt; | This function does not return anything. |
+  | boolean | Needs drains |
 
 
 ## GroupByStream
@@ -902,7 +902,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | Promise.&lt;void&gt; | This function does not return anything. |
+  | boolean | Needs drains |
 
 
 ### _final (function)
@@ -1195,7 +1195,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | Promise.&lt;void&gt; | This function does not return anything. |
+  | boolean | Needs drains |
 
 
 ### _final (function)
@@ -1350,7 +1350,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | Promise.&lt;void&gt; | This function does not return anything. |
+  | boolean | Needs drains |
 
 
 ## DiscardingInternalBufferDuplex
@@ -1416,7 +1416,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | Promise.&lt;void&gt; | This function does not return anything. |
+  | boolean | Needs drains |
 
 
 ## DiscardingSingleObjectDuplex
@@ -1560,7 +1560,7 @@ Pushes the next batch of elements from the buffer to the stream, handling backpr
   #### Returns
   | Type       | Description                             |
   |------------|-----------------------------------------|
-  | Promise.&lt;void&gt; | This function does not return anything. |
+  | boolean | Needs drains |
 
 
 ## ObjectDuplex

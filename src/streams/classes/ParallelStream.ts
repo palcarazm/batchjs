@@ -106,7 +106,6 @@ export class ParallelStream<TInput, TOutput> extends InternalBufferDuplex<TInput
             const promise = this.transform(chunk)
                 .then((result: TOutput) => {
                     this.buffer.push(result);
-                    return this._flush();
                 })
                 .catch((err: Error) => {
                     this.emit("error", err);

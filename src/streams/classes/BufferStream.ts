@@ -1,5 +1,5 @@
 import { TransformCallback } from "stream";
-import { ObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
+import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 
 /**
  * @interface
@@ -13,7 +13,7 @@ export interface BufferStreamOptions extends ObjectDuplexOptions {
 /**
  * @class
  * Class that allows you  stream data in batches of a specified size.
- * @extends ObjectDuplex
+ * @extends InternalBufferDuplex
  * @template T
  * @example
  * ```typescript
@@ -36,8 +36,8 @@ export interface BufferStreamOptions extends ObjectDuplexOptions {
  * >> Pushed chunk: ["data3"]
  * ```
  */
-export class BufferStream<T> extends ObjectDuplex<T,T[]> {
-    protected buffer: T[] = [];
+export class BufferStream<T> extends InternalBufferDuplex<T,T[]> {
+    protected prebuffer: T[] = [];
     private readonly batchSize: number;
 
     /**
@@ -59,10 +59,12 @@ export class BufferStream<T> extends ObjectDuplex<T,T[]> {
      * @return {void} This function does not return anything.
      */
     _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
-        this.buffer.push(chunk);
-        this._flush(false)
-            .then(()=>callback())
-            .catch((e)=>callback(e));
+        this.prebuffer.push(chunk);
+        if(this.prebuffer.length === this.batchSize){
+            const batch = this.prebuffer.splice(0, this.batchSize);
+            this.buffer.push(batch);
+        }
+        callback();
     }
 
     /**
@@ -73,11 +75,11 @@ export class BufferStream<T> extends ObjectDuplex<T,T[]> {
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        this._flush(true)
-            .then(()=>{
-                this.push(null);
-                callback();
-            }).catch(e=>callback(e));
+        while (this.prebuffer.length > 0) {
+            const batch = this.prebuffer.splice(0, this.batchSize);
+            this.buffer.push(batch);
+        }
+        super._final(callback);
     }
 
     /**
@@ -87,23 +89,7 @@ export class BufferStream<T> extends ObjectDuplex<T,T[]> {
      * @return {void} This function does not return anything.
      */
     _read(): void {
-        this._flush(false);
+        this._flush();
     }
 
-    /**
-     * Pushes the next batch of elements from the buffer to the stream, handling backpressure.
-     * @protected
-     * @return {Promise<void>} This function does not return anything.
-     */
-    protected async _flush(final:boolean): Promise<void> {
-        while (this.buffer.length >= this.batchSize || (final && this.buffer.length > 0)) {
-            const batch = this.buffer.splice(0, this.batchSize);
-            if(!this.push(batch)){
-                await new Promise<void>((resolve) => {  
-                    this.once("drain", () => resolve());
-                });
-            };
-        }
-        return Promise.resolve();
-    }
 }

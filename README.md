@@ -16,6 +16,7 @@ Dependencies free batch processing framework for NodeJS based on streams.
   - [NPM](#npm)
   - [Yarn](#yarn)
 - [Usage](#usage)
+- [Extensions](#extensions)
 - [Documentation](#documentation)
 - [Collaborators welcome!](#collaborators-welcome)
 
@@ -119,6 +120,12 @@ job
     console.log("Job completed with errors");
   });
 ```
+
+# Extensions
+
+|                         Extension                          |                                                                               Version                                                                               | Description                        |
+| :--------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------- |
+| [Batch JS Data](https://github.com/palcarazm/batchjs-data) | [![Latest release](https://img.shields.io/github/package-json/v/palcarazm/batchjs-data/version/v1?logo=github)](https://github.com/palcarazm/batchjs-data/releases) | Data storage support for databases |
 
 # Documentation
 

@@ -28,11 +28,15 @@ export abstract class InternalBufferDuplex<Tin,Tout> extends ObjectDuplex<Tin,To
      * @return {void} This function does not return anything.
      */
     _final(callback: TransformCallback): void {
-        this._flush()
-            .then(()=>{
+        const finalize = (callback: TransformCallback)=>{
+            if(this._flush()){
+                this.once("drain", ()=>finalize(callback));
+            }else{
                 this.push(null);
                 callback();
-            }).catch(e=>callback(e));
+            }
+        };
+        finalize(callback);
     }
 
     /**
@@ -48,17 +52,15 @@ export abstract class InternalBufferDuplex<Tin,Tout> extends ObjectDuplex<Tin,To
     /**
      * Pushes the next batch of elements from the buffer to the stream, handling backpressure.
      * @protected
-     * @return {Promise<void>} This function does not return anything.
+     * @return {boolean} Needs drains
      */
-    protected  async _flush(): Promise<void> {
+    protected  _flush(): boolean {
         while (this.buffer.length > 0) {
             const chunk = this.buffer.shift() as Tout;
             if(!this.push(chunk)){   
-                await new Promise<void>((resolve) => {  
-                    this.once("drain", () => resolve());
-                });
+                return true;
             }
         }
-        return Promise.resolve();
+        return false;
     }
 }

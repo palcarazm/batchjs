@@ -1,17 +1,17 @@
 /** @type {import('jest').Config} */
 
 module.exports = {
-    roots: ["<rootDir>/src", "<rootDir>/test"],
+    roots: ["<rootDir>/src/main", "<rootDir>/src/test"],
     testMatch: [
         "**/*.test.ts",
     ],
     transform: {
         "^.+\\.(ts|tsx)$": ["ts-jest", {
-            tsconfig: "tsconfig.json",
+            tsconfig: "tsconfig.test.json",
         }],
     },
     collectCoverageFrom: [
-        "src/**/*.ts",
+        "src/main/**/*.ts",
         "!**/index.ts",
         "!**/*.d.ts",
     ],

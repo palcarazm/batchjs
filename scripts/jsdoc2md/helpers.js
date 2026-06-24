@@ -1,6 +1,6 @@
 module.exports = {
     stripTags: function (input) {
-        return input ? input.replace(/(<([^>]+)>)/gi, "") : input;
+        return input ? input.replaceAll(/(<([^>]+)>)/i, "") : input;
     },
     not: function (value) {
         return !value;
@@ -15,7 +15,7 @@ module.exports = {
         return context.filter(item => item.kind === "interface");
     },
     toLink: function (text) {
-        return text ? text.toLowerCase().replace(/ /g, "-") : text;
+        return text ? text.toLowerCase().replaceAll(/ /, "-") : text;
     },
     getConstructors: function (context, id) {
         return Array.isArray(context) ? context.filter(item => item.memberof === id).filter(item => item.kind === "constructor").sort((a, b) => a.order - b.order) : [];
@@ -25,7 +25,8 @@ module.exports = {
     },
     equals: function (a, b) {
         return a === b;
-    },getTags: function({access, augments, scope, virtual}) {
+    },
+    getTags: function({access, augments, scope, virtual}) {
         const tags = [];
         if (access) {
             tags.push(access);

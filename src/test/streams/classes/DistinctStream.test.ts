@@ -29,7 +29,7 @@ describe("DistinctStream", () => {
 
     test("should send duplicated data to discard event listener", (done) => {
         stream.on("finish", () => {
-            expect(stream["buffer"].length).toBe(0);
+            expect(stream["buffer"]).toHaveLength(0);
             done();
         });
 

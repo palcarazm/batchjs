@@ -63,12 +63,10 @@ export abstract class SingleObjectDuplex<Tin,Tout> extends ObjectDuplex<Tin,Tout
                 this.push(null);
             }
             this.finalCallback();
-        }else{
-            if (!this.pushedResult && this.result !== undefined && this.canEarlyFlush()) {
-                this.push(this.result);
-                this.pushedResult = true;
-                this.push(null);
-            }
+        }else if (!this.pushedResult && this.result !== undefined && this.canEarlyFlush()) {
+            this.push(this.result);
+            this.pushedResult = true;
+            this.push(null);
         }
     }
 }

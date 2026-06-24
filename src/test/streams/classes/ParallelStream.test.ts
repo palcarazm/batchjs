@@ -33,8 +33,8 @@ describe("ParallelStream", () => {
 
     test("should await all data been processed to finish", (done) => {     
         stream.on("end", () => {
-            expect(stream["queue"].length).toBe(0);
-            expect(stream["buffer"].length).toBe(0);
+            expect(stream["queue"]).toHaveLength(0);
+            expect(stream["buffer"]).toHaveLength(0);
             done();
         });
 

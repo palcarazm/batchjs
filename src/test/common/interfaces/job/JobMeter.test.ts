@@ -29,7 +29,7 @@ describe("JobMeter", () => {
     test("StepStart should add a step with correct name and status", () => {
         jobMeter.StepStart("Step1", RunnableStatus.RUNNING);
         const steps = jobMeter.metrics.steps;
-        expect(steps.length).toBe(1);
+        expect(steps).toHaveLength(1);
         expect(steps[0]).toEqual({ name: "Step1", status: RunnableStatus.RUNNING });
     });
 

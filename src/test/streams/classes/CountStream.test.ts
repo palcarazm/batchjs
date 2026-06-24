@@ -36,6 +36,7 @@ describe("CountStream", () => {
         stream.write("data1");
         stream.write("data2");
         setTimeout(() => {
+            expect(chunks).toEqual([]);
             done();
         },50);
     });

@@ -34,7 +34,7 @@ describe("FilterStream", () => {
         });
 
         stream.on("end", () => {
-            expect(stream["buffer"].length).toBe(0);
+            expect(stream["buffer"]).toHaveLength(0);
             done();
         });
 

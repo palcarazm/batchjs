@@ -33,7 +33,7 @@ describe("BufferStream", () => {
 
     test("should handle _final correctly", (done) => {     
         stream.on("finish", () => {
-            expect(stream["buffer"].length).toBe(0);
+            expect(stream["buffer"]).toHaveLength(0);
             done();
         });
 

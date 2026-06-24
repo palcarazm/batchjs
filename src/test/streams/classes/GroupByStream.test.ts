@@ -35,6 +35,7 @@ describe("GroupByStream", () => {
         });
 
         stream.on("pause", () => {
+            expect(chunks).toEqual([]);
             done();
         });
 

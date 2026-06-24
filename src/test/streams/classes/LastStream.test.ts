@@ -24,6 +24,7 @@ describe("LastStream", () => {
         stream.write("third");
 
         setTimeout(()=>{
+            expect(chunks).toEqual([]);
             done();
         },50);
     });

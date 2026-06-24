@@ -31,7 +31,7 @@ describe("JobListener", () => {
             expect(metrics.name).toBe("MockPassingJob");
             expect(metrics.status).toBe(RunnableStatus.COMPLETED);
             expect(metrics.duration?.ms).toBeGreaterThan(0);
-            expect(metrics.steps.length).toBe(2);
+            expect(metrics.steps).toHaveLength(2);
             expect(metrics.steps[0].name).toBe("step1");
             expect(metrics.steps[1].name).toBe("step2");
             expect(logger.info).toHaveBeenCalled();

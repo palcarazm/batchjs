@@ -10,29 +10,30 @@
     "url": "https://github.com/sponsors/palcarazm"
   },
   "description": "Batch processing framework for NodeJS",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "types": "dist/@types",
+  "main": "dist/cjs/index.cjs",
+  "module": "dist/esm/index.mjs",
+  "types": "dist/@types/index.d.ts",
   "files": [
     "dist",
-    "docs"
+    "docs",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "clean": "rimraf dist",
     "clean:tmp": "rimraf dist/tmp",
     "prepack": "npm run build",
     "prebuild": "npm run clean",
-    "build": "npm run build:cjs && npm run build:esm",
-    "build:cjs": "tsc --project tsconfig.cjs.json",
-    "build:esm": "tsc --project tsconfig.esm.json",
-    "postpublish": "npm run clean:tmp",
-    "build:watch": "tsc --build tsconfig.cjs.json --watch",
+    "build": "tsc --project tsconfig.json && rollup -c rollup.config.mjs",
+    "postbuild": "npm run clean:tmp && npm run validate:build",
+    "build:watch": "tsc --build tsconfig.json --watch",
     "docs": "npm run docs:common && npm run docs:streams",
     "docs:common": "jsdoc2md --files ./src/main/common/**/*.ts --helper ./scripts/jsdoc2md/helpers.js --configure ./scripts/jsdoc2md/jsdoc2md.rc --template ./scripts/jsdoc2md/template-common.hbs > ./docs/common-api.md",
     "docs:streams": "jsdoc2md --files ./src/main/streams/**/*.ts --helper ./scripts/jsdoc2md/helpers.js --configure ./scripts/jsdoc2md/jsdoc2md.rc --template ./scripts/jsdoc2md/template-streams.hbs > ./docs/streams-api.md",
     "test": "jest --coverage",
     "lint": "eslint ./src",
-    "prepare": "husky"
+    "prepare": "husky",
+    "validate:build": "node scripts/validate-build.mjs"
   },
   "keywords": [
     "streams batch processing framework",
@@ -58,6 +59,7 @@
     "@babel/preset-typescript": "^7.24.7",
     "@commitlint/cli": "^19.2.1",
     "@commitlint/config-conventional": "^19.1.0",
+    "@rollup/plugin-terser": "^1.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^26.0.0",
     "@typescript-eslint/eslint-plugin": "^8.20.0",
@@ -71,22 +73,30 @@
     "jsdoc-babel": "^0.5.0",
     "jsdoc-to-markdown": "^9.0.5",
     "rimraf": "^6.1.3",
+    "rollup": "^4.62.2",
+    "rollup-plugin-dts": "^6.4.1",
     "ts-jest": "^29.4.1",
     "typescript": "^5.5.4"
   },
   "commitlint": {
     "extends": "@commitlint/config-conventional"
   },
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/@types/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.cjs"
+    },
+    "./common": {
+      "types": "./dist/@types/common/index.d.ts",
+      "import": "./dist/esm/common/index.mjs",
+      "require": "./dist/cjs/common/index.cjs"
     },
     "./streams": {
       "types": "./dist/@types/streams/index.d.ts",
-      "import": "./dist/esm/streams/index.js",
-      "require": "./dist/cjs/streams/index.js"
+      "import": "./dist/esm/streams/index.mjs",
+      "require": "./dist/cjs/streams/index.cjs"
     }
   }
 }

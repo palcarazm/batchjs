@@ -1,4 +1,4 @@
-import { MockPassingStep, MockProcessorFailingStep, MockReaderFailingStep, MockWriterFailingStep } from "../mocks/_index";
+import { MockPassingStep, MockProcessorFailingStep, MockReaderFailingStep, MockWriterFailingStep } from "../../mocks/_index";
 
 describe("Step", () => {
     test("should run the step successfully", async () => {

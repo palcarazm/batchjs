@@ -1,5 +1,5 @@
 import { Logger } from "../Logger";
-import { Step } from "../Step";
+import { Step } from "../step/Step";
 import { Job } from "./Job";
 import { JobLogger } from "./JobLogger";
 import { JobMeter, JobMetrics } from "./JobMeter";

@@ -1,5 +1,5 @@
 import { Readable, Duplex, Writable } from "node:stream";
-import { RunnableStatus } from "./RunnableStatus";
+import { RunnableStatus } from "../RunnableStatus";
 
 /**
  * @abstract

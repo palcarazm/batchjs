@@ -1,4 +1,4 @@
-import { Step } from "../Step";
+import { Step } from "../step/Step";
 
 type StepErrorData = { step:Step, error:Error };
 

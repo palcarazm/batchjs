@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
 import { Logger } from "../Logger";
-import { Step } from "../Step";
+import { Step } from "../step/Step";
 import { JobEventEmitters, JobEventHandlers } from "./JobEvents";
 import { JobListener } from "./JobListener";
 import { RunnableStatus } from "../RunnableStatus";

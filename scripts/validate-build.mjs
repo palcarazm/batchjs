@@ -16,7 +16,7 @@ const require = createRequire(import.meta.url);
  * @returns {Array} An array of errors
  */
 function validateExports(module, moduleName) {
-    const commonExports = ["BatchJSError", "Job", "JobListener", "JobLogger", "JobMeter", "JobTimer", "Step", "RunnableStatus"];
+    const commonExports = ["BatchJSError", "StepBuilderError", "Job", "JobListener", "JobLogger", "JobMeter", "JobTimer", "Step", "StepBuilder", "RunnableStatus"];
     const streamClassExports = ["AllMatchStream", "AnyMatchStream", "BufferStream", "CountStream", "DistinctStream", "EmptyStream","FilterStream", 
         "FirstStream", "FlatStream", "GroupByStream", "HasElementsStream","LastStream", "ParallelStream", "ReplayStream", "SingleStream",];
     const streamErrorExports = ["NotClosedError", "SingleStreamError"];

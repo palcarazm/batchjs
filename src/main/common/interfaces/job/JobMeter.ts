@@ -1,24 +1,56 @@
 import { RunnableStatus } from "../RunnableStatus";
 
+/**
+ * The metrics of a job.
+ * @interface
+ * @extends RunnableMetric
+ */
 export interface JobMetrics extends RunnableMetric{
+    /**
+     * The metrics of the steps in the job.
+     * @type {RunnableMetric[]}
+     */
     steps: RunnableMetric[];
 }
 
+/**
+ * The metrics of a runnable.
+ * @interface
+ */
 export interface RunnableMetric {
+    /**
+     * The name of the runnable.
+     * @type {string}
+     */
     name: string;
-    status: RunnableStatus
-    duration?: {ms: number};
+
+    /**
+     * The status of the runnable.
+     * @type {RunnableStatus}
+     */
+    status: RunnableStatus;
+
+    /**
+     * The duration of the runnable.
+     * @type {object}
+     */
+    duration?: {
+        /**
+         * The duration of the runnable in milliseconds.
+         * @type {number}
+         */
+        ms: number
+    };
   }
 
 /**
-   * @class
-   * Class responsible for keeping track of the metrics of a job.
-   */
+ * @class
+ * Class responsible for keeping track of the metrics of a job.
+ */
 export class JobMeter{
     protected readonly _metrics: JobMetrics;
 
     /**
-     * @constructor
      * @param {string} jobName - The name to assign to the Job.
      * @param {RunnableStatus} jobStatus - The status to assign to the Job.
      */
@@ -72,7 +104,6 @@ export class JobMeter{
      * The metrics of the job.
      * @readonly
      * @type {JobMetrics}
-     * @memberof JobMeter
      */
     get metrics():JobMetrics {
         return this._metrics;

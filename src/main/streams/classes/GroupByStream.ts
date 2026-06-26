@@ -5,9 +5,12 @@ import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index"
  * @interface
  * Options for the GroupByStream.
  * @extends ObjectDuplexOptions
- * @template T
+ * @template T The type of the input data.
  */
 export interface GroupByStreamOptions<T> extends ObjectDuplexOptions {
+    /**
+     * The function that will be used to group the data.
+     */
     groupBy: (chunk: T) => string;
 }
 
@@ -15,7 +18,7 @@ export interface GroupByStreamOptions<T> extends ObjectDuplexOptions {
  * @class
  * Class that allows you to group data in a stream.
  * @extends InternalBufferDuplex
- * @template T
+ * @template T The type of the input data.
  * @example
  * ```typescript
  * const stream:GroupByStream<string> = new GroupByStream({
@@ -42,9 +45,7 @@ export class GroupByStream<T> extends InternalBufferDuplex<T,T[]> {
     private readonly groupBy: (chunk: T) => string;
 
     /**
-     * @constructor
      * @param {GroupByStreamOptions<T>} options - The options for the GroupBy.
-     * @param [options.groupBy] {Function} - The function used to get the grouping key from the chunk.
      */
     constructor(options: GroupByStreamOptions<T>) {
         super(options);

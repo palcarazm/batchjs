@@ -5,10 +5,13 @@ import { DiscardingInternalBufferDuplex, ObjectDuplexOptions } from "../interfac
  * @interface
  * Options for the FilterStream.
  * @extends DuplexOptions
- * @template TInput
- * @template TKey
+ * @template TInput The type of the input data.
+ * @template TKey The type of the key.
  */
 export interface DistinctStreamOptions<TInput,TKey> extends ObjectDuplexOptions {
+    /**
+     * The function that will be used to extract the key from the chunk.
+     */
     keyExtractor: (chunk: TInput) => TKey;
 }
 
@@ -17,8 +20,8 @@ export interface DistinctStreamOptions<TInput,TKey> extends ObjectDuplexOptions 
  * Class that allows you to discard repeated data in a stream in base on a key.
  * Data with duplicated key will be emitted through the discard event.
  * @extends DiscardingInternalBufferDuplex
- * @template TInput
- * @template TKey
+ * @template TInput The type of the input data.
+ * @template TKey The type of the key.
  * @example
  * ```typescript
  * const stream:DistinctStream<string,string> = new DistinctStream({
@@ -49,9 +52,7 @@ export class DistinctStream<TInput,TKey> extends DiscardingInternalBufferDuplex<
     private readonly _keyExtractor: (chunk: TInput) => TKey;
 
     /**
-     * @constructor
      * @param {DistinctStreamOptions} options - The options for the FilterStream.
-     * @param [options.keyExtractor] {Function} - The key extractor function for determining the key of the data to be filtered.
      */
     constructor(options: DistinctStreamOptions<TInput,TKey>) {
         super(options);

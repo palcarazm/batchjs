@@ -5,6 +5,7 @@ import { StepBuilderError } from "../../errors/StepBuilderError";
 /**
  * @class
  * Fluent builder for creating Step instances without subclassing.
+ * @since 1.3.0
  * @example
  * ```typescript
  * const step = new StepBuilder('myStep')
@@ -27,7 +28,12 @@ import { StepBuilderError } from "../../errors/StepBuilderError";
  *   }))
  *   .build();
  * 
- * await step.run(); // logs 'A', 'B', 'C'
+ * await step.run();
+ * ```
+ * ```shell
+ * >> A
+ * >> B
+ * >> C
  * ```
  */
 export class StepBuilder {
@@ -38,9 +44,8 @@ export class StepBuilder {
     private readonly _params: object;
 
     /**
-     * @constructor
      * @param {string} name - The name to assign to the Step.
-     * @param {object} params - The parameters to pass to the step (optional, defaults to {}).
+     * @param {object} params - The parameters to pass to the step (optional, defaults to `{}`).
      */
     constructor(name: string, params: object = {}) {
         this._name = name;
@@ -82,7 +87,7 @@ export class StepBuilder {
      * Each call to build() returns a new Step instance. The builder can be reused to create
      * multiple Step instances with the same configuration.
      * @returns {Step} A new Step instance.
-     * @throws {StepBuilderError} If any of the required callbacks (reader, processors, writer) are missing.
+     * @throws {@link StepBuilderError} If any of the required callbacks (reader, processors, writer) are missing.
      */
     build(): Step {
         if (!this._readerFn) throw new StepBuilderError(this._name, "reader");

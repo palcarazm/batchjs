@@ -61,7 +61,6 @@ export abstract class Step {
     private _status:RunnableStatus;
 
     /**
-     * @constructor
      * @param {string} name - The name to assign to the Step.
      * @param {object} params - The parameters to pass to the step.
      */
@@ -75,7 +74,6 @@ export abstract class Step {
      * The current status of the step.
      * @readonly
      * @type {RunnableStatus}
-     * @memberof Step
      */
     get status():RunnableStatus {
         return this._status;
@@ -83,10 +81,7 @@ export abstract class Step {
     
     /**
      * @abstract
-     * @description
      * Abstract method that must be implemented by the step in order to defined the reader stream.
-     * @function _reader
-     * @memberof Step
      * @returns {Readable}
      * @protected
      */
@@ -94,11 +89,8 @@ export abstract class Step {
 
     /**
      * @abstract
-     * @description
      * Abstract method that must be implemented by the step in order to process the data from the reader stream and push it to the writer stream.
      * Processors are defined in an ordered array to be chained on the runner.
-     * @function _processors
-     * @memberof Step
      * @returns {Array<Duplex>}
      * @protected
      */
@@ -106,10 +98,7 @@ export abstract class Step {
 
     /**
      * @abstract
-     * @description
      * Abstract method that must be implemented by the step in order to defined the writer stream.
-     * @function _writer
-     * @memberof Step
      * @returns {Writable}
      * @protected
      */

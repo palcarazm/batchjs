@@ -95,10 +95,41 @@ const step = new StepBuilder('filter', { maxNumber: 10 })
 
 You don't usually run a step manually – it's executed by the job. However, you can run it directly by calling `step.run()` (returns a `Promise<void>`).
 
+## Cancelling a Step
+
+When a step is running as part of a parallel group and another step in that group fails, the step is automatically cancelled. You can also manually cancel a step by calling `step.cancel()`.
+
+```typescript
+const step = new MyStep();
+const promise = step.run();
+
+// Cancel the step
+step.cancel(); // Sets status to CANCELLED and destroys streams
+
+await promise; // throws StepCancelledError
+```
+
+When a step is cancelled:
+
+- Its status becomes `CANCELLED`.
+- A `StepCancelledError` is thrown from `step.run()`.
+
+> **Note:** Manual cancellation is typically not needed when using Jobs, as the Job handles cancellation of parallel groups automatically.
+
 ## Status
 
-The step's status is available via the `status` getter, which returns a `RunnableStatus` enum value: `CREATED`, `RUNNING`, `COMPLETED`, or `FAILED`.
+The step's status is available via the `status` getter, which returns a `RunnableStatus` enum value:
+
+| Status      | Description                                   |
+|-------------|-----------------------------------------------|
+| `CREATED`   | Step has been instantiated but not started    |
+| `RUNNING`   | Step is currently executing                   |
+| `COMPLETED` | Step finished successfully                    |
+| `CANCELLED` | Step was cancelled (only in parallel groups)  |
+| `FAILED`    | Step failed with an error                     |
 
 ## Error Handling
 
 If any stream emits an error, the step fails and the error is propagated to the job. You can listen to stream errors directly if you need custom handling.
+
+When a step is cancelled (either manually or by the job), the `run()` promise rejects with a `StepCancelledError`. This allows the job to distinguish between a step that failed and one that was cancelled.

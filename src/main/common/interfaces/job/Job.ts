@@ -89,11 +89,11 @@ export abstract class Job extends EventEmitter {
 
     /**
      * @abstract
-     * Abstract method that most be implemented by the job in order to returns an ordered array of steps that make up the job.
-     * @returns {Array<Step>}
+     * Abstract method that most be implemented by the job in order to returns an ordered array of steps or groups of steps that make up the job.
+     * @returns {(Step | Step[])[]} An ordered array of steps or groups of steps that make up the job. Groups of steps run in parallel.
      * @protected
      */
-    protected abstract _steps(): Array<Step>;
+    protected abstract _steps(): (Step | Step[])[];
 
     /**
      * Asynchronously runs the job by executing each step in sequence.
@@ -102,16 +102,14 @@ export abstract class Job extends EventEmitter {
     public async run():Promise<void>{
         this._status = RunnableStatus.RUNNING;
         this.emit("start");
-        const steps = this._steps();
+        const plan = this._steps();
         try {
-            for (const step of steps) {
-                this.emit("stepStart", step);
-                await step.run().catch((e) => { 
-                    const error = e as Error;
-                    this.emit("stepError",{step, error});
-                    throw error;
-                });
-                this.emit("stepEnd", step);
+            for (const element of plan) {
+                if (Array.isArray(element)) {
+                    await this._runParallel(element);
+                } else {
+                    await this._runSequential(element);
+                }
             }
             this._status = RunnableStatus.COMPLETED;
             this.emit("end");
@@ -122,6 +120,62 @@ export abstract class Job extends EventEmitter {
             this.emit("error", error );
             throw error;
         }
+    }
+
+    /**
+     * Runs a single step sequentially.
+     * @param step The step to run.
+     * @returns {Promise<void>}
+     * @private
+     */
+    private _runSequential(step: Step): Promise<void> {
+        this.emit("stepStart", step);
+        return step.run()
+            .then(() => {
+                this.emit("stepEnd", step);
+            })
+            .catch((e) => { 
+                const error = e as Error;
+                this.emit("stepError",{step, error});
+                throw error;
+            });
+    }
+
+    /**
+     * Runs an array of steps in parallel with fail-fast behavior.
+     * If any step fails, all other steps are cancelled immediately.
+     * @param steps The steps to run in parallel.
+     * @returns {Promise<void>}
+     * @private
+     */
+    private _runParallel(steps: Step[]): Promise<void[]> {
+        steps.forEach((step) => this.emit("stepStart", step));
+        
+        let cancelled = false;
+
+        return Promise.all(
+            steps.map((step) => step.run()
+                .then(() => {
+                    if (!cancelled) {
+                        this.emit("stepEnd", step);
+                    }
+                })
+                .catch((e) => {
+                    const error = e as Error;
+                    if (!cancelled) {
+                        cancelled = true;
+                        this.emit("stepError", { step, error });
+
+                        steps.filter((s) => s !== step && s.isRunning)
+                            .forEach((s) => {
+                                s.cancel();
+                                this.emit("stepCancelled", s);
+                            });
+                    }
+                    throw error;
+                })
+            )
+        );
     }
 
     /**

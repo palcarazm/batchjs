@@ -19,6 +19,11 @@ export enum RunnableStatus {
   COMPLETED = "COMPLETED",
 
   /**
+   *  Runnable has been cancelled
+   */
+  CANCELLED = "CANCELLED",
+
+  /**
    *  Runnable has failed
    */
   FAILED = "FAILED",

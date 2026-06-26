@@ -58,6 +58,12 @@ export interface JobEventEmitters {
      * @type {Step}
      */
     stepEnd: Step
+
+    /**
+     * Emitted when a step is cancelled.
+     * @type {Step}
+     */
+    stepCancelled: Step
 }
 
 /**
@@ -100,4 +106,10 @@ export interface JobEventHandlers {
      * @type {(Step) => void}
      */
     stepEnd: (step:Step) => void
+
+    /**
+     * Handler for the stepCancelled event.
+     * @type {(Step) => void}
+     */
+    stepCancelled: (step:Step) => void
 }

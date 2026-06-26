@@ -7,6 +7,9 @@ import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index"
  * @extends ObjectDuplexOptions
  */
 export interface BufferStreamOptions extends ObjectDuplexOptions {
+    /**
+     * The maximum number of elements in a batch. 
+     */
     batchSize: number;
 }
 
@@ -14,7 +17,7 @@ export interface BufferStreamOptions extends ObjectDuplexOptions {
  * @class
  * Class that allows you  stream data in batches of a specified size.
  * @extends InternalBufferDuplex
- * @template T
+ * @template T The type of the input data.
  * @example
  * ```typescript
  * const stream:BufferStream<string> = new BufferStream({
@@ -41,9 +44,7 @@ export class BufferStream<T> extends InternalBufferDuplex<T,T[]> {
     private readonly batchSize: number;
 
     /**
-     * @constructor
      * @param {BufferStreamOptions} options - The options for the BufferStream.
-     * @param [options.batchSize] {number} - The maximum number of elements in a batch.
      */
     constructor(options: BufferStreamOptions) {
         super(options);
@@ -86,7 +87,6 @@ export class BufferStream<T> extends InternalBufferDuplex<T,T[]> {
     /**
      * Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
      *
-     * @param {number} size - The size parameter for controlling the read operation.
      * @return {void} This function does not return anything.
      */
     _read(): void {

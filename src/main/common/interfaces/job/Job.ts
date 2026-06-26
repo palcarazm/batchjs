@@ -11,6 +11,10 @@ import { JobMetrics } from "./JobMeter";
  * Options for the Job constructor.
  */
 export interface JobOptions {
+   /**
+    * The logger to use for logging
+    * @type {Logger}
+    */ 
    logger?: Logger;
 }
 
@@ -18,8 +22,7 @@ export interface JobOptions {
  * @abstract
  * @class
  * Abstract base class for all jobs.
- * @extends EventEmitter
- * @example
+ * @extends {@link EventEmitter}
  * ```typescript
  * export class JobImplementation extends Job {
  *     protected _steps() {
@@ -53,7 +56,6 @@ export abstract class Job extends EventEmitter {
     private readonly JobListener:JobListener;
 
     /**
-     * @constructor
      * @param {string} name - The name to assign to the Step.
      * @param {object} params - The parameters to pass to the job.
      * @param {JobOptions} options - An optional options object.
@@ -71,7 +73,6 @@ export abstract class Job extends EventEmitter {
      * The current status of the job.
      * @readonly
      * @type {RunnableStatus}
-     * @memberof Job
      */
     get status():RunnableStatus {
         return this._status;
@@ -81,7 +82,6 @@ export abstract class Job extends EventEmitter {
      * The current metrics of the job.
      * @readonly
      * @type {JobMetrics}
-     * @memberof Job
      */
     get metrics():JobMetrics {
         return this.JobListener.metrics;
@@ -89,10 +89,7 @@ export abstract class Job extends EventEmitter {
 
     /**
      * @abstract
-     * @description
      * Abstract method that most be implemented by the job in order to returns an ordered array of steps that make up the job.
-     * @function _steps
-     * @memberof Job
      * @returns {Array<Step>}
      * @protected
      */
@@ -129,8 +126,9 @@ export abstract class Job extends EventEmitter {
 
     /**
      * Adds an event listener to the specified event type.
-     * @param event {start | end | stepStart | stepEnd}
-     * @param listener {Function}
+     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
+     * @param {U} event Event type
+     * @param {(...args: Array<JobEventEmitters[U]>) => void} listener Event listener
      * @returns {this} allowing to chain
      */
     addListener<U extends keyof JobEventHandlers>(event: U, listener: JobEventHandlers[U]): this {
@@ -139,8 +137,9 @@ export abstract class Job extends EventEmitter {
 
     /**
      * Emits an event of the specified type to the listeners.
-     * @param event {start | end | stepStart | stepEnd}
-     * @param args {Array<JobEventEmitters>} Data to sent to the listeners depending on the event type
+     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
+     * @param {U} event Event type
+     * @param {...Array<JobEventEmitters[U]>} args Additional arguments to pass to the listeners
      * @returns  {boolean}
      */
     emit<U extends keyof JobEventEmitters>(event: U, ...args: Array<JobEventEmitters[U]>): boolean {
@@ -149,8 +148,9 @@ export abstract class Job extends EventEmitter {
 
     /**
      * Adds an event listener to the specified event type.
-     * @param event {start | end | stepStart | stepEnd}
-     * @param listener {Function}
+     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
+     * @param {U} event Event type
+     * @param {(...args: Array<JobEventEmitters[U]>) => void} listener Event listener
      * @returns {this} allowing to chain
      */
     on<U extends keyof JobEventHandlers>(event: U, listener: JobEventHandlers[U]): this {
@@ -159,8 +159,9 @@ export abstract class Job extends EventEmitter {
 
     /**
      * Adds a one time event listener to the specified event type.
-     * @param event {start | end | stepStart | stepEnd}
-     * @param listener {Function}
+     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
+     * @param {U} event Event type
+     * @param {(...args: Array<JobEventEmitters[U]>) => void} listener Event listener
      * @returns {this} allowing to chain
      */
     once<U extends keyof JobEventHandlers>(event: U, listener: JobEventHandlers[U]): this {
@@ -169,8 +170,9 @@ export abstract class Job extends EventEmitter {
 
     /**
      * Adds an event listener to the specified event type to the beginning of the listeners array.
-     * @param event {start | end | stepStart | stepEnd}
-     * @param listener {Function}
+     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
+     * @param {U} event Event type
+     * @param {(...args: Array<JobEventEmitters[U]>) => void} listener Event listener
      * @returns {this} allowing to chain
      */
     prependListener<U extends keyof JobEventHandlers>(event: U, listener: JobEventHandlers[U]): this {
@@ -179,8 +181,9 @@ export abstract class Job extends EventEmitter {
 
     /**
      * Adds a one time event listener to the specified event type to the beginning of the listeners array.
-     * @param event {start | end | stepStart | stepEnd}
-     * @param listener {Function}
+     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
+     * @param {U} event Event type
+     * @param {(...args: Array<JobEventEmitters[U]>) => void} listener Event listener
      * @returns {this} allowing to chain
      */
     prependOnceListener<U extends keyof JobEventHandlers>(event: U, listener: JobEventHandlers[U]): this {
@@ -189,8 +192,9 @@ export abstract class Job extends EventEmitter {
 
     /**
      * Removes an event listener to the specified event type.
-     * @param event {start | end | stepStart | stepEnd}
-     * @param listener {Function}
+     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
+     * @param {U} event Event type
+     * @param {(...args: Array<JobEventEmitters[U]>) => void} listener Event listener
      * @returns {this} allowing to chain
      */
     removeListener<U extends keyof JobEventHandlers>(event: U, listener: JobEventHandlers[U]): this {

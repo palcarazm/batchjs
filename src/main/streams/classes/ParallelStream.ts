@@ -9,7 +9,14 @@ import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index"
  * @template TOutput The type of the output data.
  */
 export interface ParallelStreamOptions<TInput, TOutput> extends ObjectDuplexOptions {
+    /**
+     * The maximum number of concurrent promises.
+     */
     maxConcurrent: number;
+
+    /**
+     * The function that will be used to transform the data.
+     */
     transform: (chunk: TInput) => Promise<TOutput>;
 }
 
@@ -51,10 +58,7 @@ export class ParallelStream<TInput, TOutput> extends InternalBufferDuplex<TInput
     private readonly transform: (chunk: TInput) => Promise<TOutput>;
 
     /**
-     * @constructor
      * @param {ParallelStreamOptions<TInput, TOutput>} options - The options for the ParallelStream.
-     * @param [options.maxConcurrent] {number} - The maximum number of concurrent promises.
-     * @param [options.transform] {Function} - The function to transform the data returning a promise.
      */
     constructor(options: ParallelStreamOptions<TInput, TOutput>) {
         super(options);

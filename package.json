@@ -1,6 +1,7 @@
 {
   "name": "batchjs",
   "version": "1.2.5",
+  "type": "module",
   "author": {
     "name": "Pablo Alcaraz Martínez",
     "url": "https://github.com/palcarazm/"
@@ -27,9 +28,12 @@
     "build": "tsc --project tsconfig.json && rollup -c rollup.config.mjs",
     "postbuild": "npm run clean:tmp && npm run validate:build",
     "build:watch": "tsc --build tsconfig.json --watch",
-    "docs": "npm run docs:common && npm run docs:streams",
-    "docs:common": "jsdoc2md --files ./src/main/common/**/*.ts --helper ./scripts/jsdoc2md/helpers.js --configure ./scripts/jsdoc2md/jsdoc2md.rc --template ./scripts/jsdoc2md/template-common.hbs > ./docs/common-api.md",
-    "docs:streams": "jsdoc2md --files ./src/main/streams/**/*.ts --helper ./scripts/jsdoc2md/helpers.js --configure ./scripts/jsdoc2md/jsdoc2md.rc --template ./scripts/jsdoc2md/template-streams.hbs > ./docs/streams-api.md",
+    "docs": "npm run docs:api && npm run docs:build",
+    "docs:api": "typedoc && npm run docs:api:postprocess",
+    "docs:api:postprocess": "node scripts/typedoc-api-sidebar.mjs",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:serve": "vitepress serve docs",
     "test": "jest --coverage",
     "lint": "eslint ./src",
     "prepare": "husky",
@@ -66,17 +70,18 @@
     "@typescript-eslint/parser": "^8.20.0",
     "commitlint": "^21.1.0",
     "eslint": "^10.0.0",
+    "glob": "^13.0.6",
     "globals": "^17.7.0",
     "husky": "^9.0.11",
     "jest": "^30.1.3",
-    "jsdoc": "^4.0.3",
-    "jsdoc-babel": "^0.5.0",
-    "jsdoc-to-markdown": "^9.0.5",
     "rimraf": "^6.1.3",
     "rollup": "^4.62.2",
     "rollup-plugin-dts": "^6.4.1",
     "ts-jest": "^29.4.1",
-    "typescript": "^5.5.4"
+    "typedoc": "^0.28.19",
+    "typedoc-plugin-markdown": "^4.12.0",
+    "typescript": "^5.5.4",
+    "vitepress": "^1.6.4"
   },
   "commitlint": {
     "extends": "@commitlint/config-conventional"

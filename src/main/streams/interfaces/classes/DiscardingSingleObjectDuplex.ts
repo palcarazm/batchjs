@@ -7,8 +7,8 @@ import {  ObjectDuplexOptions } from "./ObjectDuplex";
  * @class
  * Abstract class that allows you to emit discarded data in a single data stream adding support to discard events.
  * @extends SingleObjectDuplex    
- * @template Tin
- * @template Tout
+ * @template Tin The type of the input data
+ * @template Tout The type of the output data
  * @example
  * ```typescript
  * class DiscardingStreamImplementation<Tin> extends DiscardingSingleObjectDuplex<Tin> {
@@ -47,7 +47,6 @@ import {  ObjectDuplexOptions } from "./ObjectDuplex";
  */
 export abstract class DiscardingSingleObjectDuplex<Tin,Tout> extends SingleObjectDuplex<Tin,Tout> {
     /**
-     * @constructor
      * @param options {ObjectDuplexOptions}
      * @param {Function} canEarlyFlush - A function that returns a boolean indicating whether the stream can early flush.
      */
@@ -55,30 +54,80 @@ export abstract class DiscardingSingleObjectDuplex<Tin,Tout> extends SingleObjec
         super(options, canEarlyFlush);
     }
 
+    /**
+     * Adds an event listener to the specified event type.
+     * @template U Type of the event.
+     * @param {U} event Event type
+     * @param {DiscardingStreamEventHandlers<Tin>[U]} listener Event listener
+     * @returns {this} allowing to chain
+     */
     addListener<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.addListener(event, listener);
     }
+
+    /**
+     * Emits an event of the specified type to the listeners.
+     * @template U Type of the event.
+     * @param {U} event Event type
+     * @param {...Array<DiscardingStreamEventEmitters<Tin>>} args Additional arguments to pass to the listeners
+     * @returns  {boolean}
+     */
 
     emit<U extends keyof DiscardingStreamEventEmitters<Tin>>(event: U, ...args: Array<DiscardingStreamEventEmitters<Tin>[U]>): boolean {
         return super.emit(event, ...args);
     }
 
+    /**
+     * Adds an event listener to the specified event type.
+     * @template U Type of the event.
+     * @param {U} event Event type
+     * @param {DiscardingStreamEventHandlers<Tin>[U]} listener Event listener
+     * @returns {this} allowing to chain
+     */
     on<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.on(event, listener);
     }
 
+    /**
+     * Adds a one time event listener to the specified event type.
+     * @template U Type of the event.
+     * @param {U} event Event type
+     * @param {DiscardingStreamEventHandlers<Tin>[U]} listener Event listener
+     * @returns {this} allowing to chain
+     */
     once<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.once(event, listener);
     }
 
+    /**
+     * Adds an event listener to the specified event type to the beginning of the listeners array.
+     * @template U Type of the event.
+     * @param {U} event Event type
+     * @param {DiscardingStreamEventHandlers<Tin>[U]} listener Event listener
+     * @returns {this} allowing to chain
+     */
     prependListener<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.prependListener(event, listener);
     }
 
+    /**
+     * Adds a one time event listener to the specified event type to the beginning of the listeners array.
+     * @template U Type of the event.
+     * @param {U} event Event type
+     * @param {DiscardingStreamEventHandlers<Tin>[U]} listener Event listener
+     * @returns {this} allowing to chain
+     */
     prependOnceListener<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.prependOnceListener(event, listener);
     }
-
+    
+    /**
+     * Removes an event listener to the specified event type.
+     * @template U Type of the event.
+     * @param {U} event Event type
+     * @param {DiscardingStreamEventHandlers<Tin>[U]} listener Event listener
+     * @returns {this} allowing to chain
+     */
     removeListener<U extends keyof DiscardingStreamEventHandlers<Tin>>(event: U, listener: DiscardingStreamEventHandlers<Tin>[U]): this {
         return super.removeListener(event, listener);
     }

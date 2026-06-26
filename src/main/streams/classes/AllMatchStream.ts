@@ -5,9 +5,12 @@ import { ObjectDuplexOptions, DiscardingSingleObjectDuplex } from "../interfaces
  * @interface
  * Options for the AllMatchStream.
  * @extends ObjectDuplexOptions
- * @template T
+ * @template T The type of the input data.
  */
 export interface AllMatchStreamOptions<T> extends ObjectDuplexOptions {
+    /**
+     * The function that will be used to validate the chunk.
+     */
     matcher: (chunk: T) => boolean;
 }
 
@@ -15,7 +18,7 @@ export interface AllMatchStreamOptions<T> extends ObjectDuplexOptions {
  * @class
  * Class that allows you to validate that all elements in a stream match a given condition.
  * @extends DiscardingSingleObjectDuplex
- * @template T
+ * @template T The type of the input data.
  * @example
  * ```typescript
  * const stream:AllMatchStream<string> = new AllMatchStream({
@@ -40,9 +43,7 @@ export class AllMatchStream<T> extends DiscardingSingleObjectDuplex<T,boolean> {
     private readonly _matcher: (chunk: T) => boolean;
 
     /**
-     * @constructor
      * @param {AllMatchStreamOptions} options - The options for the AllMatchStream.
-     * @param [options.matcher] {Function} - The function that will be used to validate the chunk.
      */
     constructor(options: AllMatchStreamOptions<T>) {
         super(options, ()=>this.result === false);

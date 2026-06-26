@@ -31,7 +31,6 @@ export abstract class StreamUtils {
      * @param {Array<Readable>} streams An array of readable streams to merge.
      * @param {ReadableOptions} options The options for the Readable stream.
      * @return {Readable} A readable stream that combines the input streams.
-     * @static
      */
     public static mergeStreams(streams: Array<Readable>, options:ReadableOptions = {}): Readable {
         let endSignals:number = 0;
@@ -93,7 +92,6 @@ export abstract class StreamUtils {
      * @param {Array<Writable>} streams An array of writable streams to send the input stream.
      * @param {WritableOptions} options The options for the Writable stream.
      * @return {Writable} A splitter stream that sends the input stream to the provided writable streams.
-     * @static
      */
     public static splitStreams(streams: Array<Writable>, options:WritableOptions = {}):Writable {
         const splitter:Writable = new Writable({

@@ -5,9 +5,12 @@ import { DiscardingInternalBufferDuplex, ObjectDuplexOptions } from "../interfac
  * @interface
  * Options for the FilterStream.
  * @extends ObjectDuplexOptions
- * @template T
+ * @template T The type of the input data.
  */
 export interface FilterStreamOptions<T> extends ObjectDuplexOptions {
+    /**
+     * The function that will be used to validate the chunk.
+     */
     filter: (chunk: T) => boolean;
 }
 
@@ -15,7 +18,7 @@ export interface FilterStreamOptions<T> extends ObjectDuplexOptions {
  * @class
  * Class that allows you to filter data in a stream.
  * @extends DiscardingInternalBufferDuplex
- * @template T
+ * @template T The type of the input data.
  * @example
  * ```typescript
  * const stream:FilterStream<string> = new FilterStream({
@@ -45,9 +48,7 @@ export class FilterStream<T> extends DiscardingInternalBufferDuplex<T,T> {
     private readonly _filter: (chunk: T) => boolean;
 
     /**
-     * @constructor
      * @param {FilterStreamOptions} options - The options for the FilterStream.
-     * @param [options.filter] {Function} - The filter function for pushing data to the stream or discarding it.
      */
     constructor(options: FilterStreamOptions<T>) {
         super(options);

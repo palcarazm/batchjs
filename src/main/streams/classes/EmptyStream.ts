@@ -5,7 +5,7 @@ import { SingleObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  * @class
  * Class that allows you to validate that a stream is empty.
  * @extends SingleObjectDuplex
- * @template T
+ * @template T The type of the input data.
  * @example
  * ```typescript
  * const stream:EmptyStream<string> = new EmptyStream({
@@ -26,7 +26,6 @@ import { SingleObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
 export class EmptyStream<T> extends SingleObjectDuplex<T,boolean> {
     protected result = true;
     /**
-     * @constructor
      * @param {ObjectDuplexOptions} options - The options for the EmptyStream.
      */
     constructor(options: ObjectDuplexOptions) {

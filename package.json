@@ -57,7 +57,7 @@
     "@babel/core": "^7.24.9",
     "@babel/preset-env": "^7.24.8",
     "@babel/preset-typescript": "^7.24.7",
-    "@commitlint/cli": "^20.4.1",
+    "@commitlint/cli": "^21.1.0",
     "@commitlint/config-conventional": "^21.1.0",
     "@rollup/plugin-terser": "^1.0.0",
     "@types/jest": "^30.0.0",

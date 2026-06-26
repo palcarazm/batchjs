@@ -2,16 +2,22 @@ import { Step } from "../../../../main/common/index";
 import { Readable, Writable, Transform, TransformCallback, TransformOptions } from "node:stream";
 
 export class MockPassingStep extends Step {
-    constructor(name: string = "MockPassingStep") {
+    private delay: number;
+
+    constructor(name: string = "MockPassingStep", delay: number = 0) {
         super(name);
+        this.delay = delay;
     }
 
     protected _reader() {
+        const delay = this.delay;
         return new Readable({
             objectMode: true,
             read() {
-                this.push("data");
-                this.push(null);
+                setTimeout(() => {
+                    this.push("data");
+                    this.push(null);
+                }, delay);
             }
         });
     }

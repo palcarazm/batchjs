@@ -61,6 +61,12 @@ export class JobListener {
             this.meter.StepFinish(step.name, step.status, duration);
             this.logger?.StepFinish(step.name, step.status, duration);
         });
+
+        job.on("stepCancelled", (step: Step) => {
+            const duration = this.timer.stop(TimerType.STEP, step.name);
+            this.meter.StepFinish(step.name, step.status, duration);
+            this.logger?.StepFinish(step.name, step.status, duration);
+        });
     }
 
     /**

@@ -2,7 +2,7 @@ import { Step } from "../../../../main/common/index";
 import { Readable, Writable, Transform, TransformCallback, TransformOptions } from "node:stream";
 
 export class MockPassingStep extends Step {
-    private delay: number;
+    private readonly delay: number;
 
     constructor(name: string = "MockPassingStep", delay: number = 0) {
         super(name);

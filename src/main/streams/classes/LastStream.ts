@@ -6,7 +6,7 @@ import { DiscardingSingleObjectDuplex, ObjectDuplexOptions } from "../interfaces
  * @class
  * Class that allows you to emit only the last chunk in a stream and discard the rest.
  * @extends DiscardingSingleObjectDuplex
- * @template T
+ * @template T The type of the input data.
  * @example
  * ```typescript
  * const stream:LastStream<string> = new LastStream({
@@ -34,7 +34,6 @@ import { DiscardingSingleObjectDuplex, ObjectDuplexOptions } from "../interfaces
 export class LastStream<T> extends DiscardingSingleObjectDuplex<T,T> {
 
     /**
-     * @constructor
      * @param {ObjectDuplexOptions} options - The options for the LastStream.
      */
     constructor(options: ObjectDuplexOptions) {

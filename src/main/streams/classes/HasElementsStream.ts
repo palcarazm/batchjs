@@ -5,7 +5,7 @@ import { SingleObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  * @class
  * Class that allows you to validate that a stream has elements.
  * @extends SingleObjectDuplex
- * @template T
+ * @template T The type of the input data.
  * @example
  * ```typescript
  * const stream:HasElementsStream<string> = new HasElementsStream({
@@ -27,7 +27,6 @@ export class HasElementsStream<T> extends SingleObjectDuplex<T,boolean> {
     protected result: boolean = false;
 
     /**
-     * @constructor
      * @param {ObjectDuplexOptions} options - The options for the HasElementsStream.
      */
     constructor(options: ObjectDuplexOptions) {

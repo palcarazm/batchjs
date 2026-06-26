@@ -3,7 +3,7 @@ import { Step } from "../step/Step";
 import { Job } from "./Job";
 import { JobLogger } from "./JobLogger";
 import { JobMeter, JobMetrics } from "./JobMeter";
-import { JobTimer } from "./JobTimer";
+import { JobTimer, TimerType } from "./JobTimer";
 
 /**
  * @class
@@ -25,39 +25,45 @@ export class JobListener {
         if(logger) this.logger = new JobLogger(logger,job.name);
 
         job.once("start", () => {
-            this.timer.start("JOB", job.name);
+            this.timer.start(TimerType.JOB, job.name);
             this.meter.start(job.status);
             this.logger?.start(job.params);
            
         });
 
         job.once("end", () => {
-            const duration = this.timer.stop("JOB", job.name);
+            const duration = this.timer.stop(TimerType.JOB, job.name);
             this.meter.finish(job.status, duration);
             this.logger?.finish(job.status, duration);
         });
 
         job.once("error", () => {
-            const duration = this.timer.stop("JOB", job.name);
+            const duration = this.timer.stop(TimerType.JOB, job.name);
             this.meter.finish(job.status, duration);
             this.logger?.finish(job.status, duration);
         });
 
         job.on("stepStart", (step: Step) => {
-            this.timer.start("STEP", step.name);
+            this.timer.start(TimerType.STEP, step.name);
             this.meter.StepStart(step.name, step.status);
             this.logger?.StepStart(step.name, step.params);
         });
 
         job.once("stepError", ({step, error}) => {
-            const duration = this.timer.stop("STEP", step.name);
+            const duration = this.timer.stop(TimerType.STEP, step.name);
             this.meter.StepFinish(step.name, step.status, duration);
             this.logger?.StepError(step.name, step.status, error);
             this.logger?.StepFinish(step.name, step.status, duration);
         });
 
         job.on("stepEnd", (step: Step) => {
-            const duration = this.timer.stop("STEP", step.name);
+            const duration = this.timer.stop(TimerType.STEP, step.name);
+            this.meter.StepFinish(step.name, step.status, duration);
+            this.logger?.StepFinish(step.name, step.status, duration);
+        });
+
+        job.on("stepCancelled", (step: Step) => {
+            const duration = this.timer.stop(TimerType.STEP, step.name);
             this.meter.StepFinish(step.name, step.status, duration);
             this.logger?.StepFinish(step.name, step.status, duration);
         });
@@ -67,7 +73,6 @@ export class JobListener {
      * The metrics of the job.
      * @readonly
      * @type {JobMetrics}
-     * @memberof JobListener
      */
     get metrics():JobMetrics {
         return this.meter.metrics;

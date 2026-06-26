@@ -1,5 +1,6 @@
 import { Readable, Duplex, Writable } from "node:stream";
 import { RunnableStatus } from "../RunnableStatus";
+import { StepCancelledError } from "../../errors/_index";
 
 /**
  * @abstract
@@ -59,9 +60,11 @@ export abstract class Step {
     public readonly name:string;
     public readonly params:object;
     private _status:RunnableStatus;
+    private _readerInstance?:Readable;
+    private _processorsInstances?:Duplex[];
+    private _writerInstance?:Writable;
 
     /**
-     * @constructor
      * @param {string} name - The name to assign to the Step.
      * @param {object} params - The parameters to pass to the step.
      */
@@ -75,18 +78,23 @@ export abstract class Step {
      * The current status of the step.
      * @readonly
      * @type {RunnableStatus}
-     * @memberof Step
      */
     get status():RunnableStatus {
         return this._status;
     }
+
+    /**
+     * Whether the step is currently running.
+     * @readonly
+     * @type {boolean}
+     */
+    get isRunning():boolean {
+        return this._status === RunnableStatus.RUNNING;
+    }
     
     /**
      * @abstract
-     * @description
      * Abstract method that must be implemented by the step in order to defined the reader stream.
-     * @function _reader
-     * @memberof Step
      * @returns {Readable}
      * @protected
      */
@@ -94,11 +102,8 @@ export abstract class Step {
 
     /**
      * @abstract
-     * @description
      * Abstract method that must be implemented by the step in order to process the data from the reader stream and push it to the writer stream.
      * Processors are defined in an ordered array to be chained on the runner.
-     * @function _processors
-     * @memberof Step
      * @returns {Array<Duplex>}
      * @protected
      */
@@ -106,10 +111,7 @@ export abstract class Step {
 
     /**
      * @abstract
-     * @description
      * Abstract method that must be implemented by the step in order to defined the writer stream.
-     * @function _writer
-     * @memberof Step
      * @returns {Writable}
      * @protected
      */
@@ -124,20 +126,24 @@ export abstract class Step {
         this._status = RunnableStatus.RUNNING;
         return new Promise<void>((resolve, reject) => {
             // Reader
-            const reader = this._reader();
-            reader.once("error", (error) => {
-                reject(error);
-            });
+            this._readerInstance = this._reader()
+                .once("error", (error) => {
+                    reject(error);
+                });
 
             // Writer
-            const writer = this._writer();
-            writer.once("error", (error) => {
-                reject(error);
-            });
+            this._writerInstance = this._writer()
+                .once("error", (error) => {
+                    reject(error);
+                })
+                .once("close", () => {
+                    if(this._status === RunnableStatus.CANCELLED) reject(new StepCancelledError(this.name));
+                });
 
-            // Assembly processors           
-            let assembly:Readable = reader;
-            for (const processor of this._processors()) {
+            // Assembly processors
+            this._processorsInstances = this._processors();
+            let assembly:Readable = this._readerInstance;
+            for (const processor of this._processorsInstances) {
                 processor.once("error", (error) => {
                     reject(error);
                 });
@@ -145,14 +151,41 @@ export abstract class Step {
             }
 
             // Assembly writer
-            assembly.pipe(writer)
-                .on("finish", () => {
+            assembly.pipe(this._writerInstance)
+                .once("finish", () => {
                     this._status = RunnableStatus.COMPLETED;
                     resolve();
                 });
         }).catch((error) => {
-            this._status = RunnableStatus.FAILED;
+            if(this._status === RunnableStatus.RUNNING) this._status = RunnableStatus.FAILED;
             throw error;
+        }).finally(() => {
+            this.destroy();
         });
+    }
+
+    /**
+     * Cancel the execution of the step.
+     * @returns {void}
+     */
+    public cancel():void {
+        if(!this.isRunning) return;
+        this._status = RunnableStatus.CANCELLED;
+        this.destroy();
+    }
+
+    /**
+     * Destroys all resources associated with the step if it's in a final state.
+     * It's automatically called when the step is cancelled and once run promises are settled (resolve or reject).
+     * @returns {void}
+     * @protected
+     */
+    protected destroy():void {
+        if(this._status === RunnableStatus.CREATED || this._status === RunnableStatus.RUNNING) return;
+        this._readerInstance?.destroy();
+        this._writerInstance?.destroy();
+        for (const processor of this._processorsInstances ?? []) {
+            processor.destroy();
+        }
     }
 }

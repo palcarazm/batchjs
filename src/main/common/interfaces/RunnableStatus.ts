@@ -3,8 +3,28 @@
  * Enum for the status of a Runnable.
  */
 export enum RunnableStatus {
-    CREATED = "CREATED",        // Runnable has been created but not started
-    RUNNING = "RUNNING",        // Runnable is running
-    COMPLETED = "COMPLETED",    // Runnable has completed
-    FAILED = "FAILED",          // Runnable has failed
-  }
+  /**
+   *  Runnable has been created but not started
+   */  
+  CREATED = "CREATED",
+
+  /**
+   *  Runnable is running
+   */
+  RUNNING = "RUNNING",
+
+  /**
+   *  Runnable has completed
+   */
+  COMPLETED = "COMPLETED",
+
+  /**
+   *  Runnable has been cancelled
+   */
+  CANCELLED = "CANCELLED",
+
+  /**
+   *  Runnable has failed
+   */
+  FAILED = "FAILED",
+}

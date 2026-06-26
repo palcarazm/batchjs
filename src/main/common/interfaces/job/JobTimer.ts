@@ -1,4 +1,18 @@
-type timerType = "JOB" | "STEP";
+/**
+ * @enum
+ * The type of timer.
+ */
+export enum TimerType {
+    /**
+     * The type of timer for a job.
+     */
+    JOB = "JOB",
+
+    /**
+     * The type of timer for a step.
+     */
+    STEP = "STEP"
+};
 
 /**
  * @class
@@ -22,6 +36,7 @@ export class JobTimer {
      * @protected
      * @param start starting time in nanoseconds
      * @returns time in milliseconds
+     * @internal This method is not part of the public API.
      */
     protected nsFrom(start: bigint) {
         const ns = process.hrtime.bigint() - start;
@@ -34,12 +49,13 @@ export class JobTimer {
      * @param type Is it a job or a step?
      * @param name The name of the job or step
      * @returns A key that can be used to identify the timer
+     * @internal This method is not part of the public API.
      */
-    protected getKey(type:timerType,name:string): string {
+    protected getKey(type:TimerType,name:string): string {
         switch (type) {
-        case "JOB":
+        case TimerType.JOB:
             return `${type}::${name}`;
-        case "STEP":
+        case TimerType.STEP:
             return `${type}::${this.jobName}::${name}`;
         }
     }
@@ -49,7 +65,7 @@ export class JobTimer {
      * @param type Is it a job or a step?
      * @param name The name of the job or step
      */
-    start(type:timerType,name:string): void {
+    start(type:TimerType,name:string): void {
         this.times.set(this.getKey(type,name), process.hrtime.bigint());
     }
 
@@ -59,7 +75,7 @@ export class JobTimer {
      * @param name The name of the job or step
      * @returns The time taken to run the job or step in milliseconds, or 0 if the timer was not started.
      */
-    stop(type:timerType,name:string): number {
+    stop(type:TimerType,name:string): number {
         const start = this.times.get(this.getKey  (type,name));
         if (!start) return 0;
         this.times.delete(this.getKey (type,name));

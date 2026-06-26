@@ -5,7 +5,7 @@ import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index"
  * @class
  * Class that allows you to transform an array stream into a flat stream.
  * @extends InternalBufferDuplex
- * @template T
+ * @template T The type of the input data.
  * @example
  * ```typescript
  * const stream:FlatStream<string> = new FlatStream({
@@ -29,7 +29,6 @@ import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index"
  */
 export class FlatStream<T> extends InternalBufferDuplex<T[],T> {
     /**
-     * @constructor
      * @param {ObjectDuplexOptions} options - The options for the FlatStream.
      */
     constructor(options: ObjectDuplexOptions) {

@@ -6,7 +6,7 @@ import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index"
  * @class
  * Class that allows you to remit chunks from a stream when the source is finished.
  * @extends ObjectDuplex
- * @template T
+ * @template T The type of the input data.
  * @example
  * ```typescript
  * const stream:ReplayStream<string> = new ReplayStream({
@@ -39,9 +39,7 @@ export class ReplayStream<T> extends InternalBufferDuplex<T,T> {
     private readonly memory: T[] = [];
 
     /**
-     * @constructor
      * @param {ObjectDuplexOptions} options - The options for the ReplayStream.
-     * @param [options.objectMode=true] {true} - Whether the stream should operate in object mode.
      */
     constructor(options: ObjectDuplexOptions) {
         super(options);
@@ -65,7 +63,7 @@ export class ReplayStream<T> extends InternalBufferDuplex<T,T> {
     /**
      * Creates a readable stream from the buffer to replay the data that have been pushed.
      * @returns {Readable} The replay stream.
-     * @throws {NotClosedError} If the stream is not closed, so the buffer is not already completed to be replayed.
+     * @throws {@link NotClosedError} If the stream is not closed, so the buffer is not already completed to be replayed.
      */
     replay(): Readable {
         if (this.closed) {

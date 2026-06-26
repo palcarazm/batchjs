@@ -1,4 +1,4 @@
-import { JobTimer } from "../../../../main/common/index";
+import { JobTimer, TimerType } from "../../../../main/common/index";
 
 
 describe("JobTimer", () => {
@@ -11,11 +11,11 @@ describe("JobTimer", () => {
     });
 
     test("should measure job duration in ms", (done) => {
-        timer.start("JOB", "myJob");
+        timer.start(TimerType.JOB, "myJob");
         const start = Date.now();
 
         setTimeout(()=>{
-            const duration = timer.stop("JOB", "myJob");
+            const duration = timer.stop(TimerType.JOB, "myJob");
             const end = Date.now();
             expect(duration).toBeGreaterThanOrEqual(50 - deltaMin);
             expect(duration).toBeLessThanOrEqual(end - start + deltaMax);
@@ -24,11 +24,11 @@ describe("JobTimer", () => {
     });
 
     test("should measure step duration in ms", (done) => {
-        timer.start("STEP", "myStep");
+        timer.start(TimerType.STEP, "myStep");
         const start = Date.now();
 
         setTimeout(()=>{
-            const duration = timer.stop("STEP", "myStep");
+            const duration = timer.stop(TimerType.STEP, "myStep");
             const end = Date.now();
             expect(duration).toBeGreaterThanOrEqual(30 - deltaMin);
             expect(duration).toBeLessThanOrEqual(end - start + deltaMax);
@@ -37,7 +37,7 @@ describe("JobTimer", () => {
     });
 
     test("should return 0 if stop called without start", () => {
-        const duration = timer.stop("JOB", "notStarted");
+        const duration = timer.stop(TimerType.JOB, "notStarted");
         expect(duration).toBe(0);
     });
 });

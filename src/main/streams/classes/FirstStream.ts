@@ -5,7 +5,7 @@ import {  DiscardingSingleObjectDuplex, ObjectDuplexOptions } from "../interface
  * @class
  * Class that allows you to emit only the first chunk in a stream and discard the rest.
  * @extends DiscardingSingleObjectDuplex
- * @template T
+ * @template T The type of the input data.
  * @example
  * ```typescript
  * const stream:FirstStream<string> = new FirstStream({
@@ -34,7 +34,6 @@ import {  DiscardingSingleObjectDuplex, ObjectDuplexOptions } from "../interface
 export class FirstStream<T> extends DiscardingSingleObjectDuplex<T,T> {
 
     /**
-     * @constructor
      * @param {ObjectDuplexOptions} options - The options for the FirstStream.
      */
     constructor(options: ObjectDuplexOptions) {

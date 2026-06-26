@@ -10,7 +10,6 @@ export class JobLogger {
     protected readonly jobName: string;
 
     /**
-     * @constructor
      * @param {Logger} logger - The logger to use for logging.
      * @param {string} jobName - The name of the job to log.
      */

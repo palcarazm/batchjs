@@ -1,0 +1,4 @@
+api
+.vitepress/cache
+.vitepress/dist
+.vitepress/tmp

@@ -6,7 +6,8 @@ import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
  * @class
  * Abstract class that allows you to emit a single data in a stream.
  * @extends ObjectDuplex
- * @template T
+ * @template Tin The type of the input data
+ * @template Tout The type of the output data
  */
 export abstract class SingleObjectDuplex<Tin,Tout> extends ObjectDuplex<Tin,Tout> {
     protected result: Tout | undefined = undefined;
@@ -15,7 +16,6 @@ export abstract class SingleObjectDuplex<Tin,Tout> extends ObjectDuplex<Tin,Tout
     private finalCallback?: TransformCallback;
 
     /**
-     * @constructor
      * @param {ObjectDuplexOptions} options 
      * @param {Function} canEarlyFlush - A function that returns a boolean indicating whether the stream can early flush.
      */

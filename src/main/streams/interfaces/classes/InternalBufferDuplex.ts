@@ -6,14 +6,13 @@ import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
  * @class
  * Abstract class that implements an stream that buffers data internally.
  * @extends ObjectDuplex
- * @template Tin
- * @template Tout
+ * @template Tin The type of the input data
+ * @template Tout The type of the output data
  */
 export abstract class InternalBufferDuplex<Tin,Tout> extends ObjectDuplex<Tin,Tout> {
     protected buffer: Tout[] = [];
 
     /**
-     * @constructor
      * @param {ObjectDuplexOptions} options - The options for the InternalBufferDuplex.
      */
     constructor(options: ObjectDuplexOptions) {
@@ -46,7 +45,6 @@ export abstract class InternalBufferDuplex<Tin,Tout> extends ObjectDuplex<Tin,To
     /**
      * Pushes the ready chunks to the consumer stream since the buffer is empty or the size limit is reached.
      *
-     * @param {number} size - The size parameter for controlling the read operation.
      * @return {void} This function does not return anything.
      */
     _read(): void {

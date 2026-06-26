@@ -5,7 +5,7 @@ import { SingleObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
  * @class
  * Class that allows you to count the number of chunks in a stream.
  * @extends SingleObjectDuplex
- * @template T
+ * @template T The type of the input data.
  * @example
  * ```typescript
  * const stream:CountStream<string> = new CountStream({
@@ -29,7 +29,6 @@ export class CountStream<T extends NonNullable<unknown>> extends SingleObjectDup
     protected result: number = 0; 
 
     /**
-     * @constructor
      * @param {ObjectDuplexOptions} options - The options for the GroupBy.
      */
     constructor(options: ObjectDuplexOptions) {

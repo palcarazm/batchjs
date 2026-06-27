@@ -53,7 +53,10 @@ class MyJob extends Job {
 
 // Run
 const job = new MyJob('my-job');
-await job.run();
+job.on('finished', ({ status }) => {
+  console.log(`Job finished with status ${status}`);
+});
+job.run();
 ```
 
 ## Next Steps

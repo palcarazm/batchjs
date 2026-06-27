@@ -10,103 +10,162 @@ function getStepInstances(step: Step): StepInstances {
 
 describe("Step", () => {
     describe("run()", () => {
-        test("should run the step successfully", async () => {
-            const step = new MockPassingStep();
-            await expect(step.run()).resolves.toBeUndefined();
+        test("should run the step successfully", (done) => {
+            new MockPassingStep()
+                .once("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.COMPLETED);
+                    done();
+                })
+                .run();
         });
         
-        test("should reject if the reader stream errors", async () => {
-            const step = new MockReaderFailingStep();
-            await expect(step.run()).rejects.toThrow("Reader error");
+        test("should reject if the reader stream errors", (done) => {
+            new MockReaderFailingStep()
+                .once("failed", ({ error }) => {
+                    expect(error).toBeDefined();
+                    expect(error?.message).toBe("Reader error");
+                })
+                .once("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.FAILED);
+                    done();
+                })
+                .run();
         });
         
-        test("should reject if a processor stream errors", async () => {
-            const step = new MockProcessorFailingStep();
-            await expect(step.run()).rejects.toThrow("Processor error");
+        test("should reject if a processor stream errors", (done) => {
+            new MockProcessorFailingStep()
+                .once("failed", ({ error }) => {
+                    expect(error).toBeDefined();
+                    expect(error?.message).toBe("Processor error");
+                })
+                .once("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.FAILED);
+                    done();
+                })
+                .run();
         });
         
-        test("should reject if the writer stream errors", async () => {
-            const step = new MockWriterFailingStep();
-            await expect(step.run()).rejects.toThrow("Writer error");
+        test("should reject if the writer stream errors", (done) => {
+            new MockWriterFailingStep()
+                .once("failed", ({ error }) => {
+                    expect(error).toBeDefined();
+                    expect(error?.message).toBe("Writer error");
+                })
+                .once("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.FAILED);
+                    done();
+                })
+                .run();
         });
     });
 
     describe("cancel()", () => {
-        test("should cancel a running step", async () => {
-            const step = new MockPassingStep();
+        test("should cancel a running step", (done) => {
+            const step = new MockPassingStep()
+                .once("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.CANCELLED);
+                    done();
+                });
 
-            const runPromise = step.run();
-            step.cancel();
-
-            await expect(runPromise).rejects.toThrow(StepCancelledError);
-            expect(step.status).toBe(RunnableStatus.CANCELLED);
-            expect(step.isRunning).toBe(false);
+            step.run().then(()=>step.cancel());
         });
 
-        test("should do nothing when cancel() called on non-running step", () => {
+        test("should do nothing when cancel() called on non-running step", async () => {
             const step = new MockPassingStep();
 
-            step.cancel();
+            await step.cancel();
 
             expect(step.status).toBe(RunnableStatus.CREATED);
             expect(step.isRunning).toBe(false);
         });
 
         
-        test("should cancel multiple times without side effects", async () => {
-            const step = new MockPassingStep();
-            const runPromise = step.run();
+        test("should cancel multiple times without side effects", (done) => {
+            const step = new MockPassingStep()
+                .on("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.CANCELLED);
+                    done();
+                });
             
-            step.cancel();
-            step.cancel(); // Second call should do nothing
-            
-            await expect(runPromise).rejects.toThrow(StepCancelledError);
-            expect(step.status).toBe(RunnableStatus.CANCELLED);
+            step.run()
+                .then(()=>step.cancel())
+                .then(()=>step.cancel()); // No side effects on second call
         });
     });
 
     describe("destroy()", () => {
-        test("should destroy streams when destroy() is called in a Completed step", async() => {
-            const step = new MockPassingStep();
-            const stepInstances = getStepInstances(step);
-            
-            await expect(step.run()).resolves.toBeUndefined();
+        test("should destroy streams when destroy() is called in a Completed step", (done) => {
+            const step = new MockPassingStep()
+                .once("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.COMPLETED);
+                    const stepInstances = getStepInstances(step);
 
-            expect(stepInstances._readerInstance?.destroyed).toBe(true);
-            expect(stepInstances._writerInstance?.destroyed).toBe(true);
-            for (const processor of stepInstances._processorsInstances) {
-                expect(processor.destroyed).toBe(true);
-            }
+                    expect(stepInstances._readerInstance?.destroyed).toBe(true);
+                    expect(stepInstances._writerInstance?.destroyed).toBe(true);
+                    for (const processor of stepInstances._processorsInstances) {
+                        expect(processor.destroyed).toBe(true);
+                    }
+
+                    done();
+                });
+
+            step.run();            
         });
 
-        test("should destroy streams when destroy() is called in a Failed step", async () => {
-            const step = new MockReaderFailingStep();
-            const stepInstances = getStepInstances(step);
+        test("should destroy streams when destroy() is called in a Failed step", (done) => {
+            const step = new MockReaderFailingStep()
+                .once("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.FAILED);
+                    const stepInstances = getStepInstances(step);
 
-            await expect(step.run()).rejects.toThrow("Reader error");
+                    expect(stepInstances._readerInstance?.destroyed).toBe(true);
+                    expect(stepInstances._writerInstance?.destroyed).toBe(true);
+                    for (const processor of stepInstances._processorsInstances) {
+                        expect(processor.destroyed).toBe(true);
+                    }
 
-            expect(stepInstances._readerInstance?.destroyed).toBe(true);
-            expect(stepInstances._writerInstance?.destroyed).toBe(true);
-            for (const processor of stepInstances._processorsInstances) {
-                expect(processor.destroyed).toBe(true);
-            }
+                    done();
+                });
+                
+            step.run();    
         });
 
-        test("should destroy streams when cancel() is called", async() => {
-            const step = new MockPassingStep();
-            const stepInstances = getStepInstances(step);
-          
-            
-            const runPromise = step.run();
-            
-            step.cancel();
-            
-            await expect(runPromise).rejects.toThrow(StepCancelledError);
-            expect(stepInstances._readerInstance?.destroyed).toBe(true);
-            expect(stepInstances._writerInstance?.destroyed).toBe(true);
-            for (const processor of stepInstances._processorsInstances) {
-                expect(processor.destroyed).toBe(true);
-            }
+        test("should destroy streams when cancel() is called", (done) => {
+            const step = new MockPassingStep()
+                .once("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.CANCELLED);
+                    const stepInstances = getStepInstances(step);
+
+                    expect(stepInstances._readerInstance?.destroyed).toBe(true);
+                    expect(stepInstances._writerInstance?.destroyed).toBe(true);
+                    for (const processor of stepInstances._processorsInstances) {
+                        expect(processor.destroyed).toBe(true);
+                    }
+
+                    done();
+                });
+                
+            step.run().then(()=>step.cancel());    
+        });
+    });
+
+    describe("execution task", () => {
+        test("should resolve to a fulfilled promise on success", async () => {
+            const runnable = new MockPassingStep();
+            await runnable.run();
+            await expect(runnable.executionTask).resolves.toEqual(expect.objectContaining({status: "fulfilled"}));
+        });
+
+        test("should resolve to a rejected promise on fail", async () => {
+            const runnable = new MockReaderFailingStep();
+            await runnable.run();
+            await expect(runnable.executionTask).resolves.toEqual(expect.objectContaining({status: "rejected", reason: expect.any(Error)}));
+        });
+
+        test("should resolve to a rejected promise on cancel", async () => {
+            const runnable = new MockPassingStep();
+            await runnable.run().then(()=>runnable.cancel());
+            await expect(runnable.executionTask).resolves.toEqual(expect.objectContaining({status: "rejected", reason: expect.any(StepCancelledError)}));
         });
     });
 });

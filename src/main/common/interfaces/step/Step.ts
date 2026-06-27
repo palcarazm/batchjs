@@ -1,11 +1,13 @@
 import { Readable, Duplex, Writable } from "node:stream";
-import { RunnableStatus } from "../RunnableStatus";
+import { Runnable , RunnableStatus } from "../runnable/_index";
+import { StepEventMap } from "./StepEvents";
 import { StepCancelledError } from "../../errors/_index";
 
 /**
  * @abstract
  * @class
  * Abstract base class for all steps.
+ * @extends {@link Runnable<StepEventMap>}
  * @example
  * ```typescript
  * class StepImplementation extends Step {
@@ -44,22 +46,16 @@ import { StepCancelledError } from "../../errors/_index";
     }
 }
  * const step = new StepImplementation("StepImplementation");
- * step.run()
- *     .then(() => {
- *         console.log("Step completed successfully");
- *     })
- *     .catch((error) => {
- *         console.log("Step completed with errors");
- *     });
+ * step.on("started", () => console.log("Step started"));
+ * step.on("completed", () => console.log("Step completed"));
+ * step.run();
  * ```
  * ```shell
- * >> Step completed successfully
+ * >> Step started
+ * >> Step completed
  * ```
  */
-export abstract class Step {
-    public readonly name:string;
-    public readonly params:object;
-    private _status:RunnableStatus;
+export abstract class Step extends Runnable<StepEventMap> {
     private _readerInstance?:Readable;
     private _processorsInstances?:Duplex[];
     private _writerInstance?:Writable;
@@ -69,27 +65,7 @@ export abstract class Step {
      * @param {object} params - The parameters to pass to the step.
      */
     constructor(name:string,params:object={}) {
-        this.name = name;
-        this.params = params;
-        this._status = RunnableStatus.CREATED;
-    }
-
-    /**
-     * The current status of the step.
-     * @readonly
-     * @type {RunnableStatus}
-     */
-    get status():RunnableStatus {
-        return this._status;
-    }
-
-    /**
-     * Whether the step is currently running.
-     * @readonly
-     * @type {boolean}
-     */
-    get isRunning():boolean {
-        return this._status === RunnableStatus.RUNNING;
+        super(name, params);
     }
     
     /**
@@ -116,72 +92,97 @@ export abstract class Step {
      * @protected
      */
     protected abstract _writer():Writable;
-    
+
     /**
-     * Executes the step by connecting streams, processing data, and listening for events.
-     *
-     * @return {Promise<void>} A Promise that resolves when the step execution is completed, and rejects if an error occurs.
+     * Hook called during transition to RUNNING.
+     * Builds the stream pipeline and launches it asynchronously.
+     * @returns {Promise<{ cancelled: boolean; reason?: string; executionPromise: Promise<void> }>}
      */
-    public run():Promise<void>{
-        this._status = RunnableStatus.RUNNING;
-        return new Promise<void>((resolve, reject) => {
-            // Reader
-            this._readerInstance = this._reader()
-                .once("error", (error) => {
-                    reject(error);
-                });
+    protected async doRun(): Promise<{ cancelled: boolean; reason?: string, executionPromise: Promise<void> }> {
+        this._readerInstance = this._reader();
+        this._processorsInstances = this._processors();
+        this._writerInstance = this._writer();
 
-            // Writer
-            this._writerInstance = this._writer()
-                .once("error", (error) => {
-                    reject(error);
-                })
-                .once("close", () => {
-                    if(this._status === RunnableStatus.CANCELLED) reject(new StepCancelledError(this.name));
-                });
+        const executionPromise = new Promise<void>((resolve, reject) => {
+            this._readerInstance!.once("error", (error) => {
+                reject(error);
+            });
+            this._writerInstance!.once("close", () => {
+                if (this.isCancelled || this.transitioningTo === RunnableStatus.CANCELLED) {
+                    reject(new StepCancelledError(this.name));
+                }
+            }).once("error", (error) => {
+                reject(error);
+            });
 
-            // Assembly processors
-            this._processorsInstances = this._processors();
-            let assembly:Readable = this._readerInstance;
-            for (const processor of this._processorsInstances) {
+            let assembly: Readable = this._readerInstance!;
+            for (const processor of this._processorsInstances!) {
                 processor.once("error", (error) => {
                     reject(error);
                 });
                 assembly = assembly.pipe(processor);
             }
+            assembly.pipe(this._writerInstance!);
 
-            // Assembly writer
-            assembly.pipe(this._writerInstance)
+            assembly
                 .once("finish", () => {
-                    this._status = RunnableStatus.COMPLETED;
                     resolve();
                 });
+        }).then(() => {
+            return this.transitionTo(RunnableStatus.COMPLETED);
         }).catch((error) => {
-            if(this._status === RunnableStatus.RUNNING) this._status = RunnableStatus.FAILED;
+            if (this.isRunning && this.transitioningTo === undefined) {
+                return this.transitionTo(RunnableStatus.FAILED, error)
+                    .finally(() => { throw error; });
+            }
             throw error;
-        }).finally(() => {
-            this.destroy();
         });
+
+        return { cancelled: false, executionPromise };
     }
 
     /**
-     * Cancel the execution of the step.
-     * @returns {void}
+     * Hook called during transition to COMPLETED.
+     * Destroys all streams.
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>}
      */
-    public cancel():void {
-        if(!this.isRunning) return;
-        this._status = RunnableStatus.CANCELLED;
+    protected async doComplete(): Promise<{ cancelled: boolean; reason?: string }> {
         this.destroy();
+        return { cancelled: false };
     }
 
     /**
-     * Destroys all resources associated with the step if it's in a final state.
-     * It's automatically called when the step is cancelled and once run promises are settled (resolve or reject).
+     * Hook called during transition to FAILED.
+     * Destroys all streams.
+     * @param {Error} _error - The error that caused the failure.
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>}
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    protected async doFail(_error: Error): Promise<{ cancelled: boolean; reason?: string }> {
+        this.destroy();
+        return { cancelled: false };
+    }
+
+    /**
+     * Hook called during transition to CANCELLED.
+     * Destroys all streams.
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>}
+     */
+    protected async doCancel(): Promise<{ cancelled: boolean; reason?: string }> {
+        this.destroy();
+        return { cancelled: false };
+    }
+
+    /**
+     * Destroys all resources associated with the step.
+     * Called automatically on completion, failure, or cancellation.
      * @returns {void}
      * @protected
      */
-    protected destroy():void {
-        if(this._status === RunnableStatus.CREATED || this._status === RunnableStatus.RUNNING) return;
+    protected destroy(): void {
+        if (this.isCreated || (this.isRunning && this.transitioningTo === undefined)) {
+            return;
+        }
         this._readerInstance?.destroy();
         this._writerInstance?.destroy();
         for (const processor of this._processorsInstances ?? []) {

@@ -1,7 +1,7 @@
 import { BatchJSError } from "./BatchJSError";
 
 /**
- * Error thrown when the StepBuilder is used incorrectly.
+ * Error thrown when the Step is cancelled.
  * @extends BatchJSError
  */
 export class StepCancelledError extends BatchJSError {

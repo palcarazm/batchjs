@@ -35,9 +35,9 @@ describe("JobLogger", () => {
         );
     });
 
-    test("StepStart should log step start with parameters", () => {
+    test("stepStart should log step start with parameters", () => {
         const stepParams = { x: 42 };
-        jobLogger.StepStart("Step1", stepParams);
+        jobLogger.stepStart("Step1", stepParams);
 
         expect(mockLogger.info).toHaveBeenCalledTimes(1);
         expect(mockLogger.info).toHaveBeenCalledWith(
@@ -45,8 +45,8 @@ describe("JobLogger", () => {
         );
     });
 
-    test("StepFinish should log step finish with status and duration", () => {
-        jobLogger.StepFinish("Step1", RunnableStatus.COMPLETED, 78.9);
+    test("stepFinish should log step finish with status and duration", () => {
+        jobLogger.stepFinish("Step1", RunnableStatus.COMPLETED, 78.9);
 
         expect(mockLogger.info).toHaveBeenCalledTimes(1);
         expect(mockLogger.info).toHaveBeenCalledWith(
@@ -54,9 +54,9 @@ describe("JobLogger", () => {
         );
     });
 
-    test("StepError should log step error with message and stack", () => {
+    test("stepError should log step error with message and stack", () => {
         const error = new Error("Something went wrong");
-        jobLogger.StepError("Step1", RunnableStatus.FAILED, error);
+        jobLogger.stepError("Step1", RunnableStatus.FAILED, error);
 
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(

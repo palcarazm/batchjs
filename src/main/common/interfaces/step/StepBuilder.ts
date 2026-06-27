@@ -5,7 +5,8 @@ import { StepBuilderError } from "../../errors/StepBuilderError";
 /**
  * @class
  * Fluent builder for creating Step instances without subclassing.
- * @since 1.3.0
+ * @since 2.0.0
+ * 
  * @example
  * ```typescript
  * const step = new StepBuilder('myStep')
@@ -28,12 +29,16 @@ import { StepBuilderError } from "../../errors/StepBuilderError";
  *   }))
  *   .build();
  * 
- * await step.run();
+ * step.on("started", () => console.log("Step started"));
+ * step.on("completed", () => console.log("Step completed"));
+ * step.run();
  * ```
  * ```shell
+ * >> Step started
  * >> A
  * >> B
  * >> C
+ * >> Step completed
  * ```
  */
 export class StepBuilder {

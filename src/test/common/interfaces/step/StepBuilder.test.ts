@@ -158,9 +158,9 @@ describe("StepBuilder", () => {
             expect(step).toBeInstanceOf(Step);
         });
 
-        test("should execute successfully with valid stream setup", async () => {
+        test("should execute successfully with valid stream setup", (done) => {
             const chunks: string[] = [];
-            const step = builder
+            builder
                 .reader(() => Readable.from(["x", "y", "z"], { objectMode: true }))
                 .processors(() => [
                     new Transform({
@@ -178,15 +178,17 @@ describe("StepBuilder", () => {
                         callback();
                     }
                 }))
-                .build();
-
-            await step.run();
-            expect(chunks).toEqual(["xx", "yy", "zz"]);
-            expect(step.status).toBe(RunnableStatus.COMPLETED);
+                .build()
+                .on("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.COMPLETED);
+                    expect(chunks).toEqual(["xx", "yy", "zz"]);
+                    done();
+                })
+                .run();
         });
 
-        test("should handle errors from streams", async () => {
-            const step = builder
+        test("should handle errors from streams", (done) => {
+            builder
                 .reader(() => {
                     const readable = new Readable({
                         objectMode: true,
@@ -198,10 +200,16 @@ describe("StepBuilder", () => {
                 })
                 .processors(processorsFn)
                 .writer(writerFn)
-                .build();
-
-            await expect(step.run()).rejects.toThrow("Reader error");
-            expect(step.status).toBe(RunnableStatus.FAILED);
+                .build()
+                .once("failed", ({ error }) => {
+                    expect(error).toBeDefined();
+                    expect(error?.message).toBe("Reader error");
+                })
+                .on("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.FAILED);
+                    done();
+                })
+                .run();
         });
     });
 });

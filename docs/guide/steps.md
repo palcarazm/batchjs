@@ -95,27 +95,6 @@ const step = new StepBuilder('filter', { maxNumber: 10 })
 
 You don't usually run a step manually – it's executed by the job. However, you can run it directly by calling `step.run()` (returns a `Promise<void>`).
 
-## Cancelling a Step
-
-When a step is running as part of a parallel group and another step in that group fails, the step is automatically cancelled. You can also manually cancel a step by calling `step.cancel()`.
-
-```typescript
-const step = new MyStep();
-const promise = step.run();
-
-// Cancel the step
-step.cancel(); // Sets status to CANCELLED and destroys streams
-
-await promise; // throws StepCancelledError
-```
-
-When a step is cancelled:
-
-- Its status becomes `CANCELLED`.
-- A `StepCancelledError` is thrown from `step.run()`.
-
-> **Note:** Manual cancellation is typically not needed when using Jobs, as the Job handles cancellation of parallel groups automatically.
-
 ## Status
 
 The step's status is available via the `status` getter, which returns a `RunnableStatus` enum value:
@@ -125,8 +104,54 @@ The step's status is available via the `status` getter, which returns a `Runnabl
 | `CREATED`   | Step has been instantiated but not started    |
 | `RUNNING`   | Step is currently executing                   |
 | `COMPLETED` | Step finished successfully                    |
-| `CANCELLED` | Step was cancelled (only in parallel groups)  |
+| `CANCELLED` | Step was cancelled                            |
 | `FAILED`    | Step failed with an error                     |
+
+Convenience getters are also available:
+
+- `isCreated`, `isRunning`, `isCompleted`, `isFailed`, `isCancelled`
+
+## Events
+
+Steps extend `Runnable` and emit the following lifecycle events:
+
+| Event                   | Payload                                                         | Description                               |
+|-------------------------|-----------------------------------------------------------------|-------------------------------------------|
+| `started`               | `{ name: string }`                                              | Emitted when transitioning to `RUNNING`   |
+| `completed`             | `{ name: string }`                                              | Emitted when transitioning to `COMPLETED` |
+| `failed`                | `{ name: string; error: Error }`                                | Emitted when transitioning to `FAILED`    |
+| `cancelled`             | `{ name: string }`                                              | Emitted when transitioning to `CANCELLED` |
+| `finished`              | `{ name: string; status: RunnableStatus }`                      | Emitted on any terminal state             |
+| `transition-cancelled`  | `{ from: RunnableStatus; to: RunnableStatus; reason?: string }` | Emitted when a hook cancels a transition  |
+| `transition-invalid`    | `{ from: RunnableStatus; to: RunnableStatus }`                  | Emitted on invalid state transition       |
+
+```typescript
+step.on('started', () => console.log('Step started'));
+step.on('completed', () => console.log('Step completed'));
+step.on('failed', ({ error }) => console.error('Step failed', error));
+step.on('cancelled', () => console.log('Step cancelled'));
+step.on('finished', ({ status }) => console.log(`Step finished with ${status}`));
+```
+
+## Cancelling a Step
+
+When a step is running as part of a parallel group and another step in that group fails, the step is automatically cancelled. You can also manually cancel a step by calling `step.cancel()` (which now returns a `Promise<void>`).
+
+```typescript
+const step = new MyStep();
+step.run(); // Returns immediately
+
+// Cancel the step (async)
+await step.cancel(); // Sets status to CANCELLED and destroys streams
+```
+
+When a step is cancelled:
+
+- Its status becomes `CANCELLED`.
+- The `finished` and `cancelled` events are emitted.
+- Any pending streams are destroyed.
+
+> **Note:** Manual cancellation is typically not needed when using Jobs, as the Job handles cancellation of parallel groups automatically.
 
 ## Error Handling
 

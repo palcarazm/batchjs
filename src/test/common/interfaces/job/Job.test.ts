@@ -1,91 +1,272 @@
-import { RunnableStatus } from "../../../../main/common";
+/// <reference types="jest" />
+import { JobCancelledError, RunnableStatus, Step } from "../../../../main/common";
 import { MockProcessorFailingStepJob,MockPassingJob, MockParallelAllPassingJob, MockParallelWithFailureJob, MockSequentialFailingBeforeParallelJob } from "../../mocks/jobs/_index";
 
 describe("Job", () => {
-    test("should run all steps successfully", async () => {
-        const job = new MockPassingJob();
-        await expect(job.run()).resolves.toBeUndefined();
-    });
-
-    test("should reject if a step fails", async () => {
-        const job = new MockProcessorFailingStepJob();
-        await expect(job.run()).rejects.toThrow("Processor error");
-    });
-
-    test("should run parallel steps successfully", async () => {
-        const job = new MockParallelAllPassingJob();
-        await expect(job.run()).resolves.toBeUndefined();
-
-        const metrics = job.metrics;
-        expect(metrics.status).toBe(RunnableStatus.COMPLETED);
-        // sequential1, parallel1, parallel2, sequential2
-        expect(metrics.steps).toHaveLength(4);
+    describe("run()", () => { 
+        test("should run all steps successfully", (done) => {
+            new MockPassingJob()
+                .once("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.COMPLETED);
+                    done();
+                }).run();
+        });
         
-        const stepNames = metrics.steps.map(s => s.name);
-        expect(stepNames).toContain("sequential1");
-        expect(stepNames).toContain("parallel1");
-        expect(stepNames).toContain("parallel2");
-        expect(stepNames).toContain("sequential2");
+        test("should reject if a step fails", (done) => {
+            new MockProcessorFailingStepJob()
+                .once("failed", ({ error }) => {
+                    expect(error).toBeDefined();
+                    expect(error?.message).toBe("Processor error");
+                })
+                .once("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.FAILED);
+                    done();
+                }).run();
+        });
+
+        test("should run parallel steps successfully", (done) => {
+            const job = new MockParallelAllPassingJob()
+                .once("finished", ({status}) => {
+                    expect(status).toBe(RunnableStatus.COMPLETED);
+                    
+                    const metrics = job.metrics;
+                    expect(metrics.status).toBe(RunnableStatus.COMPLETED);
+                    // sequential1, parallel1, parallel2, sequential2
+                    expect(metrics.steps).toHaveLength(4);
+                    
+                    const stepNames = metrics.steps.map(s => s.name);
+                    expect(stepNames).toContain("sequential1");
+                    expect(stepNames).toContain("parallel1");
+                    expect(stepNames).toContain("parallel2");
+                    expect(stepNames).toContain("sequential2");
+
+                    done();
+                });
+            job.run();
+        });
+
+        test("should cancel parallel steps on failure", (done) => {
+            const job = new MockParallelWithFailureJob()
+                .once("finished", ({status}) => {
+                    expect(status).toBe(RunnableStatus.FAILED);
+                    const metrics = job.metrics;
+                    expect(metrics.status).toBe(RunnableStatus.FAILED);
+
+                    // Failed step should be in metrics
+                    const failedStep = metrics.steps.find(s => s.name === "parallel2_failing");
+                    expect(failedStep).toBeDefined();
+                    expect(failedStep?.status).toBe(RunnableStatus.FAILED);
+
+                    // Other parallel steps should have run or been cancelled
+                    const parallel1 = metrics.steps.find(s => s.name === "parallel1");
+                    const parallel3 = metrics.steps.find(s => s.name === "parallel3");
+                    expect(parallel1).toBeDefined();
+                    expect(parallel1?.status).toMatch(/(CANCELLED|COMPLETED)$/);
+                    expect(parallel3).toBeDefined();
+                    expect(parallel3?.status).toMatch(/(CANCELLED|COMPLETED)$/);
+
+                    done();
+                });
+            job.run();
+        });
+
+        test("should not run subsequent steps after parallel failure", (done) => {
+            const job = new MockParallelWithFailureJob()
+                .once("finished", ({status}) => {
+                    expect(status).toBe(RunnableStatus.FAILED);
+
+                    const metrics = job.metrics;
+                    expect(metrics.status).toBe(RunnableStatus.FAILED);
+
+                    const stepNames = metrics.steps.map(s => s.name);
+
+                    // Only sequential1 and the parallel group steps should exist
+                    expect(stepNames).toContain("sequential1");
+                    expect(stepNames).toContain("parallel1");
+                    expect(stepNames).toContain("parallel2_failing");
+                    expect(stepNames).toContain("parallel3");
+
+                    // sequential2 should NOT be in metrics
+                    expect(stepNames).not.toContain("sequential2");
+
+                    done();
+                });
+            job.run();
+        });
+
+        test("should run mixed sequential and parallel steps in correct order", (done) => {
+            const job = new MockParallelAllPassingJob()
+                .once("finished", ({status}) => {
+                    expect(status).toBe(RunnableStatus.COMPLETED);
+
+                    const metrics = job.metrics;
+                    expect(metrics.status).toBe(RunnableStatus.COMPLETED);
+
+                    const stepNames = metrics.steps.map(s => s.name);
+                    expect(stepNames).toEqual(["sequential1", "parallel1", "parallel2", "sequential2"]);
+
+                    done();
+                });
+            
+            job.run();
+        });
+
+        test("should halt job when sequential step fails before parallel group", (done) => {
+            const job = new MockSequentialFailingBeforeParallelJob()
+                .once("finished", ({status}) => {
+                    expect(status).toBe(RunnableStatus.FAILED);
+
+                    const metrics = job.metrics;
+                    expect(metrics.status).toBe(RunnableStatus.FAILED);
+                    
+                    expect(metrics.steps).toHaveLength(1);
+                    expect(metrics.steps[0].name).toBe("sequential1_failing");
+                    expect(metrics.steps[0].status).toBe(RunnableStatus.FAILED);
+
+                    done();
+                });
+            job.run();
+        });
     });
 
-    test("should cancel parallel steps on failure", async () => {
-        const job = new MockParallelWithFailureJob();
-        await expect(job.run()).rejects.toThrow("Processor error");
+    describe("cancel()", () => {
+        test("should cancel a running job", (done) => {
+            const job = new MockParallelAllPassingJob()
+                .once("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.CANCELLED);
+                    const metrics = job.metrics;
+                    expect(metrics.status).toBe(RunnableStatus.CANCELLED);
+                    expect(metrics.steps).toHaveLength(1);
+                    expect(metrics.steps[0].status).toBe(RunnableStatus.CANCELLED);
+                    done();
+                });
 
-        const metrics = job.metrics;
-        expect(metrics.status).toBe(RunnableStatus.FAILED);
+            job.run().then(()=>job.cancel());
+        });
 
-        // Failed step should be in metrics
-        const failedStep = metrics.steps.find(s => s.name === "parallel2_failing");
-        expect(failedStep).toBeDefined();
-        expect(failedStep?.status).toBe(RunnableStatus.FAILED);
+        test("should do nothing when cancel() called on non-running job", async () => {
+            const job = new MockPassingJob();
 
-        // Other parallel steps should have run or been cancelled
-        const parallel1 = metrics.steps.find(s => s.name === "parallel1");
-        const parallel3 = metrics.steps.find(s => s.name === "parallel3");
-        expect(parallel1).toBeDefined();
-        expect(parallel1?.status).toMatch(/(CANCELLED|COMPLETED)$/);
-        expect(parallel3).toBeDefined();
-        expect(parallel3?.status).toMatch(/(CANCELLED|COMPLETED)$/);
-    });
+            await job.cancel();
 
-    test("should not run subsequent steps after parallel failure", async () => {
-        const job = new MockParallelWithFailureJob();
-        await expect(job.run()).rejects.toThrow("Processor error");
+            expect(job.status).toBe(RunnableStatus.CREATED);
+            expect(job.isRunning).toBe(false);
+        });
 
-        const stepNames = job.metrics.steps.map(s => s.name);
-
-        // Only sequential1 and the parallel group steps should exist
-        expect(stepNames).toContain("sequential1");
-        expect(stepNames).toContain("parallel1");
-        expect(stepNames).toContain("parallel2_failing");
-        expect(stepNames).toContain("parallel3");
-
-        // sequential2 should NOT be in metrics
-        expect(stepNames).not.toContain("sequential2");
-    });
-
-    test("should run mixed sequential and parallel steps in correct order", async () => {
-        const job = new MockParallelAllPassingJob();
         
-        await expect(job.run()).resolves.toBeUndefined();
-
-        const metrics = job.metrics;
-        const stepNames = metrics.steps.map(s => s.name);
-        
-        expect(stepNames).toEqual(["sequential1", "parallel1", "parallel2", "sequential2"]);
-        expect(metrics.status).toBe(RunnableStatus.COMPLETED);
+        test("should cancel multiple times without side effects", (done) => {
+            const job = new MockPassingJob()
+                .on("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.CANCELLED);
+                    done();
+                });
+            
+            job.run()
+                .then(()=>job.cancel())
+                .then(()=>job.cancel()); // No side effects on second call
+        });
     });
 
-    test("should halt job when sequential step fails before parallel group", async () => {
-        const job = new MockSequentialFailingBeforeParallelJob();
-        await expect(job.run()).rejects.toThrow("Processor error");
+    describe("step events", () => {
+        test("should emit step STARTED events", (done) => {
+            let stepStartedCount = 0;
 
-        const metrics = job.metrics;
-        expect(metrics.status).toBe(RunnableStatus.FAILED);
-        
-        expect(metrics.steps).toHaveLength(1);
-        expect(metrics.steps[0].name).toBe("sequential1_failing");
-        expect(metrics.steps[0].status).toBe(RunnableStatus.FAILED);
+            const job = new MockPassingJob()
+                .on("stepStarted",({ step }: { step: Step }) => {
+                    expect(step).toBeInstanceOf(Step);
+                    stepStartedCount++;
+                })
+                .once("finished", () => {
+                    expect(stepStartedCount).toBe(2);
+                    done();
+                });
+            job.run();
+        });
+
+        test("should emit step COMPLETED and step FINISHED events", (done) => {
+            let stepCompletedCount = 0;
+            let stepFinishedCount = 0;
+
+            const job = new MockPassingJob()
+                .on("stepCompleted", ({ step }: { step: Step }) => {
+                    expect(step).toBeInstanceOf(Step);
+                    stepCompletedCount++;
+                })
+                .on("stepFinished", ({ step, status }) => {
+                    expect(step).toBeInstanceOf(Step);
+                    expect(status).toBe(RunnableStatus.COMPLETED);
+                    stepFinishedCount++;
+                })
+                .once("finished", () => {
+                    expect(stepCompletedCount).toBe(2);
+                    expect(stepFinishedCount).toBe(2);
+                    done();
+                });
+            job.run();
+        });
+
+        test("should emit step FAILED and step FINISHED event if step fails", (done) => {
+            let stepFailedCount = 0;
+            let stepFinishedCount = 0;
+
+            const job = new MockSequentialFailingBeforeParallelJob()
+                .on("stepFailed", ({ step }: { step: Step }) => {
+                    expect(step).toBeInstanceOf(Step);
+                    stepFailedCount++;
+                })
+                .on("stepFinished", ({ step, status }) => {
+                    expect(step).toBeInstanceOf(Step);
+                    expect(status).toBe(RunnableStatus.FAILED);
+                    stepFinishedCount++;
+                })
+                .once("finished", () => {
+                    expect(stepFailedCount).toBe(1);
+                    expect(stepFinishedCount).toBe(1);
+                    done();
+                });
+            job.run();
+        });
+
+        test("should emit step CANCELLED and step FINISHED event if step fails", (done) => {
+            let stepCancelledCount = 0;
+            let stepFinishedCount = 0;
+
+            const job = new MockParallelWithFailureJob()
+                .on("stepCancelled", ({ step }: { step: Step }) => {
+                    expect(step).toBeInstanceOf(Step);
+                    stepCancelledCount++;
+                })
+                .on("stepFinished", ({ step, status }) => {
+                    expect(step).toBeInstanceOf(Step);
+                    expect(status).toBeDefined();
+                    stepFinishedCount++;
+                })
+                .once("finished", () => {
+                    expect(stepCancelledCount).toBe(2);
+                    expect(stepFinishedCount).toBe(4);
+                    done();
+                });
+            job.run();
+        });
+    });
+
+    describe("execution task", () => {
+        test("should resolve to a fulfilled promise on success", async () => {
+            const runnable = new MockPassingJob();
+            await runnable.run();
+            await expect(runnable.executionTask).resolves.toEqual(expect.objectContaining({status: "fulfilled"}));
+        });
+
+        test("should resolve to a rejected promise on fail", async () => {
+            const runnable = new MockParallelWithFailureJob();
+            await runnable.run();
+            await expect(runnable.executionTask).resolves.toEqual(expect.objectContaining({status: "rejected", reason: expect.any(Error)}));
+        });
+
+        test("should resolve to a rejected promise on cancel", async () => {
+            const runnable = new MockPassingJob();
+            await runnable.run().then(()=>runnable.cancel());
+            await expect(runnable.executionTask).resolves.toEqual(expect.objectContaining({status: "rejected", reason: expect.any(JobCancelledError)}));
+        });
     });
 });

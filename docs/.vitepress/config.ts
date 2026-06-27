@@ -43,6 +43,10 @@ export default defineConfig({
                         { text: "Steps", link: "/guide/steps" },
                         { text: "Streams", link: "/guide/streams" },
                         { text: "Custom Streams", link: "/guide/custom-streams" },
+                        { text: "Migrations", collapsed: true, items: [
+                                { text: "v1.0 -> v2.0", link: "/guide/migrations/v2.0" }
+                            ]
+                        },
                     ],
                 },
             ],

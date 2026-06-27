@@ -26,7 +26,7 @@ describe("JobListener", () => {
     });
 
     test("should capture job start and end metrics", (done) => {
-        passingJob.once("end", () => {
+        passingJob.once("finished", () => {
             const metrics = passingJob.metrics;
             expect(metrics.name).toBe("MockPassingJob");
             expect(metrics.status).toBe(RunnableStatus.COMPLETED);
@@ -41,7 +41,7 @@ describe("JobListener", () => {
     });
 
     test("should capture step metrics correctly", (done) => {
-        passingJob.once("end", () => {
+        passingJob.once("finished", () => {
             const stepMetrics = passingJob.metrics.steps;
             for (const step of stepMetrics) {
                 expect(step.status).toBe(RunnableStatus.COMPLETED);
@@ -53,15 +53,20 @@ describe("JobListener", () => {
     });
 
     test("should log errors and mark job as failed", (done) => {
-        failingJob.once("error", () => {
-            const metrics = failingJob.metrics;
-            expect(metrics.status).toBe(RunnableStatus.FAILED);
-            expect(metrics.steps[0].status).toBe(
-                RunnableStatus.FAILED
-            );
-            expect(logger.error).toHaveBeenCalled();
-            done();
-        });
-        expect(failingJob.run()).rejects.toThrow("Processor error");
+        failingJob
+            .once("failed", ({ error }) => {
+                expect(error).toBeDefined();
+                expect(error?.message).toBe("Processor error");
+            })
+            .once("finished", () => {
+                const metrics = failingJob.metrics;
+                expect(metrics.status).toBe(RunnableStatus.FAILED);
+                expect(metrics.steps[0].status).toBe(
+                    RunnableStatus.FAILED
+                );
+                expect(logger.error).toHaveBeenCalled();
+                done();
+            });
+        failingJob.run();
     });
 });

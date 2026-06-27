@@ -1,5 +1,4 @@
 import { Logger } from "../Logger";
-import { Step } from "../step/Step";
 import { Job } from "./Job";
 import { JobLogger } from "./JobLogger";
 import { JobMeter, JobMetrics } from "./JobMeter";
@@ -10,7 +9,7 @@ import { JobTimer, TimerType } from "./JobTimer";
  * Class responsible for listening to the events of a job and dispatching them to handle timers, metrics and logging.
  */
 export class JobListener {
-    protected readonly timer:JobTimer;
+    protected readonly timer: JobTimer;
     protected readonly meter: JobMeter;
     protected readonly logger?: JobLogger;
 
@@ -19,53 +18,46 @@ export class JobListener {
      * @param job The job to listen to.
      * @param logger The logger to use for logging. If not given, no logging will be done.
      */
-    constructor(job: Job,logger?: Logger) {
+    constructor(job: Job, logger?: Logger) {
         this.timer = new JobTimer(job.name);
-        this.meter = new JobMeter(job.name, job.status);
-        if(logger) this.logger = new JobLogger(logger,job.name);
+        this.meter = new JobMeter(job.name);
+        if (logger) this.logger = new JobLogger(logger, job.name);
 
-        job.once("start", () => {
+        job.once("started", () => {
             this.timer.start(TimerType.JOB, job.name);
-            this.meter.start(job.status);
+            this.meter.start();
             this.logger?.start(job.params);
-           
         });
 
-        job.once("end", () => {
+        job.once("finished", (payload) => {
             const duration = this.timer.stop(TimerType.JOB, job.name);
-            this.meter.finish(job.status, duration);
-            this.logger?.finish(job.status, duration);
+            this.meter.finish(payload.status, duration);
+            this.logger?.finish(payload.status, duration);
         });
 
-        job.once("error", () => {
-            const duration = this.timer.stop(TimerType.JOB, job.name);
-            this.meter.finish(job.status, duration);
-            this.logger?.finish(job.status, duration);
-        });
-
-        job.on("stepStart", (step: Step) => {
+        job.on("stepStarted", ({ step }) => {
             this.timer.start(TimerType.STEP, step.name);
-            this.meter.StepStart(step.name, step.status);
-            this.logger?.StepStart(step.name, step.params);
+            this.meter.stepStart(step.name);
+            this.logger?.stepStart(step.name, step.params);
         });
 
-        job.once("stepError", ({step, error}) => {
+        job.once("stepFailed", ({ step, error }) => {
             const duration = this.timer.stop(TimerType.STEP, step.name);
-            this.meter.StepFinish(step.name, step.status, duration);
-            this.logger?.StepError(step.name, step.status, error);
-            this.logger?.StepFinish(step.name, step.status, duration);
+            this.meter.stepFinish(step.name, step.status, duration);
+            this.logger?.stepError(step.name, step.status, error);
+            this.logger?.stepFinish(step.name, step.status, duration);
         });
 
-        job.on("stepEnd", (step: Step) => {
+        job.on("stepCompleted", ({ step }) => {
             const duration = this.timer.stop(TimerType.STEP, step.name);
-            this.meter.StepFinish(step.name, step.status, duration);
-            this.logger?.StepFinish(step.name, step.status, duration);
+            this.meter.stepFinish(step.name, step.status, duration);
+            this.logger?.stepFinish(step.name, step.status, duration);
         });
 
-        job.on("stepCancelled", (step: Step) => {
+        job.on("stepCancelled", ({ step }) => {
             const duration = this.timer.stop(TimerType.STEP, step.name);
-            this.meter.StepFinish(step.name, step.status, duration);
-            this.logger?.StepFinish(step.name, step.status, duration);
+            this.meter.stepFinish(step.name, step.status, duration);
+            this.logger?.stepFinish(step.name, step.status, duration);
         });
     }
 
@@ -74,7 +66,7 @@ export class JobListener {
      * @readonly
      * @type {JobMetrics}
      */
-    get metrics():JobMetrics {
+    get metrics(): JobMetrics {
         return this.meter.metrics;
     }
 }

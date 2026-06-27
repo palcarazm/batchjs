@@ -1,6 +1,6 @@
 # Jobs
 
-A `Job` is the top‑level container that orchestrates the execution of a sequence of steps. It manages the overall state, timing, and metrics.
+A `Job` is the top‑level container that orchestrates the execution of a sequence of steps. It extends `Runnable` and inherits a full state machine with lifecycle events.
 
 ## Creating a Job
 
@@ -63,28 +63,55 @@ Call `run()` on your job instance:
 
 ```typescript
 const job = new MyJob('my-job', { someParam: 42 });
-await job.run();
+job.run(); // Returns immediately, work runs in background
 ```
 
-The job will execute each step according to the plan. If any step fails, the job stops and throws the error.
-
-## Events
-
-Jobs extend `EventEmitter` and emit the following events:
-
-- `start` – when the job begins.
-- `end` – when the job completes successfully.
-- `error` – when the job fails (emitted with the error).
-- `stepStart` – when a step starts (emitted with the step instance).
-- `stepEnd` – when a step ends (emitted with the step instance).
-- `stepError` – when a step fails (emitted with `{ step, error }`).
-- `stepCancelled` – when a step is cancelled (emitted with the step instance).
-
-Use them to add logging or custom monitoring:
+The job executes each step according to the plan. Subscribe to the `finished` event to know when the job completes.
 
 ```typescript
-job.on('stepStart', (step) => console.log(`Starting ${step.name}`));
-job.on('stepCancelled', (step) => console.log(`Step ${step.name} was cancelled`));
+job.on('finished', ({ name, status }) => {
+  console.log(`Job ${name} finished with status ${status}`);
+});
+```
+
+## Lifecycle & Events
+
+Jobs extend `Runnable`, which provides a state machine with the following states:
+
+```text
+CREATED → RUNNING → COMPLETED | FAILED | CANCELLED
+```
+
+### Job Events
+
+| Event                   | Payload                                                         | Description                               |
+|-------------------------|-----------------------------------------------------------------|-------------------------------------------|
+| `started`               | `{ name: string }`                                              | Emitted when transitioning to `RUNNING`   |
+| `completed`             | `{ name: string }`                                              | Emitted when transitioning to `COMPLETED` |
+| `failed`                | `{ name: string; error: Error }`                                | Emitted when transitioning to `FAILED`    |
+| `cancelled`             | `{ name: string }`                                              | Emitted when transitioning to `CANCELLED` |
+| `finished`              | `{ name: string; status: RunnableStatus }`                      | Emitted on any terminal state             |
+| `transition-cancelled`  | `{ from: RunnableStatus; to: RunnableStatus; reason?: string }` | Emitted when a hook cancels a transition  |
+| `transition-invalid`    | `{ from: RunnableStatus; to: RunnableStatus }`                  | Emitted on invalid state transition       |
+
+### Step Events (re-emitted by Job)
+
+| Event           | Payload                                   | Description                                       |
+|-----------------|-------------------------------------------|---------------------------------------------------|
+| `stepStarted`   | `{ step: Step }`                          | Emitted when a step starts                        |
+| `stepCompleted` | `{ step: Step }`                          | Emitted when a step completes successfully        |
+| `stepFailed`    | `{ step: Step; error: Error }`            | Emitted when a step fails                         |
+| `stepCancelled` | `{ step: Step }`                          | Emitted when a step is cancelled                  |
+| `stepFinished`  | `{ step: Step; status: RunnableStatus }`  | Emitted when a step finishes (any terminal state) |
+
+### Usage Example
+
+```typescript
+job.on('started', ({ name }) => console.log(`Job ${name} started`));
+job.on('stepStarted', ({ step }) => console.log(`Starting ${step.name}`));
+job.on('stepCompleted', ({ step }) => console.log(`Step ${step.name} completed`));
+job.on('stepCancelled', ({ step }) => console.log(`Step ${step.name} was cancelled`));
+job.on('finished', ({ name, status }) => console.log(`Job ${name} finished with ${status}`));
 ```
 
 ## Metrics

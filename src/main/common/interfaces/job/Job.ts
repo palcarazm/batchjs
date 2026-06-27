@@ -1,10 +1,10 @@
-import { EventEmitter } from "node:events";
 import { Logger } from "../Logger";
 import { Step } from "../step/Step";
-import { JobEventEmitters, JobEventHandlers } from "./JobEvents";
+import { Runnable, RunnableStatus } from "../runnable/_index";
+import { JobEventMap } from "./JobEvents";
 import { JobListener } from "./JobListener";
-import { RunnableStatus } from "../RunnableStatus";
 import { JobMetrics } from "./JobMeter";
+import { JobCancelledError } from "../../errors/JobCancelledError";
 
 /**
  * @interface
@@ -22,7 +22,8 @@ export interface JobOptions {
  * @abstract
  * @class
  * Abstract base class for all jobs.
- * @extends {@link EventEmitter}
+ * @extends {@link Runnable<JobEventMap>}
+ * 
  * ```typescript
  * export class JobImplementation extends Job {
  *     protected _steps() {
@@ -31,29 +32,24 @@ export interface JobOptions {
  * }
  * 
  * const job = new JobImplementation("My job");
- * job.on("stepStart", (step:step) => {
+ * job.on("stepStarted", ({ step }) => {
  *     console.log(`Starting step ${step.name}`);
  * })
- * job.run()
- *     .then(() => {
- *         console.log("Job completed successfully");
- *     })
- *     .catch((error) => {
- *         console.log("Job completed with errors");
- *     });
+ * job.on("finished", ({ name, status }) => {
+ *     console.log(`Job ${name} finished with status ${status}`);
+ * });
+ * job.run();
  * ```
  * ```shell
  * >> Starting step PassingStepFirst
  * >> Starting step PassingStepSecond
- * >> Job completed successfully
+ * >> Job My job finished with status COMPLETED
  * ```
  */
-export abstract class Job extends EventEmitter {
-    public readonly name:string;
-    protected _status:RunnableStatus;
-    public readonly params:object;
+export abstract class Job extends Runnable<JobEventMap> {
     protected readonly options?:JobOptions;
     private readonly JobListener:JobListener;
+    private _plan?: (Step | Step[])[];
 
     /**
      * @param {string} name - The name to assign to the Step.
@@ -61,21 +57,9 @@ export abstract class Job extends EventEmitter {
      * @param {JobOptions} options - An optional options object.
      */
     constructor(name:string, params:object={}, options?:JobOptions) {
-        super();
-        this._status = RunnableStatus.CREATED;
-        this.name = name;
-        this.params = params;
+        super(name, params);
         if (options) this.options = options;
         this.JobListener = new JobListener(this, options?.logger);
-    }
-
-    /**
-     * The current status of the job.
-     * @readonly
-     * @type {RunnableStatus}
-     */
-    get status():RunnableStatus {
-        return this._status;
     }
 
     /**
@@ -96,49 +80,107 @@ export abstract class Job extends EventEmitter {
     protected abstract _steps(): (Step | Step[])[];
 
     /**
-     * Asynchronously runs the job by executing each step in sequence.
-     * @return {Promise<void>} A Promise that resolves when all steps are successfully executed or rejects if an error occurs.
+     * Hook called during transition to RUNNING.
+     * Builds the execution plan and launches it asynchronously.
+     * @returns {Promise<{ cancelled: boolean; reason?: string; executionPromise: Promise<void> }>}
      */
-    public async run():Promise<void>{
-        this._status = RunnableStatus.RUNNING;
-        this.emit("start");
-        const plan = this._steps();
+    protected async doRun(): Promise<{ cancelled: boolean; reason?: string, executionPromise: Promise<void> }> {
+        this._plan = this._steps();
+        const executionPromise = this._executePlan(this._plan);
+        return { cancelled: false, executionPromise };
+    }
+
+    /**
+     * Hook called during transition to COMPLETED.
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>}
+     */
+    protected async doComplete(): Promise<{ cancelled: boolean; reason?: string }> {
+        return { cancelled: false };
+    }
+
+    /**
+     * Hook called during transition to FAILED.
+     * @param {Error} _error - The error that caused the failure.
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>}
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    protected async doFail(_error: Error): Promise<{ cancelled: boolean; reason?: string }> {
+        return { cancelled: false };
+    }
+
+    /**
+     * Hook called during transition to CANCELLED.
+     * Cancels all running steps.
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>}
+     */
+    protected async doCancel(): Promise<{ cancelled: boolean; reason?: string }> {
+        if(!this._plan) return { cancelled: false };
+
+        return Promise.all(this._plan.flat().filter(s => s.isRunning).map(s => s.cancel()))
+            .then(() => ({cancelled: false}))
+            .catch((error) => ({cancelled: true, reason: error.message}));
+    }
+
+    /**
+     * Asynchronously executes the plan. This runs in the background
+     * after doRun() returns and the RUNNING state is set.
+     * @param plan - The execution plan.
+     * @returns {Promise<void>}
+     * @private
+     */
+    private async _executePlan(plan: (Step | Step[])[]): Promise<void> {
         try {
             for (const element of plan) {
+                if (this.isCancelled || this.transitioningTo === RunnableStatus.CANCELLED) break;
                 if (Array.isArray(element)) {
                     await this._runParallel(element);
                 } else {
                     await this._runSequential(element);
                 }
             }
-            this._status = RunnableStatus.COMPLETED;
-            this.emit("end");
-            return ;
-        } catch (e) {
-            const error = e as Error;
-            this._status = RunnableStatus.FAILED;
-            this.emit("error", error );
+            
+            if (this.isRunning) {
+                await this.transitionTo(RunnableStatus.COMPLETED);
+            }
+        } catch (error) {
+            if (this.isRunning && this.transitioningTo === undefined) {
+                return this.transitionTo(RunnableStatus.FAILED,error as Error)
+                    .finally(() => { throw error; });
+            }
+
             throw error;
         }
     }
 
     /**
-     * Runs a single step sequentially.
+     * Runs a single step sequentially and re-emits its events.
      * @param step The step to run.
      * @returns {Promise<void>}
      * @private
      */
     private _runSequential(step: Step): Promise<void> {
-        this.emit("stepStart", step);
-        return step.run()
-            .then(() => {
-                this.emit("stepEnd", step);
-            })
-            .catch((e) => { 
-                const error = e as Error;
-                this.emit("stepError",{step, error});
-                throw error;
-            });
+        return new Promise<void>((resolve, reject) => {
+            step
+                .once("started", () => {
+                    this.emit("stepStarted", { step });
+                })
+                .once("completed", () => {
+                    this.emit("stepCompleted", { step });
+                    resolve();
+                })
+                .once("failed", (payload) => {
+                    this.emit("stepFailed", { step, error: payload.error });
+                    reject(payload.error);
+                })
+                .once("cancelled", () => {
+                    this.emit("stepCancelled", { step });
+                    reject(new JobCancelledError([step.name]));
+                })
+                .once("finished", (payload) => {
+                    this.emit("stepFinished", { step, status: payload.status });
+                })
+                .run();
+        });
     }
 
     /**
@@ -148,110 +190,55 @@ export abstract class Job extends EventEmitter {
      * @returns {Promise<void>}
      * @private
      */
-    private _runParallel(steps: Step[]): Promise<void[]> {
-        steps.forEach((step) => this.emit("stepStart", step));
-        
+    private _runParallel(steps: Step[]): Promise<void> {
         let cancelled = false;
 
-        return Promise.all(
-            steps.map((step) => step.run()
-                .then(() => {
-                    if (!cancelled) {
-                        this.emit("stepEnd", step);
-                    }
-                })
-                .catch((e) => {
-                    const error = e as Error;
-                    if (!cancelled) {
+        return new Promise<void>((resolve, reject) => {
+            let completedCount = 0;
+            let hasRejected = false;
+
+            for (const step of steps) {
+                step
+                    .once("started", () => {
+                        this.emit("stepStarted", { step });
+                    })
+                    .once("completed", () => {
+                        this.emit("stepCompleted", { step });
+                        completedCount++;
+                        if (completedCount === steps.length && !hasRejected) {
+                            if (cancelled) {
+                                reject(new JobCancelledError(steps.filter((s) => s.isCancelled).map((s) => s.name))); 
+                            } else {
+                                resolve();
+                            }
+                        }
+                    })
+                    .once("failed", ({ error }) => {
+                        this.emit("stepFailed", { step, error });
+                        if (!cancelled && !hasRejected) {
+                            hasRejected = true;
+                            cancelled = true;
+
+                            steps
+                                .filter((s) => s !== step && s.isRunning)
+                                .forEach((s) => s.cancel());
+                            
+                            reject(error);
+                        }
+                    })
+                    .once("cancelled", () => {
                         cancelled = true;
-                        this.emit("stepError", { step, error });
-
-                        steps.filter((s) => s !== step && s.isRunning)
-                            .forEach((s) => {
-                                s.cancel();
-                                this.emit("stepCancelled", s);
-                            });
-                    }
-                    throw error;
-                })
-            )
-        );
-    }
-
-    /**
-     * Adds an event listener to the specified event type.
-     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
-     * @param {U} event Event type
-     * @param {(...args: Array<JobEventEmitters[U]>) => void} listener Event listener
-     * @returns {this} allowing to chain
-     */
-    addListener<U extends keyof JobEventHandlers>(event: U, listener: JobEventHandlers[U]): this {
-        return super.addListener(event, listener);
-    }
-
-    /**
-     * Emits an event of the specified type to the listeners.
-     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
-     * @param {U} event Event type
-     * @param {...Array<JobEventEmitters[U]>} args Additional arguments to pass to the listeners
-     * @returns  {boolean}
-     */
-    emit<U extends keyof JobEventEmitters>(event: U, ...args: Array<JobEventEmitters[U]>): boolean {
-        return super.emit(event, ...args);
-    }
-
-    /**
-     * Adds an event listener to the specified event type.
-     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
-     * @param {U} event Event type
-     * @param {(...args: Array<JobEventEmitters[U]>) => void} listener Event listener
-     * @returns {this} allowing to chain
-     */
-    on<U extends keyof JobEventHandlers>(event: U, listener: JobEventHandlers[U]): this {
-        return super.on(event, listener);
-    }
-
-    /**
-     * Adds a one time event listener to the specified event type.
-     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
-     * @param {U} event Event type
-     * @param {(...args: Array<JobEventEmitters[U]>) => void} listener Event listener
-     * @returns {this} allowing to chain
-     */
-    once<U extends keyof JobEventHandlers>(event: U, listener: JobEventHandlers[U]): this {
-        return super.once(event, listener);
-    }
-
-    /**
-     * Adds an event listener to the specified event type to the beginning of the listeners array.
-     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
-     * @param {U} event Event type
-     * @param {(...args: Array<JobEventEmitters[U]>) => void} listener Event listener
-     * @returns {this} allowing to chain
-     */
-    prependListener<U extends keyof JobEventHandlers>(event: U, listener: JobEventHandlers[U]): this {
-        return super.prependListener(event, listener);
-    }
-
-    /**
-     * Adds a one time event listener to the specified event type to the beginning of the listeners array.
-     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
-     * @param {U} event Event type
-     * @param {(...args: Array<JobEventEmitters[U]>) => void} listener Event listener
-     * @returns {this} allowing to chain
-     */
-    prependOnceListener<U extends keyof JobEventHandlers>(event: U, listener: JobEventHandlers[U]): this {
-        return super.prependOnceListener(event, listener);
-    }
-
-    /**
-     * Removes an event listener to the specified event type.
-     * @template U Type of the event. Should be one of `start`, `end`, `stepStart` or `stepEnd`.
-     * @param {U} event Event type
-     * @param {(...args: Array<JobEventEmitters[U]>) => void} listener Event listener
-     * @returns {this} allowing to chain
-     */
-    removeListener<U extends keyof JobEventHandlers>(event: U, listener: JobEventHandlers[U]): this {
-        return super.removeListener(event, listener);
+                        this.emit("stepCancelled", { step });
+                        completedCount++;
+                        if (completedCount === steps.length && !hasRejected) {
+                            reject(new JobCancelledError(steps.filter((s) => s.isCancelled).map((s) => s.name)));
+                        }
+                    })
+                    .once("finished", ({status}) => {
+                        this.emit("stepFinished", { step, status });
+                    })
+                    .run();
+            }
+        });
     }
 }

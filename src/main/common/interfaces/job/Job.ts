@@ -5,17 +5,18 @@ import { JobEventMap } from "./JobEvents";
 import { JobListener } from "./JobListener";
 import { JobMetrics } from "./JobMeter";
 import { JobCancelledError } from "../../errors/JobCancelledError";
+import { CheckpointStore, JobCheckpointManager } from "./checkpoint/_index";
 
 /**
  * @interface
  * Options for the Job constructor.
  */
 export interface JobOptions {
-   /**
-    * The logger to use for logging
-    * @type {Logger}
-    */ 
+   /** The logger to use for logging */ 
    logger?: Logger;
+
+   /** The checkpoint store to use for resumable jobs */
+   checkpointStore?: CheckpointStore;
 }
 
 /**
@@ -49,17 +50,21 @@ export interface JobOptions {
 export abstract class Job extends Runnable<JobEventMap> {
     protected readonly options?:JobOptions;
     private readonly JobListener:JobListener;
+    private readonly checkpointManager?: JobCheckpointManager;
     private _plan?: (Step | Step[])[];
 
     /**
      * @param {string} name - The name to assign to the Step.
-     * @param {object} params - The parameters to pass to the job.
+     * @param {Record<string, unknown>} params - The parameters to pass to the job.
      * @param {JobOptions} options - An optional options object.
      */
-    constructor(name:string, params:object={}, options?:JobOptions) {
+    constructor(name:string, params:Record<string, unknown> ={}, options?:JobOptions) {
         super(name, params);
         if (options) this.options = options;
         this.JobListener = new JobListener(this, options?.logger);
+        if (options?.checkpointStore){
+            this.checkpointManager =  new JobCheckpointManager(this, options.checkpointStore);
+        }
     }
 
     /**
@@ -72,8 +77,19 @@ export abstract class Job extends Runnable<JobEventMap> {
     }
 
     /**
+     * The ordered array of steps or groups of steps that make up the job.
+     * @readonly
+     * @type {(Step | Step[])[]}
+     */
+    get plan(): (Step | Step[])[] {
+        this._plan ??= this._steps();
+        return this._plan;
+    }
+
+    /**
      * @abstract
      * Abstract method that most be implemented by the job in order to returns an ordered array of steps or groups of steps that make up the job.
+     * Groups of steps run in parallel.
      * @returns {(Step | Step[])[]} An ordered array of steps or groups of steps that make up the job. Groups of steps run in parallel.
      * @protected
      */
@@ -84,9 +100,14 @@ export abstract class Job extends Runnable<JobEventMap> {
      * Builds the execution plan and launches it asynchronously.
      * @returns {Promise<{ cancelled: boolean; reason?: string; executionPromise: Promise<void> }>}
      */
-    protected async doRun(): Promise<{ cancelled: boolean; reason?: string, executionPromise: Promise<void> }> {
-        this._plan = this._steps();
-        const executionPromise = this._executePlan(this._plan);
+    protected async doRun(): Promise<{ cancelled: true; reason?: string}|{ cancelled: false; reason?: string, executionPromise: Promise<void> }> {
+        try{
+            await this.checkpointManager?.load();
+        } catch (error) {
+            return {cancelled: true, reason: `Failed to load checkpoints: ${(error as Error).message}`};
+        }
+        
+        const executionPromise = this._executePlan();
         return { cancelled: false, executionPromise };
     }
 
@@ -114,9 +135,7 @@ export abstract class Job extends Runnable<JobEventMap> {
      * @returns {Promise<{ cancelled: boolean; reason?: string }>}
      */
     protected async doCancel(): Promise<{ cancelled: boolean; reason?: string }> {
-        if(!this._plan) return { cancelled: false };
-
-        return Promise.all(this._plan.flat().filter(s => s.isRunning).map(s => s.cancel()))
+        return Promise.all(this.plan.flat().filter(s => s.isRunning).map(s => s.cancel()))
             .then(() => ({cancelled: false}))
             .catch((error) => ({cancelled: true, reason: error.message}));
     }
@@ -124,32 +143,44 @@ export abstract class Job extends Runnable<JobEventMap> {
     /**
      * Asynchronously executes the plan. This runs in the background
      * after doRun() returns and the RUNNING state is set.
-     * @param plan - The execution plan.
      * @returns {Promise<void>}
      * @private
      */
-    private async _executePlan(plan: (Step | Step[])[]): Promise<void> {
-        try {
-            for (const element of plan) {
-                if (this.isCancelled || this.transitioningTo === RunnableStatus.CANCELLED) break;
-                if (Array.isArray(element)) {
-                    await this._runParallel(element);
-                } else {
-                    await this._runSequential(element);
-                }
-            }
-            
-            if (this.isRunning) {
-                await this.transitionTo(RunnableStatus.COMPLETED);
-            }
-        } catch (error) {
-            if (this.isRunning && this.transitioningTo === undefined) {
-                return this.transitionTo(RunnableStatus.FAILED,error as Error)
-                    .finally(() => { throw error; });
-            }
+    private async _executePlan(): Promise<void> {
+        return new Promise<void>((resolve, rejects) => {
+            this.once("started", async() => {
+                try {
+                    if( this.checkpointManager?.isAllStepsCompleted()){
+                        await this.transitionTo(RunnableStatus.COMPLETED);
+                        return resolve();
+                    } 
+                    for (const element of this.plan) {
+                        if (this.isCancelled || this.transitioningTo === RunnableStatus.CANCELLED) break;
+                        if (Array.isArray(element)) {
+                            const stepsToRun = this.checkpointManager === undefined ? element : element.filter(e => this.checkpointManager!.shouldRun(e));
+                            await this._runParallel(stepsToRun)
+                                .finally(() =>  this.checkpointManager?.saveStepsCheckpoints(stepsToRun));
+                        } else {
+                            if(this.checkpointManager?.shouldRun(element) === false) continue;
+                            await this._runSequential(element)
+                                .finally(() =>  this.checkpointManager?.saveStepCheckpoint(element));
+                        }
+                    }
+                    
+                    if (this.isRunning) {
+                        await this.transitionTo(RunnableStatus.COMPLETED);
+                        return resolve();
+                    }
+                } catch (error) {
+                    if (this.isRunning && this.transitioningTo === undefined) {
+                        return this.transitionTo(RunnableStatus.FAILED,error as Error)
+                            .finally(() => { rejects(error); });
+                    }
 
-            throw error;
-        }
+                    rejects(error);
+                }
+            });
+        });
     }
 
     /**
@@ -191,6 +222,7 @@ export abstract class Job extends Runnable<JobEventMap> {
      * @private
      */
     private _runParallel(steps: Step[]): Promise<void> {
+        if (steps.length === 0) return Promise.resolve();
         let cancelled = false;
 
         return new Promise<void>((resolve, reject) => {

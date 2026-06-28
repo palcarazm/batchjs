@@ -39,14 +39,18 @@ export default defineConfig({
                     text: "Guide",
                     items: [
                         { text: "Getting Started", link: "/guide/getting-started" },
-                        { text: "Jobs", link: "/guide/jobs" },
-                        { text: "Steps", link: "/guide/steps" },
-                        { text: "Streams", link: "/guide/streams" },
-                        { text: "Custom Streams", link: "/guide/custom-streams" },
+                        {text: "Commons", items: [
+                            { text: "Jobs", link: "/guide/jobs" },
+                            { text: "Steps", link: "/guide/steps" },
+                            { text: "Checkpointing", link: "/guide/checkpointing" },
+                        ]},
+                        { text: "Streams", items: [
+                            { text: "Streams", link: "/guide/streams" },
+                            { text: "Custom Streams", link: "/guide/custom-streams" },
+                        ]},
                         { text: "Migrations", collapsed: true, items: [
-                                { text: "v1.0 -> v2.0", link: "/guide/migrations/v2.0" }
-                            ]
-                        },
+                            { text: "v1.0 -> v2.0", link: "/guide/migrations/v2.0" }
+                        ]},
                     ],
                 },
             ],

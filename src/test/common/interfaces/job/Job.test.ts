@@ -1,6 +1,7 @@
 /// <reference types="jest" />
 import { JobCancelledError, RunnableStatus, Step } from "../../../../main/common";
-import { MockProcessorFailingStepJob,MockPassingJob, MockParallelAllPassingJob, MockParallelWithFailureJob, MockSequentialFailingBeforeParallelJob } from "../../mocks/jobs/_index";
+import { MockPassingStep } from "../../mocks/_index";
+import { MockProcessorFailingStepJob,MockPassingJob, MockParallelAllPassingJob, MockParallelWithFailureJob, MockSequentialFailingBeforeParallelJob, MockCustomStepsJob } from "../../mocks/jobs/_index";
 
 describe("Job", () => {
     describe("run()", () => { 
@@ -40,6 +41,18 @@ describe("Job", () => {
                     expect(stepNames).toContain("parallel2");
                     expect(stepNames).toContain("sequential2");
 
+                    done();
+                });
+            job.run();
+        });
+
+        test("should skip empty parallel groups", (done) => {
+            const job = new MockCustomStepsJob("parallel", [[]])
+                .once("finished", ({status}) => {
+                    expect(status).toBe(RunnableStatus.COMPLETED);
+                    const metrics = job.metrics;
+                    expect(metrics.status).toBe(RunnableStatus.COMPLETED);
+                    expect(metrics.steps).toHaveLength(0);
                     done();
                 });
             job.run();
@@ -130,14 +143,34 @@ describe("Job", () => {
     });
 
     describe("cancel()", () => {
-        test("should cancel a running job", (done) => {
-            const job = new MockParallelAllPassingJob()
+        test("should handle cancelling a job with a step running", (done) => {
+            const step1 = new MockPassingStep("step1", 10);
+            const step2 = new MockPassingStep("step1", 25);
+            const job = new MockCustomStepsJob("parallel",[step1, step2])
                 .once("finished", ({ status }) => {
                     expect(status).toBe(RunnableStatus.CANCELLED);
                     const metrics = job.metrics;
                     expect(metrics.status).toBe(RunnableStatus.CANCELLED);
                     expect(metrics.steps).toHaveLength(1);
                     expect(metrics.steps[0].status).toBe(RunnableStatus.CANCELLED);
+                    done();
+                });
+
+            job.run().then(()=>job.cancel());
+        });
+        
+        test("should handle cancelling a job with a parallel group running", (done) => {
+            const step1 = new MockPassingStep("step1", 10);
+            const step2 = new MockPassingStep("step2", 25);
+            const job = new MockCustomStepsJob("parallel",[[step1, step2]])
+                .once("finished", ({ status }) => {
+                    expect(status).toBe(RunnableStatus.CANCELLED);
+                    const metrics = job.metrics;
+                    expect(metrics.status).toBe(RunnableStatus.CANCELLED);
+                    expect(metrics.steps).toHaveLength(2);
+                    expect(metrics.steps).toEqual(expect.arrayContaining([
+                        {"name":"step1","status":RunnableStatus.CANCELLED,"duration":{ms: expect.any(Number)}},
+                        {"name":"step2","status":RunnableStatus.CANCELLED,"duration":{ms: expect.any(Number)}}]));
                     done();
                 });
 

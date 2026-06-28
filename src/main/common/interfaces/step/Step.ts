@@ -62,9 +62,9 @@ export abstract class Step extends Runnable<StepEventMap> {
 
     /**
      * @param {string} name - The name to assign to the Step.
-     * @param {object} params - The parameters to pass to the step.
+     * @param {Record<string, unknown>} params - The parameters to pass to the step.
      */
-    constructor(name:string,params:object={}) {
+    constructor(name:string,params:Record<string, unknown> ={}) {
         super(name, params);
     }
     

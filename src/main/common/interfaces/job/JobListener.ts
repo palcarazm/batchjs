@@ -35,6 +35,7 @@ export class JobListener {
             this.logger?.finish(payload.status, duration);
         });
 
+
         job.on("stepStarted", ({ step }) => {
             this.timer.start(TimerType.STEP, step.name);
             this.meter.stepStart(step.name);

@@ -46,13 +46,13 @@ export class StepBuilder {
     private _processorsFn?: () => Duplex[];
     private _writerFn?: () => Writable;
     private readonly _name: string;
-    private readonly _params: object;
+    private readonly _params: Record<string, unknown>;
 
     /**
      * @param {string} name - The name to assign to the Step.
-     * @param {object} params - The parameters to pass to the step (optional, defaults to `{}`).
+     * @param {Record<string, unknown>} params - The parameters to pass to the step (optional, defaults to `{}`).
      */
-    constructor(name: string, params: object = {}) {
+    constructor(name: string, params: Record<string, unknown> = {}) {
         this._name = name;
         this._params = params;
     }

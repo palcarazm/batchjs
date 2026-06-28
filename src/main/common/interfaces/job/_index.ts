@@ -4,3 +4,4 @@ export * from "./JobListener";
 export * from "./JobLogger";
 export * from "./JobMeter";
 export * from "./JobTimer";
+export * from "./checkpoint/_index";

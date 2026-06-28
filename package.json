@@ -57,6 +57,10 @@
   "bugs": {
     "url": "https://github.com/palcarazm/batchjs/issues"
   },
+  "engines": {
+    "node": ">=22 <25",
+    "npm": ">=10"
+  },
   "devDependencies": {
     "@babel/core": "^7.24.9",
     "@babel/preset-env": "^7.24.8",
@@ -65,7 +69,7 @@
     "@commitlint/config-conventional": "^21.1.0",
     "@rollup/plugin-terser": "^1.0.0",
     "@types/jest": "^30.0.0",
-    "@types/node": "^26.0.0",
+    "@types/node": "^26.0.1",
     "@typescript-eslint/eslint-plugin": "^8.20.0",
     "@typescript-eslint/parser": "^8.20.0",
     "commitlint": "^21.1.0",

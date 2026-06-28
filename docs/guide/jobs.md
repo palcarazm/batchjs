@@ -131,6 +131,14 @@ const logger = console; // or any custom logger
 const job = new MyJob('my-job', {}, { logger });
 ```
 
+## Checkpointing (Resumable Jobs)
+
+For long-running jobs, BatchJS supports checkpointing. When a job fails or is interrupted, it can resume from where it left off instead of restarting from the beginning.
+
+Checkpoints are saved automatically after each step, and completed steps are skipped on resume.
+
+> **Learn more:** See the [Checkpointing guide](/guide/checkpointing) for detailed documentation and examples.
+
 ## Example: Mixed Sequential and Parallel Steps
 
 ```typescript

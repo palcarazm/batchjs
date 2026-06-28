@@ -150,8 +150,11 @@ describe("JobCheckpointManager", () => {
             mockStore.load.mockResolvedValue(checkpoint);
             await manager.load();
 
+            const preSave = Date.now();
             mockStore.save.mockImplementationOnce((_jobId: string, checkpoint: JobCheckpoint) => {
-                expect(checkpoint.updatedAt.getTime()).toBeCloseTo(Date.now());
+                const postSave = Date.now();
+                expect(checkpoint.updatedAt.getTime()).toBeGreaterThanOrEqual(preSave);
+                expect(checkpoint.updatedAt.getTime()).toBeLessThanOrEqual(postSave);
                 return Promise.resolve();
             });
 

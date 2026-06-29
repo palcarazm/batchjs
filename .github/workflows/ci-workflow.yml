@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22.x, 24.x]
+        node-version: [22.x, 24.x, 26.x]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -41,7 +41,6 @@ jobs:
           name: coverage-report-${{ matrix.node-version }}
           path: coverage
       - name: Upload coverage report to Coveralls
-        #v2.3.7
         uses: coverallsapp/github-action@5cbfd81b66ca5d10c19b062c04de0199c215fb6e
         with:
           flag-name: coverage-report-${{ matrix.node-version }}
@@ -56,11 +55,10 @@ jobs:
     steps:
       - name: Coveralls Finished
         id: coveralls
-        #v2.3.7
         uses: coverallsapp/github-action@5cbfd81b66ca5d10c19b062c04de0199c215fb6e
         with:
           parallel-finished: true
-          carryforward: "coverage-report-22.x,coverage-report-24.x"
+          carryforward: "coverage-report-22.x,coverage-report-24.x,coverage-report-26.x"
         continue-on-error: true
   
       - name: Check Coveralls status

@@ -58,7 +58,7 @@
     "url": "https://github.com/palcarazm/batchjs/issues"
   },
   "engines": {
-    "node": ">=22 <25",
+    "node": ">=22 <27",
     "npm": ">=10"
   },
   "devDependencies": {

@@ -63,4 +63,23 @@ describe("JobLogger", () => {
             `Error in STEP::Step1: [${error.message}]\n${error.stack}`
         );
     });
+
+    test("stepRollbackSucceed should log rollback success", () => {
+        jobLogger.stepRollbackSucceed("Step1");
+
+        expect(mockLogger.info).toHaveBeenCalledTimes(1);
+        expect(mockLogger.info).toHaveBeenCalledWith(
+            "STEP::Step1 rollback succeeded"
+        );
+    });
+
+    test("stepRollbackFailed should log rollback failure with error message and stack", () => {
+        const error = new Error("Rollback failed", { cause: new Error("Inner error") });
+        jobLogger.stepRollbackFailed("Step1", error);
+
+        expect(mockLogger.error).toHaveBeenCalledTimes(1);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            `STEP::Step1 rollback failed: [${error.message}]\n${error.stack}`
+        );
+    });
 });

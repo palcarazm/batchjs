@@ -1,3 +1,4 @@
+import { RollbackStatus } from "../RollbackStatus";
 import { RunnableStatus, ExtendableRunnableEventMap } from "../runnable/_index";
 import { Step } from "../step/Step";
 
@@ -11,9 +12,13 @@ export type JobEventMap = ExtendableRunnableEventMap<{
   /** Emitted when a step completes successfully */
   stepCompleted: { step: Step };
   /** Emitted when a step is cancelled */
-  stepCancelled: { step: Step };
+  stepCancelled: { step: Step; rollback: RollbackStatus };
   /** Emitted when a step fails */
-  stepFailed: { step: Step; error: Error };
+  stepFailed: { step: Step; error: Error; rollback: RollbackStatus };
   /** Emitted when a step finishes (any terminal state) */
-  stepFinished: { step: Step; status: RunnableStatus };
+  stepFinished: { step: Step; status: RunnableStatus; rollback: RollbackStatus };
+  /** Emitted when a step's rollback succeeds */
+  stepRollbackSucceed: {step: Step;};
+  /** Emitted when a step's rollback fails */
+  stepRollbackFailed: { step: Step; error: Error };
 }>;

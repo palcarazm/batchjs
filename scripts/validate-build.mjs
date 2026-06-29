@@ -17,7 +17,7 @@ const require = createRequire(import.meta.url);
  */
 function validateExports(module, moduleName) {
     const commonErrorExports = ["BatchJSError", "StepBuilderError", "StepCancelledError", "JobCancelledError"];
-    const commonInterfaceExports = ["Job", "JobListener", "JobLogger", "JobMeter", "JobTimer", "TimerType", "FileCheckpointStore", "JobCheckpointManager", "Step", "StepBuilder", "Runnable", "RunnableStatus"];
+    const commonInterfaceExports = ["Job", "JobListener", "JobLogger", "JobMeter", "JobTimer", "TimerType", "FileCheckpointStore", "JobCheckpointManager", "Step", "StepBuilder", "Runnable", "RunnableStatus", "RollbackStatus"];
     const commonExports = [...commonErrorExports, ...commonInterfaceExports];
     const streamClassExports = ["AllMatchStream", "AnyMatchStream", "BufferStream", "CountStream", "DistinctStream", "EmptyStream","FilterStream", 
         "FirstStream", "FlatStream", "GroupByStream", "HasElementsStream","LastStream", "ParallelStream", "ReplayStream", "SingleStream",];

@@ -200,15 +200,21 @@ export abstract class Job extends Runnable<JobEventMap> {
                     resolve();
                 })
                 .once("failed", (payload) => {
-                    this.emit("stepFailed", { step, error: payload.error });
+                    this.emit("stepFailed", { step, error: payload.error, rollback: step.rollbackStatus });
                     reject(payload.error);
                 })
                 .once("cancelled", () => {
-                    this.emit("stepCancelled", { step });
+                    this.emit("stepCancelled", { step, rollback: step.rollbackStatus });
                     reject(new JobCancelledError([step.name]));
                 })
                 .once("finished", (payload) => {
-                    this.emit("stepFinished", { step, status: payload.status });
+                    this.emit("stepFinished", { step, status: payload.status, rollback: step.rollbackStatus });
+                })
+                .once("rollback-succeed", () => {
+                    this.emit("stepRollbackSucceed", { step });
+                })
+                .once("rollback-failed", (payload) => {
+                    this.emit("stepRollbackFailed", { step, error: payload.error });
                 })
                 .run();
         });
@@ -246,7 +252,7 @@ export abstract class Job extends Runnable<JobEventMap> {
                         }
                     })
                     .once("failed", ({ error }) => {
-                        this.emit("stepFailed", { step, error });
+                        this.emit("stepFailed", { step, error, rollback: step.rollbackStatus });
                         if (!cancelled && !hasRejected) {
                             hasRejected = true;
                             cancelled = true;
@@ -260,14 +266,20 @@ export abstract class Job extends Runnable<JobEventMap> {
                     })
                     .once("cancelled", () => {
                         cancelled = true;
-                        this.emit("stepCancelled", { step });
+                        this.emit("stepCancelled", { step, rollback: step.rollbackStatus });
                         completedCount++;
                         if (completedCount === steps.length && !hasRejected) {
                             reject(new JobCancelledError(steps.filter((s) => s.isCancelled).map((s) => s.name)));
                         }
                     })
                     .once("finished", ({status}) => {
-                        this.emit("stepFinished", { step, status });
+                        this.emit("stepFinished", { step, status, rollback: step.rollbackStatus });
+                    })
+                    .once("rollback-succeed", () => {
+                        this.emit("stepRollbackSucceed", { step });
+                    })
+                    .once("rollback-failed", (payload) => {
+                        this.emit("stepRollbackFailed", { step, error: payload.error });
                     })
                     .run();
             }

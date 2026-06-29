@@ -40,7 +40,9 @@ describe("StepBuilder", () => {
             const result = builder
                 .reader(readerFn)
                 .processors(processorsFn)
-                .writer(writerFn);
+                .writer(writerFn)
+                .autoRollback(true)
+                .rollback(() => Promise.resolve());
 
             expect(result).toBe(builder);
         });
@@ -66,150 +68,238 @@ describe("StepBuilder", () => {
             expect((builder as any)._writerFn).toBe(writerFn);
             expect((step as any)._writer()).toBeInstanceOf(Writable);
         });
+
+        test("rollback should store the provided function", () => {
+            const rollbackFn = () => Promise.resolve();
+            const step = builder
+                .reader(readerFn)
+                .processors(processorsFn)
+                .writer(writerFn)
+                .rollback(rollbackFn)
+                .build();
+            
+            expect((builder as any)._rollbackFn).toBe(rollbackFn);
+            expect((step as any)._rollback()).toBeInstanceOf(Promise);
+        });
+
+        test.each([true, false])("autoRollback should store the provided boolean %s", (value) => {
+            const step = builder
+                .reader(readerFn)
+                .processors(processorsFn)
+                .writer(writerFn)
+                .rollback(() => Promise.resolve())
+                .autoRollback(value)
+                .build();
+            
+            expect((builder as any)._options.autoRollback).toBe(value);
+            expect((step as any).options.autoRollback).toBe(value);
+        });
     });
 
     describe("build", () => {
-        test("should throw StepBuilderError if reader is missing", () => {
-            expect(() => {
-                builder
+        describe("validation", () => {
+            test("should throw StepBuilderError if reader is missing", () => {
+                expect(() => {
+                    builder
+                        .processors(processorsFn)
+                        .writer(writerFn)
+                        .build();
+                }).toThrow(StepBuilderError);
+
+                expect(() => {
+                    builder
+                        .processors(processorsFn)
+                        .writer(writerFn)
+                        .build();
+                }).toThrow(/missing a reader/);
+            });
+
+            test("should throw StepBuilderError if processor is missing", () => {
+                expect(() => {
+                    builder
+                        .reader(readerFn)
+                        .writer(writerFn)
+                        .build();
+                }).toThrow(StepBuilderError);
+
+                expect(() => {
+                    builder
+                        .reader(readerFn)
+                        .writer(writerFn)
+                        .build();
+                }).toThrow(/missing a processor/);
+            });
+
+            test("should throw StepBuilderError if writer is missing", () => {
+                expect(() => {
+                    builder
+                        .reader(readerFn)
+                        .processors(processorsFn)
+                        .build();
+                }).toThrow(StepBuilderError);
+
+                expect(() => {
+                    builder
+                        .reader(readerFn)
+                        .processors(processorsFn)
+                        .build();
+                }).toThrow(/missing a writer/);
+            });
+
+            test("should throw StepBuilderError if autoRollback is true but rollback() not called", () => {
+                expect(() => {
+                    builder
+                        .reader(readerFn)
+                        .processors(processorsFn)
+                        .writer(writerFn)
+                        .autoRollback(true)
+                        .build();
+                }).toThrow(StepBuilderError);
+                
+                expect(() => {
+                    builder
+                        .reader(readerFn)
+                        .processors(processorsFn)
+                        .writer(writerFn)
+                        .autoRollback(true)
+                        .build();
+                }).toThrow(/rollback \(required when autoRollback is true\)/);
+            });
+        });
+
+        describe("step instance creation", () => {
+            test("should return a Step instance when all callbacks are provided", () => {
+                const step = createStep(builder);
+
+                expect(step).toBeDefined();
+                expect(step.name).toBe(stepName);
+                expect(step.status).toBe(RunnableStatus.CREATED);
+            });
+
+            test("should allow building with autoRollback true and rollback function", () => {
+                const step = builder
+                    .reader(readerFn)
+                    .processors(processorsFn)
+                    .writer(writerFn)
+                    .autoRollback(true)
+                    .rollback(() => Promise.resolve())
+                    .build();
+
+                expect(step).toBeInstanceOf(Step);
+            });
+
+            test("should build with autoRollback false and no rollback function", () => {
+                const step = builder
+                    .reader(readerFn)
+                    .processors(processorsFn)
+                    .writer(writerFn)
+                    .autoRollback(false)
+                    .build();
+
+                expect(step).toBeInstanceOf(Step);
+            });
+
+            test("should build with default autoRollback false and no rollback function", () => {
+                const step = builder
+                    .reader(readerFn)
                     .processors(processorsFn)
                     .writer(writerFn)
                     .build();
-            }).toThrow(StepBuilderError);
-            expect(() => {
-                builder
-                    .processors(processorsFn)
-                    .writer(writerFn)
-                    .build();
-            }).toThrow(/missing a reader/);
-        });
 
-        test("should throw StepBuilderError if processor is missing", () => {
-            expect(() => {
-                builder
-                    .reader(readerFn)
-                    .writer(writerFn)
-                    .build();
-            }).toThrow(StepBuilderError);
-            expect(() => {
-                builder
-                    .reader(readerFn)
-                    .writer(writerFn)
-                    .build();
-            }).toThrow(/missing a processor/);
-        });
+                expect(step).toBeInstanceOf(Step);
+            });
 
-        test("should throw StepBuilderError if writer is missing", () => {
-            expect(() => {
+            test("should return a new Step instance each time .build() is called", () => {
                 builder
                     .reader(readerFn)
                     .processors(processorsFn)
-                    .build();
-            }).toThrow(StepBuilderError);
-            expect(() => {
-                builder
-                    .reader(readerFn)
+                    .writer(writerFn);
+
+                const step1 = builder.build();
+                const step2 = builder.build();
+
+                expect(step1).not.toBe(step2);
+            });
+
+            test("should support params passed to constructor", async () => {
+                const params = { multiplier: 2 };
+                const builderWithParams = new StepBuilder(stepName, params);
+                const step = builderWithParams
+                    .reader(() => Readable.from(["a", "b"], { objectMode: true }))
                     .processors(processorsFn)
-                    .build();
-            }).toThrow(/missing a writer/);
-        });
-
-        test("should return a Step instance when all callbacks are provided", () => {
-            const step = createStep(builder);
-
-            expect(step).toBeDefined();
-            expect(step.name).toBe(stepName);
-            expect(step.status).toBe(RunnableStatus.CREATED);
-        });
-
-        test("should return a new Step instance each time .build() is called", () => {
-            builder
-                .reader(readerFn)
-                .processors(processorsFn)
-                .writer(writerFn);
-
-            const step1 = builder.build();
-            const step2 = builder.build();
-
-            expect(step1).not.toBe(step2);
-        });
-
-        test("should support params passed to constructor", async () => {
-            const params = { multiplier: 2 };
-            const builderWithParams = new StepBuilder(stepName, params);
-            const step = builderWithParams
-                .reader(() => Readable.from(["a", "b"], { objectMode: true }))
-                .processors(processorsFn)
-                .writer(() => new Writable({
-                    objectMode: true,
-                    write(chunk: string, encoding: BufferEncoding, callback: TransformCallback) {
-                        callback();
-                    }
-                }))
-                .build();
-
-            // params are stored internally, we test they exist via the name matching
-            expect(step.params).toBe(params);
-        });
-
-        test("should pass instanceof check", () => {
-            const step = createStep(builder);
-
-            expect(step).toBeInstanceOf(Step);
-        });
-
-        test("should execute successfully with valid stream setup", (done) => {
-            const chunks: string[] = [];
-            builder
-                .reader(() => Readable.from(["x", "y", "z"], { objectMode: true }))
-                .processors(() => [
-                    new Transform({
+                    .writer(() => new Writable({
                         objectMode: true,
-                        transform(chunk: string, encoding: BufferEncoding, callback: TransformCallback) {
-                            this.push(chunk.repeat(2));
+                        write(chunk: string, encoding: BufferEncoding, callback: TransformCallback) {
                             callback();
                         }
-                    })
-                ])
-                .writer(() => new Writable({
-                    objectMode: true,
-                    write(chunk: string, encoding: BufferEncoding, callback: TransformCallback) {
-                        chunks.push(chunk);
-                        callback();
-                    }
-                }))
-                .build()
-                .on("finished", ({ status }) => {
-                    expect(status).toBe(RunnableStatus.COMPLETED);
-                    expect(chunks).toEqual(["xx", "yy", "zz"]);
-                    done();
-                })
-                .run();
+                    }))
+                    .build();
+
+                // params are stored internally, we test they exist via the name matching
+                expect(step.params).toBe(params);
+            });
+
+            test("should pass instanceof check", () => {
+                const step = createStep(builder);
+
+                expect(step).toBeInstanceOf(Step);
+            });
         });
 
-        test("should handle errors from streams", (done) => {
-            builder
-                .reader(() => {
-                    const readable = new Readable({
+        describe("execution", () => {
+            test("should execute successfully with valid stream setup", (done) => {
+                const chunks: string[] = [];
+                builder
+                    .reader(() => Readable.from(["x", "y", "z"], { objectMode: true }))
+                    .processors(() => [
+                        new Transform({
+                            objectMode: true,
+                            transform(chunk: string, encoding: BufferEncoding, callback: TransformCallback) {
+                                this.push(chunk.repeat(2));
+                                callback();
+                            }
+                        })
+                    ])
+                    .writer(() => new Writable({
                         objectMode: true,
-                        read() {
-                            this.emit("error", new Error("Reader error"));
+                        write(chunk: string, encoding: BufferEncoding, callback: TransformCallback) {
+                            chunks.push(chunk);
+                            callback();
                         }
-                    });
-                    return readable;
-                })
-                .processors(processorsFn)
-                .writer(writerFn)
-                .build()
-                .once("failed", ({ error }) => {
-                    expect(error).toBeDefined();
-                    expect(error?.message).toBe("Reader error");
-                })
-                .on("finished", ({ status }) => {
-                    expect(status).toBe(RunnableStatus.FAILED);
-                    done();
-                })
-                .run();
+                    }))
+                    .build()
+                    .on("finished", ({ status }) => {
+                        expect(status).toBe(RunnableStatus.COMPLETED);
+                        expect(chunks).toEqual(["xx", "yy", "zz"]);
+                        done();
+                    })
+                    .run();
+            });
+
+            test("should handle errors from streams", (done) => {
+                builder
+                    .reader(() => {
+                        const readable = new Readable({
+                            objectMode: true,
+                            read() {
+                                this.emit("error", new Error("Reader error"));
+                            }
+                        });
+                        return readable;
+                    })
+                    .processors(processorsFn)
+                    .writer(writerFn)
+                    .build()
+                    .once("failed", ({ error }) => {
+                        expect(error).toBeDefined();
+                        expect(error?.message).toBe("Reader error");
+                    })
+                    .on("finished", ({ status }) => {
+                        expect(status).toBe(RunnableStatus.FAILED);
+                        done();
+                    })
+                    .run();
+            });
         });
     });
 });

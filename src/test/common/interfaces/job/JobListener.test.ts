@@ -2,7 +2,9 @@ import {
     Logger,
     RunnableStatus,
 } from "../../../../main/common/index";
+import { MockProcessorFailingStep } from "../../mocks/_index";
 import {
+    MockCustomStepsJob,
     MockPassingJob,
     MockProcessorFailingStepJob,
 } from "../../mocks/jobs/_index";
@@ -68,5 +70,39 @@ describe("JobListener", () => {
                 done();
             });
         failingJob.run();
+    });
+
+    test("should log rollback success", (done) => {
+        const step = new MockProcessorFailingStep("rollback-step", 0, { autoRollback: true });
+        jest.spyOn(step as unknown as { _rollback: () => Promise<void> }, "_rollback")
+            .mockImplementationOnce(() => Promise.resolve());
+
+        const job = new MockCustomStepsJob("test-job", [step], { logger });
+
+        job.once("finished", () => {
+            expect(logger.info).toHaveBeenCalledWith(
+                expect.stringContaining("rollback succeeded")
+            );
+            done();
+        });
+
+        job.run();
+    });
+
+    test("should log rollback failure", (done) => {
+        const step = new MockProcessorFailingStep("rollback-step", 0, { autoRollback: true });
+        jest.spyOn(step as unknown as { _rollback: () => Promise<void> }, "_rollback")
+            .mockImplementationOnce(() => Promise.reject(new Error("unexpected error")));
+
+        const job = new MockCustomStepsJob("test-job", [step], { logger });
+
+        job.once("finished", () => {
+            expect(logger.error).toHaveBeenCalledWith(
+                expect.stringContaining("rollback failed")
+            );
+            done();
+        });
+
+        job.run();
     });
 });

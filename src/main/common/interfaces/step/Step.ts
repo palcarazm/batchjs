@@ -2,6 +2,8 @@ import { Readable, Duplex, Writable } from "node:stream";
 import { Runnable , RunnableStatus } from "../runnable/_index";
 import { StepEventMap } from "./StepEvents";
 import { StepCancelledError } from "../../errors/_index";
+import { RollbackStatus } from "../RollbackStatus";
+import { StepOptions } from "./StepOptions";
 
 /**
  * @abstract
@@ -56,16 +58,32 @@ import { StepCancelledError } from "../../errors/_index";
  * ```
  */
 export abstract class Step extends Runnable<StepEventMap> {
+    protected readonly options: StepOptions;
     private _readerInstance?:Readable;
     private _processorsInstances?:Duplex[];
     private _writerInstance?:Writable;
+    private _rollbackStatus:RollbackStatus = RollbackStatus.UNATTEMPTED;
 
     /**
      * @param {string} name - The name to assign to the Step.
      * @param {Record<string, unknown>} params - The parameters to pass to the step.
+     * @param {Partial<StepOptions>} options - An optional options object for the step.
      */
-    constructor(name:string,params:Record<string, unknown> ={}) {
+    constructor(name:string,params:Record<string, unknown> ={}, options:Partial<StepOptions> = {}) {
         super(name, params);
+        this.options = {
+            autoRollback: false,
+            ...options
+        };
+    }
+
+    /**
+     * Gets the rollback status of the step.
+     * @readonly
+     * @type {RollbackStatus}
+     */
+    get rollbackStatus(): RollbackStatus {
+        return this._rollbackStatus;
     }
     
     /**
@@ -92,6 +110,22 @@ export abstract class Step extends Runnable<StepEventMap> {
      * @protected
      */
     protected abstract _writer():Writable;
+
+    /**
+     * Optional rollback hook. Override this to clean up any side effects
+     * (e.g., delete partially written files, revert database transactions)
+     * when the step fails or is cancelled.
+     *
+     * This is called automatically if `autorollback` is `true` and the step
+     * transitions to FAILED or CANCELLED.
+     * 
+     * The default implementation throws an error to indicate that the rollback is not implemented. 
+     * Please override this method if you need to perform a rollback.
+     *
+     * @returns A promise that resolves when rollback is complete.
+     * @protected
+     */
+    protected _rollback():Promise<void> {return Promise.reject(new Error("Rollback not implemented"));}
 
     /**
      * Hook called during transition to RUNNING.
@@ -160,6 +194,9 @@ export abstract class Step extends Runnable<StepEventMap> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     protected async doFail(_error: Error): Promise<{ cancelled: boolean; reason?: string }> {
         this.destroy();
+        if (this.options.autoRollback) {
+            await this._attemptRollback();
+        }
         return { cancelled: false };
     }
 
@@ -170,6 +207,9 @@ export abstract class Step extends Runnable<StepEventMap> {
      */
     protected async doCancel(): Promise<{ cancelled: boolean; reason?: string }> {
         this.destroy();
+        if (this.options.autoRollback) {
+            await this._attemptRollback();
+        }
         return { cancelled: false };
     }
 
@@ -187,6 +227,23 @@ export abstract class Step extends Runnable<StepEventMap> {
         this._writerInstance?.destroy();
         for (const processor of this._processorsInstances ?? []) {
             processor.destroy();
+        }
+    }
+
+    /**
+     * Attempts to rollback the step and emits appropriate events.
+     * @private
+     */
+    private async _attemptRollback(): Promise<void> {
+        try {
+            await this._rollback();
+            this._rollbackStatus = RollbackStatus.SUCCEED;
+            this.emit("rollback-succeed");
+        } catch (error) {
+            this._rollbackStatus = RollbackStatus.FAILED;
+            this.emit("rollback-failed", {
+                error: error instanceof Error ? error : new Error(String(error)),
+            });
         }
     }
 }

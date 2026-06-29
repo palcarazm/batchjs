@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { RunnableStatus, Step, StepCancelledError } from "../../../../main/common";
+import { RollbackStatus, RunnableStatus, Step, StepCancelledError } from "../../../../main/common";
 import { MockPassingStep, MockProcessorFailingStep, MockReaderFailingStep, MockWriterFailingStep } from "../../mocks/_index";
 
 type StepInstances = {_readerInstance: {destroyed: boolean}, _writerInstance: {destroyed: boolean}, _processorsInstances: Array<{destroyed: boolean}>};
@@ -146,6 +146,111 @@ describe("Step", () => {
                 });
                 
             step.run().then(()=>step.cancel());    
+        });
+    });
+
+    describe("_rollback()", () => {
+        test("should not call _rollback() when autoRollback is false and step fails", (done) => {
+            const step = new MockProcessorFailingStep("test-step", 0, { autoRollback: false });
+
+            const rollbackSpy = jest.spyOn(step as unknown as { _rollback(): Promise<void> }, "_rollback")
+                .mockImplementationOnce(() => {
+                    fail("Should not have called _rollback()");
+                });
+
+            step
+                .once("failed", () => {
+                    expect(step.rollbackStatus).toBe(RollbackStatus.UNATTEMPTED);
+                    expect(rollbackSpy).toHaveBeenCalledTimes(0);
+                    done();
+                })
+                .run();
+        });
+
+        test("should call _rollback() when autoRollback is true and step fails", (done) => {
+            const step = new MockProcessorFailingStep("test-step", 0, { autoRollback: true });
+            const rollbackSpy = jest.spyOn(step as unknown as { _rollback(): Promise<void> }, "_rollback")
+                .mockImplementationOnce(() => Promise.resolve());
+
+            step
+                .once("failed", () => {
+                    expect(step.rollbackStatus).toBe(RollbackStatus.SUCCEED);
+                    expect(rollbackSpy).toHaveBeenCalledTimes(1);
+                    done();
+                })
+                .run();
+        });
+
+        test("should not call _rollback() when autoRollback is false and step is cancelled", (done) => {
+            const step = new MockPassingStep("test-step", 0, { autoRollback: false });
+
+            const rollbackSpy = jest.spyOn(step as unknown as { _rollback(): Promise<void> }, "_rollback")
+                .mockImplementationOnce(() => {
+                    fail("Should not have called _rollback()");
+                });
+
+            step.once("cancelled", () => {
+                expect(step.rollbackStatus).toBe(RollbackStatus.UNATTEMPTED);
+                expect(rollbackSpy).toHaveBeenCalledTimes(0);
+                done();
+            });
+
+            step.run().then(() => step.cancel());
+        });
+
+        test("should call _rollback() when autoRollback is true and step is cancelled", (done) => {
+            const step = new MockPassingStep("test-step", 0, { autoRollback: true });
+            const rollbackSpy = jest.spyOn(step as unknown as { _rollback(): Promise<void> }, "_rollback")
+                .mockImplementationOnce(() => Promise.resolve());
+
+            step.once("cancelled", () => {
+                expect(step.rollbackStatus).toBe(RollbackStatus.SUCCEED);
+                expect(rollbackSpy).toHaveBeenCalledTimes(1);
+                done();
+            });
+
+            step.run().then(() => step.cancel());
+        });
+
+        test("should emit rollback-succeed event when rollback succeeds", (done) => {
+            const step = new MockProcessorFailingStep("test-step", 0, { autoRollback: true });
+            jest.spyOn(step as unknown as { _rollback(): Promise<void> }, "_rollback")
+                .mockImplementationOnce(() => Promise.resolve());
+
+            let rollbackSucceedEmitted = false;
+
+            step
+                .once("rollback-succeed", () => {
+                    rollbackSucceedEmitted = true;
+                })
+                .once("failed", () => {
+                    expect(rollbackSucceedEmitted).toBe(true);
+                    expect(step.rollbackStatus).toBe(RollbackStatus.SUCCEED);
+                    done();
+                })
+                .run();
+        });
+
+        test("should emit rollback-failed event when rollback throws", (done) => {
+            const step = new MockProcessorFailingStep("test-step", 0, { autoRollback: true });
+
+            jest.spyOn(step as unknown as { _rollback(): Promise<void> }, "_rollback")
+                .mockImplementationOnce(() => {
+                    throw new Error("Rollback failed");
+                });
+
+            let rollbackFailedEmitted = false;
+
+            step
+                .once("rollback-failed", () => {
+                    rollbackFailedEmitted = true;
+                })
+                .once("failed", () => {
+                    expect(rollbackFailedEmitted).toBe(true);
+                    expect(step.rollbackStatus).toBe(RollbackStatus.FAILED);
+                    done();
+                })
+                .run();
         });
     });
 

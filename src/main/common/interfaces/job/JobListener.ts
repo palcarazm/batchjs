@@ -60,6 +60,14 @@ export class JobListener {
             this.meter.stepFinish(step.name, step.status, duration);
             this.logger?.stepFinish(step.name, step.status, duration);
         });
+
+        job.on("stepRollbackSucceed", ({ step }) => {
+            this.logger?.stepRollbackSucceed(step.name);
+        });
+
+        job.on("stepRollbackFailed", ({ step, error }) => {
+            this.logger?.stepRollbackFailed(step.name, error);
+        });
     }
 
     /**

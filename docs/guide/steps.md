@@ -91,6 +91,115 @@ const step = new StepBuilder('filter', { maxNumber: 10 })
   .build();
 ```
 
+## StepOptions
+
+Steps accept an optional `StepOptions` object in the constructor (or via `StepBuilder`) to configure behavior:
+
+| Option         | Type      | Default | Description                                                                     |
+|----------------|-----------|---------|---------------------------------------------------------------------------------|
+| `autoRollback` | `boolean` | `false` | Whether to automatically call `_rollback()` when the step fails or is cancelled |
+
+## Rollback
+
+Steps can implement rollback logic to clean up side effects when a step fails or is cancelled. This is useful for:
+
+- Deleting partially written files
+- Reverting database transactions
+- Cleaning up temporary resources
+- Ensuring idempotent retries
+
+### How Rollback Works
+
+1. **Define rollback logic** – Override the `_rollback()` method in your step subclass or provide a rollback function via `StepBuilder.rollback()`.
+2. **Enable auto-rollback** – Set `autoRollback: true` in `StepOptions`.
+3. **Automatic execution** – When the step fails or is cancelled, `_rollback()` is called automatically.
+
+### Example with StepBuilder
+
+```typescript
+import { StepBuilder, Readable, Writable, Transform } from 'batchjs';
+import { promises as fs } from 'node:fs';
+
+const step = new StepBuilder('file-writer')
+  .reader(() => Readable.from(['data'], { objectMode: true }))
+  .processors(() => [])
+  .writer(() => {
+    const filePath = '/tmp/output.txt';
+    return createWriteStream(filePath);
+  })
+  .autoRollback(true)
+  .rollback(async () => {
+    // Delete the partially written file if the step fails
+    await fs.unlink('/tmp/output.txt').catch(() => {});
+  })
+  .build();
+```
+
+### Example by Extending Step
+
+```typescript
+import { Step, Readable, Writable, Duplex } from 'batchjs';
+import { promises as fs } from 'node:fs';
+
+class FileWriterStep extends Step {
+  private readonly filePath: string;
+
+  constructor(filePath: string) {
+    super('file-writer', { filePath }, { autoRollback: true });
+    this.filePath = filePath;
+  }
+
+  protected _reader(): Readable {
+    return Readable.from(['data'], { objectMode: true });
+  }
+
+  protected _processors(): Duplex[] {
+    return [];
+  }
+
+  protected _writer(): Writable {
+    return createWriteStream(this.filePath);
+  }
+
+  protected async _rollback(): Promise<void> {
+    // Clean up the partial file if the step fails
+    await fs.unlink(this.filePath).catch(() => {});
+  }
+}
+```
+
+### Rollback Status
+
+After a rollback attempt, the rollback status is available via `step.rollbackStatus`:
+
+| Status          | Description                                                         |
+|-----------------|---------------------------------------------------------------------|
+| `UNATTEMPTED`   | No rollback was attempted (autoRollback is false or step succeeded) |
+| `SUCCEED`       | Rollback completed successfully                                     |
+| `FAILED`        | Rollback failed with an error                                       |
+
+The rollback status is also included in job events (`stepFailed`, `stepCancelled`, `stepFinished`).
+
+### Rollback Events
+
+Steps emit the following rollback-specific events:
+
+| Event               | Payload             | Description                                   |
+|---------------------|---------------------|-----------------------------------------------|
+| `rollback-succeed`  | `void`              | Emitted when rollback completes successfully  |
+| `rollback-failed`   | `{ error: Error }`  | Emitted when rollback fails                   |
+
+Jobs re-emit these events as `stepRollbackSucceed` and `stepRollbackFailed` with the step instance included in the payload.
+
+### Important Notes
+
+| Note                        | Description                                                                                                                                 |
+|-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| **Default implementation**  | `_rollback()` throws by default. You **must** override it or provide a rollback function when `autoRollback` is enabled.                    |
+| **Builder validation**      | `StepBuilder` will throw an error if `autoRollback: true` is set without a rollback function.                                               |
+| **Error preservation**      | If rollback fails, the original error (from the step failure) is preserved. The rollback error is emitted via the `rollback-failed` event.  |
+| **Order of operations**     | When a step fails or is cancelled: 1) Streams are destroyed, 2) Rollback is attempted (if enabled).                                         |
+
 ## Running a Step
 
 You don't usually run a step manually – it's executed by the job. However, you can run it directly by calling `step.run()` (returns a `Promise<void>`).
@@ -122,6 +231,8 @@ Steps extend `Runnable` and emit the following lifecycle events:
 | `failed`                | `{ name: string; error: Error }`                                | Emitted when transitioning to `FAILED`    |
 | `cancelled`             | `{ name: string }`                                              | Emitted when transitioning to `CANCELLED` |
 | `finished`              | `{ name: string; status: RunnableStatus }`                      | Emitted on any terminal state             |
+| `rollback-succeed`      | `void`                                                          | Emitted when rollback succeeds            |
+| `rollback-failed`       | `{ error: Error }`                                              | Emitted when rollback fails               |
 | `transition-cancelled`  | `{ from: RunnableStatus; to: RunnableStatus; reason?: string }` | Emitted when a hook cancels a transition  |
 | `transition-invalid`    | `{ from: RunnableStatus; to: RunnableStatus }`                  | Emitted on invalid state transition       |
 
@@ -131,6 +242,8 @@ step.on('completed', () => console.log('Step completed'));
 step.on('failed', ({ error }) => console.error('Step failed', error));
 step.on('cancelled', () => console.log('Step cancelled'));
 step.on('finished', ({ status }) => console.log(`Step finished with ${status}`));
+step.on('rollback-succeed', () => console.log('Rollback succeeded'));
+step.on('rollback-failed', ({ error }) => console.error('Rollback failed', error));
 ```
 
 ## Cancelling a Step
@@ -150,6 +263,7 @@ When a step is cancelled:
 - Its status becomes `CANCELLED`.
 - The `finished` and `cancelled` events are emitted.
 - Any pending streams are destroyed.
+- If `autoRollback` is enabled, `_rollback()` is called.
 
 > **Note:** Manual cancellation is typically not needed when using Jobs, as the Job handles cancellation of parallel groups automatically.
 

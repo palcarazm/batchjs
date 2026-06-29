@@ -1,11 +1,12 @@
-import { Step } from "../../../../main/common/index";
+/// <reference types="node" />
+import { Step, StepOptions } from "../../../../main/common/index";
 import { Readable, Writable, Transform, TransformCallback, TransformOptions } from "node:stream";
 
 export class MockPassingStep extends Step {
     private readonly delay: number;
 
-    constructor(name: string = "MockPassingStep", delay: number = 0) {
-        super(name);
+    constructor(name: string = "MockPassingStep", delay: number = 0, options?: Partial<StepOptions>) {
+        super(name, {}, options);
         this.delay = delay;
     }
 

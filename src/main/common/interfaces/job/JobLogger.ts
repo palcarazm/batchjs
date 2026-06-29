@@ -77,4 +77,25 @@ export class JobLogger {
             `STEP::${stepName} completed with status [${stepStatus}] in ${duration.toFixed(2)}ms`
         );
     }
+
+    /**
+     * Log a rollback success that occurred in a step.
+     * @param stepName The name of the step that rollback.
+     */
+    public stepRollbackSucceed(stepName: string) {
+        this.logger.info(
+            `STEP::${stepName} rollback succeeded`
+        );
+    }
+
+    /**
+     * Log a rollback error that occurred in a step.
+     * @param stepName The name of the step that attempt to rollback.
+     * @param error The rollback error.
+     */
+    public stepRollbackFailed(stepName: string, error: Error) {
+        this.logger.error(
+            `STEP::${stepName} rollback failed: [${error.message}]\n${error.stack}`
+        );
+    }
 }

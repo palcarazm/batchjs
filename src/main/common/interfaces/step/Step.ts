@@ -130,14 +130,14 @@ export abstract class Step extends Runnable<StepEventMap> {
     /**
      * Hook called during transition to RUNNING.
      * Builds the stream pipeline and launches it asynchronously.
-     * @returns {Promise<{ cancelled: boolean; reason?: string; executionPromise: Promise<void> }>}
+     * @returns {Promise<{ cancelled: boolean; reason?: string; executionPromise: () => Promise<void> }>}
      */
-    protected async doRun(): Promise<{ cancelled: boolean; reason?: string, executionPromise: Promise<void> }> {
+    protected async doRun(): Promise<{ cancelled: boolean; reason?: string, executionPromise: () => Promise<void> }> {
         this._readerInstance = this._reader();
         this._processorsInstances = this._processors();
         this._writerInstance = this._writer();
 
-        const executionPromise = new Promise<void>((resolve, reject) => {
+        const executionPromise = () => new Promise<void>((resolve, reject) => {
             this._readerInstance!.once("error", (error) => {
                 reject(error);
             });
@@ -164,10 +164,9 @@ export abstract class Step extends Runnable<StepEventMap> {
                 });
         }).then(() => {
             return this.transitionTo(RunnableStatus.COMPLETED);
-        }).catch((error) => {
+        }).catch(async (error) => {
             if (this.isRunning && this.transitioningTo === undefined) {
-                return this.transitionTo(RunnableStatus.FAILED, error)
-                    .finally(() => { throw error; });
+                await this.transitionTo(RunnableStatus.FAILED, error);
             }
             throw error;
         });

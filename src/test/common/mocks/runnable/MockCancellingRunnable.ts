@@ -3,8 +3,8 @@ import { BaseRunnableEventMap, Runnable, RunnableStatus } from "../../../../main
 export class MockCancellingRunnable extends Runnable<BaseRunnableEventMap> {
     private _runCancelling: boolean = true;
 
-    protected async doRun(): Promise<{ cancelled: true; reason?: string} | { cancelled: false; reason?: string, executionPromise: Promise<void>}> {
-        return this._runCancelling ? { cancelled: true, reason: "Cancelled" } : { cancelled: false, executionPromise: Promise.resolve() };
+    protected async doRun(): Promise<{ cancelled: true; reason?: string} | { cancelled: false; reason?: string, executionPromise: () => Promise<void>}> {
+        return this._runCancelling ? { cancelled: true, reason: "Cancelled" } : { cancelled: false, executionPromise: () => Promise.resolve() };
     }
     protected async doComplete(): Promise<{ cancelled: boolean; reason?: string }> {
         return { cancelled: true, reason: "Cancelled" };

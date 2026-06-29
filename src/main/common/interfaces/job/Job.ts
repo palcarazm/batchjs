@@ -97,18 +97,18 @@ export abstract class Job extends Runnable<JobEventMap> {
 
     /**
      * Hook called during transition to RUNNING.
-     * Builds the execution plan and launches it asynchronously.
-     * @returns {Promise<{ cancelled: boolean; reason?: string; executionPromise: Promise<void> }>}
+     * Builds the execution plan and returns a function that, when invoked,
+     * executes the plan asynchronously.
+     * @returns {Promise<{ cancelled: true; reason?: string} | { cancelled: false; reason?: string, executionPromise: () => Promise<void> }>}
      */
-    protected async doRun(): Promise<{ cancelled: true; reason?: string}|{ cancelled: false; reason?: string, executionPromise: Promise<void> }> {
+    protected async doRun(): Promise<{ cancelled: true; reason?: string} | { cancelled: false; reason?: string, executionPromise: () => Promise<void> }> {
         try{
             await this.checkpointManager?.load();
         } catch (error) {
             return {cancelled: true, reason: `Failed to load checkpoints: ${(error as Error).message}`};
         }
         
-        const executionPromise = this._executePlan();
-        return { cancelled: false, executionPromise };
+        return { cancelled: false, executionPromise : () => this._executePlan() };
     }
 
     /**
@@ -147,40 +147,43 @@ export abstract class Job extends Runnable<JobEventMap> {
      * @private
      */
     private async _executePlan(): Promise<void> {
-        return new Promise<void>((resolve, rejects) => {
-            this.once("started", async() => {
-                try {
-                    if( this.checkpointManager?.isAllStepsCompleted()){
-                        await this.transitionTo(RunnableStatus.COMPLETED);
-                        return resolve();
-                    } 
-                    for (const element of this.plan) {
-                        if (this.isCancelled || this.transitioningTo === RunnableStatus.CANCELLED) break;
-                        if (Array.isArray(element)) {
-                            const stepsToRun = this.checkpointManager === undefined ? element : element.filter(e => this.checkpointManager!.shouldRun(e));
-                            await this._runParallel(stepsToRun)
-                                .finally(() =>  this.checkpointManager?.saveStepsCheckpoints(stepsToRun));
-                        } else {
-                            if(this.checkpointManager?.shouldRun(element) === false) continue;
-                            await this._runSequential(element)
-                                .finally(() =>  this.checkpointManager?.saveStepCheckpoint(element));
-                        }
-                    }
-                    
-                    if (this.isRunning) {
-                        await this.transitionTo(RunnableStatus.COMPLETED);
-                        return resolve();
-                    }
-                } catch (error) {
-                    if (this.isRunning && this.transitioningTo === undefined) {
-                        return this.transitionTo(RunnableStatus.FAILED,error as Error)
-                            .finally(() => { rejects(error); });
-                    }
+        try {
+            if( this.checkpointManager?.isAllStepsCompleted()) return this.transitionTo(RunnableStatus.COMPLETED);
 
-                    rejects(error);
-                }
-            });
-        });
+            await this._executePlanSteps();
+            
+            if (this.isRunning) return this.transitionTo(RunnableStatus.COMPLETED);
+        } catch (error) {
+            if (this.isRunning && this.transitioningTo === undefined) {
+                await this.transitionTo(RunnableStatus.FAILED, error as Error);
+            }
+
+            throw error;
+        }
+    }
+
+
+    /**
+     * Executes all steps in the plan. It handles:
+     * - Parallel execution of groups of steps.
+     * - Sequential execution of steps.
+     * - Checkpoints saving.
+     * @returns {Promise<void>}
+     */
+    private async _executePlanSteps(): Promise<void> {
+        for (const element of this.plan) {
+            if (this.isCancelled || this.transitioningTo === RunnableStatus.CANCELLED) break;
+            if (Array.isArray(element)) {
+                const stepsToRun = this.checkpointManager === undefined ? element : element.filter(e => this.checkpointManager!.shouldRun(e));
+                if (stepsToRun.length === 0) continue;
+                await this._runParallel(stepsToRun)
+                    .finally(() =>  this.checkpointManager?.saveStepsCheckpoints(stepsToRun));
+            } else {
+                if(this.checkpointManager?.shouldRun(element) === false) continue;
+                await this._runSequential(element)
+                    .finally(() =>  this.checkpointManager?.saveStepCheckpoint(element));
+            }
+        }
     }
 
     /**

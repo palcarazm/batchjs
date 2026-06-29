@@ -194,8 +194,7 @@ export abstract class Runnable<
 
         switch (next) {
         case RunnableStatus.RUNNING:{
-            const result =  await this.executeTransition(RunnableStatus.RUNNING, () => this.doRun(), "started", {name: this.name});
-            this.setExecutionTask(result.executionPromise);
+            await this.executeTransition(RunnableStatus.RUNNING, () => this.doRun(), "started", {name: this.name});
             break;
         }
         case RunnableStatus.COMPLETED:
@@ -233,10 +232,10 @@ export abstract class Runnable<
      */
     private async executeTransition<K extends keyof TEventMap & string>(
         to: RunnableStatus,
-        hook: () => Promise<{ cancelled: boolean; reason?: string; executionPromise?: Promise<void> }>,
+        hook: () => Promise<{ cancelled: boolean; reason?: string; executionPromise?: () => Promise<void> }>,
         eventName: K,
         eventArgs: TEventMap[K]
-    ): Promise<{ cancelled: boolean; reason?: string, executionPromise?: Promise<void> }> {
+    ): Promise<{ cancelled: boolean; reason?: string, executionPromise?: () => Promise<void> }> {
         const hookResult = await hook();
         if (hookResult.cancelled) {
             this.emit("transition-cancelled", {
@@ -247,6 +246,7 @@ export abstract class Runnable<
             return hookResult;
         }
         this._status = to;
+        this.setExecutionTask(hookResult.executionPromise ? hookResult.executionPromise() : undefined);
         this.emit(eventName, eventArgs);
         return hookResult;
     }
@@ -261,7 +261,7 @@ export abstract class Runnable<
      *   - reason: Optional reason for cancellation.
      *   - executionPromise: The promise that runs the main work.
      */
-    protected abstract doRun(): Promise<{ cancelled: true; reason?: string} | { cancelled: false; reason?: string, executionPromise: Promise<void> }>;
+    protected abstract doRun(): Promise<{ cancelled: true; reason?: string} | { cancelled: false; reason?: string, executionPromise: () => Promise<void> }>;
 
     /**
      * Abstract hook called during transition to COMPLETED.

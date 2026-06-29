@@ -1,8 +1,8 @@
 import { BaseRunnableEventMap, Runnable } from "../../../../main/common";
 
 export class MockPassingRunnable extends Runnable<BaseRunnableEventMap> {
-    protected async doRun(): Promise<{ cancelled: boolean; reason?: string; executionPromise: Promise<void> }> {
-        return { cancelled: false, executionPromise: Promise.resolve() };
+    protected async doRun(): Promise<{ cancelled: boolean; reason?: string; executionPromise: () => Promise<void> }> {
+        return { cancelled: false, executionPromise: () => Promise.resolve() };
     }
     protected async doComplete(): Promise<{ cancelled: boolean; reason?: string }> {
         return { cancelled: false };

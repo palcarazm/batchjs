@@ -200,6 +200,24 @@ Jobs re-emit these events as `step-rollback-succeed` and `step-rollback-failed` 
 | **Error preservation**      | If rollback fails, the original error (from the step failure) is preserved. The rollback error is emitted via the `rollback-failed` event.  |
 | **Order of operations**     | When a step fails or is cancelled: 1) Streams are destroyed, 2) Rollback is attempted (if enabled).                                         |
 
+## Retry & Resilience
+
+Steps can be configured to automatically retry on failure, making your batch jobs resilient to transient failures like network timeouts, database locks, or temporary resource unavailability.
+
+```typescript
+const step = new StepBuilder('resilient-step')
+  .reader(() => Readable.from([1, 2, 3], { objectMode: true }))
+  .processors(() => [/* ... */])
+  .writer(() => new Writable({ objectMode: true, write(chunk, enc, cb) { cb(); } }))
+  .autoRollback(true)
+  .rollback(async () => { /* Clean up partial writes */ })
+  .maxRetries(3)
+  .retryDelay((attempt) => Math.min(100 * Math.pow(2, attempt - 1), 5000))
+  .build();
+```
+
+> **Learn more:** See the [Retry & Resilience guide](/guide/retry) for detailed documentation, event reference, and retry patterns.
+
 ## Running a Step
 
 You don't usually run a step manually – it's executed by the job. However, you can run it directly by calling `step.run()` (returns a `Promise<void>`).

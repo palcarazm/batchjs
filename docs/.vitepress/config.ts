@@ -43,6 +43,7 @@ export default defineConfig({
                             { text: "Jobs", link: "/guide/jobs" },
                             { text: "Steps", link: "/guide/steps" },
                             { text: "Checkpointing", link: "/guide/checkpointing" },
+                            { text: "Retry", link: "/guide/retry" },
                         ]},
                         { text: "Streams", items: [
                             { text: "Streams", link: "/guide/streams" },

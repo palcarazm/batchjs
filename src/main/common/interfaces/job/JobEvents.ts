@@ -21,4 +21,11 @@ export type JobEventMap = ExtendableRunnableEventMap<{
   "step-rollback-succeed": {step: Step;};
   /** Emitted when a step's rollback fails */
   "step-rollback-failed": { step: Step; error: Error };
+  /** Emitted when a step schedules a retry */
+  "step-retry-created": { step: Step; attempt: number; maxRetries: number; delayMs: number; cause: Error; };
+  /** Emitted when a step actually starts a retry */
+  "step-retry-started": { step: Step; attempt: number; maxRetries: number; };
+  /** Emitted when a step exhausts all retry attempts */
+  "step-retry-exhausted": { step: Step; attempt: number; maxRetries: number; cause: Error; };
+
 }>;

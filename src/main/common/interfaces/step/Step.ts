@@ -63,6 +63,8 @@ export abstract class Step extends Runnable<StepEventMap> {
     private _processorsInstances?:Duplex[];
     private _writerInstance?:Writable;
     private _rollbackStatus:RollbackStatus = RollbackStatus.UNATTEMPTED;
+    private _retryAttempt: number = 0;
+    private _retryTimeout?: NodeJS.Timeout;
 
     /**
      * @param {string} name - The name to assign to the Step.
@@ -73,6 +75,8 @@ export abstract class Step extends Runnable<StepEventMap> {
         super(name, params);
         this.options = {
             autoRollback: false,
+            maxRetries: 0,
+            retryDelay: () => 100,
             ...options
         };
     }
@@ -137,7 +141,74 @@ export abstract class Step extends Runnable<StepEventMap> {
         this._processorsInstances = this._processors();
         this._writerInstance = this._writer();
 
-        const executionPromise = () => new Promise<void>((resolve, reject) => {
+        return { cancelled: false, executionPromise : () => this._executeStep() };
+    }
+
+    /**
+     * Hook called during transition to COMPLETED.
+     * Destroys all streams.
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>}
+     */
+    protected async doComplete(): Promise<{ cancelled: boolean; reason?: string }> {
+        this.destroy();
+        return { cancelled: false };
+    }
+
+    /**
+     * Hook called during transition to FAILED.
+     * Destroys all streams.
+     * @param {Error} error - The error that caused the failure.
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>}
+     */
+    protected async doFail(error: Error): Promise<{ cancelled: boolean; reason?: string }> {
+        this.destroy();
+        if (this.options.autoRollback) {
+            const hasRollbackSucceed = await this._attemptRollback();
+            if (hasRollbackSucceed && this._attemptRetry(error)) return { cancelled: true, reason: "Attempting to retry" };
+        }
+        return { cancelled: false };
+    }
+
+    /**
+     * Hook called during transition to CANCELLED.
+     * Destroys all streams.
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>}
+     */
+    protected async doCancel(): Promise<{ cancelled: boolean; reason?: string }> {
+        this.destroy();
+        if (this.options.autoRollback) {
+            await this._attemptRollback();
+        }
+        return { cancelled: false };
+    }
+
+    /**
+     * Destroys all resources associated with the step and clears timeouts.
+     * Called automatically on completion, failure, or cancellation.
+     * @returns {void}
+     * @protected
+     */
+    protected destroy(): void {
+        if (this.isCreated || (this.isRunning && this.transitioningTo === undefined)) {
+            return;
+        }
+        if (this._retryTimeout){
+            clearTimeout(this._retryTimeout);
+            this._retryTimeout = undefined;
+        }
+        this._readerInstance?.destroy();
+        this._writerInstance?.destroy();
+        for (const processor of this._processorsInstances ?? []) {
+            processor.destroy();
+        }
+    }
+
+    /**
+     * Executes the step by creating a new stream pipeline and launching it asynchronously.
+     * @returns A promise that resolves when the step finishes.
+     */
+    private _executeStep(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
             this._readerInstance!.once("error", (error) => {
                 reject(error);
             });
@@ -170,79 +241,67 @@ export abstract class Step extends Runnable<StepEventMap> {
             }
             throw error;
         });
-
-        return { cancelled: false, executionPromise };
     }
 
-    /**
-     * Hook called during transition to COMPLETED.
-     * Destroys all streams.
-     * @returns {Promise<{ cancelled: boolean; reason?: string }>}
-     */
-    protected async doComplete(): Promise<{ cancelled: boolean; reason?: string }> {
-        this.destroy();
-        return { cancelled: false };
-    }
-
-    /**
-     * Hook called during transition to FAILED.
-     * Destroys all streams.
-     * @param {Error} _error - The error that caused the failure.
-     * @returns {Promise<{ cancelled: boolean; reason?: string }>}
-     */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    protected async doFail(_error: Error): Promise<{ cancelled: boolean; reason?: string }> {
-        this.destroy();
-        if (this.options.autoRollback) {
-            await this._attemptRollback();
-        }
-        return { cancelled: false };
-    }
-
-    /**
-     * Hook called during transition to CANCELLED.
-     * Destroys all streams.
-     * @returns {Promise<{ cancelled: boolean; reason?: string }>}
-     */
-    protected async doCancel(): Promise<{ cancelled: boolean; reason?: string }> {
-        this.destroy();
-        if (this.options.autoRollback) {
-            await this._attemptRollback();
-        }
-        return { cancelled: false };
-    }
-
-    /**
-     * Destroys all resources associated with the step.
-     * Called automatically on completion, failure, or cancellation.
-     * @returns {void}
-     * @protected
-     */
-    protected destroy(): void {
-        if (this.isCreated || (this.isRunning && this.transitioningTo === undefined)) {
-            return;
-        }
-        this._readerInstance?.destroy();
-        this._writerInstance?.destroy();
-        for (const processor of this._processorsInstances ?? []) {
-            processor.destroy();
-        }
-    }
 
     /**
      * Attempts to rollback the step and emits appropriate events.
      * @private
+     * @returns {Promise<boolean>} `true` if the rollback succeeded, `false` otherwise
      */
-    private async _attemptRollback(): Promise<void> {
+    private async _attemptRollback(): Promise<boolean> {
         try {
             await this._rollback();
             this._rollbackStatus = RollbackStatus.SUCCEED;
             this.emit("rollback-succeed");
+            return true;
         } catch (error) {
             this._rollbackStatus = RollbackStatus.FAILED;
             this.emit("rollback-failed", {
                 error: error instanceof Error ? error : new Error(String(error)),
             });
+            return false;
         }
+    }
+
+    /**
+     * Attempts to retry the step and emits appropriate events.
+     * @param error Error that caused the failure to retry
+     * @returns {boolean} `true` if the retry created, `false` otherwise
+     */
+    private _attemptRetry(error: Error): boolean {
+        if (this.options.maxRetries === 0) return false;
+
+        this._retryAttempt = this._retryAttempt + 1;
+        if(this._retryAttempt > this.options.maxRetries){
+            this.emit("retry-exhausted", {
+                attempt: this._retryAttempt,
+                maxRetries: this.options.maxRetries,
+                cause: error
+            });
+            return false;
+        }
+
+        const delayMs = this.options.retryDelay(this._retryAttempt);
+        this._retryTimeout = setTimeout(() => {
+            this._retryTimeout = undefined;
+            this._readerInstance = this._reader();
+            this._processorsInstances = this._processors();
+            this._writerInstance = this._writer();
+            this.setExecutionTask(this._executeStep());
+            this.emit("retry-started", {
+                attempt: this._retryAttempt,
+                maxRetries: this.options.maxRetries,
+            });
+        }, delayMs);
+
+        this.emit("retry-created", {
+            attempt: this._retryAttempt,
+            maxRetries: this.options.maxRetries,
+            delayMs,
+            cause: error,
+        });
+
+        return true;
     }
 }

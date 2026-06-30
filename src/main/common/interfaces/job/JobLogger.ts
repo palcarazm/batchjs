@@ -98,4 +98,46 @@ export class JobLogger {
             `STEP::${stepName} rollback failed: [${error.message}]\n${error.stack}`
         );
     }
+
+    /**
+     * Log the schedule of a retry in a step.
+     * @since 2.0.0
+     * @param stepName The name of the step that will be retried
+     * @param attempt The attempt number
+     * @param maxRetries The maximum retries allowed by this step
+     * @param delayMs The delay in milliseconds to wait until retry starts
+     * @param cause The cause of the retry
+     */
+    public stepRetry(stepName: string, attempt: number, maxRetries: number, delayMs: number, cause: Error) {
+        this.logger.warn(
+            `STEP::${stepName} retry created with attempt ${attempt} of ${maxRetries}. Will start on ${delayMs} ms. Cause: [${cause.message}]\n${cause.stack}`
+        );
+    }
+
+    /**
+     * Log the start of a retry in a step.
+     * @since 2.0.0
+     * @param stepName The name of the step that will be retried
+     * @param attempt The attempt number
+     * @param maxRetries The maximum retries allowed by this step
+     */
+    public stepRetryStarted(stepName: string, attempt: number, maxRetries: number) {
+        this.logger.debug(
+            `STEP::${stepName} retry started with attempt ${attempt} of ${maxRetries}`
+        );
+    }
+
+    /**
+     * Log the exhaustion of a retry in a step.
+     * @since 2.0.0
+     * @param stepName The name of the step that will be retried
+     * @param attempt The attempt number
+     * @param maxRetries The maximum retries allowed by this step
+     * @param cause The cause of the retry
+     */
+    public stepRetryExhausted(stepName: string, attempt: number, maxRetries: number, cause: Error) {
+        this.logger.warn(
+            `STEP::${stepName} retry exhausted with attempt ${attempt} of ${maxRetries}. Cause: [${cause.message}]\n${cause.stack}`
+        );
+    }
 }

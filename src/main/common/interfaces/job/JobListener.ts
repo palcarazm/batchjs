@@ -68,6 +68,18 @@ export class JobListener {
         job.on("step-rollback-failed", ({ step, error }) => {
             this.logger?.stepRollbackFailed(step.name, error);
         });
+
+        job.on("step-retry-created", ({ step, attempt, maxRetries, delayMs, cause })=>{
+            this.logger?.stepRetry(step.name, attempt, maxRetries, delayMs, cause);
+        });
+
+        job.on("step-retry-started", ({ step, attempt, maxRetries })=>{
+            this.logger?.stepRetryStarted(step.name, attempt, maxRetries);
+        });
+
+        job.on("step-retry-exhausted", ({ step, attempt, maxRetries, cause })=>{
+            this.logger?.stepRetryExhausted(step.name, attempt, maxRetries, cause);
+        });
     }
 
     /**

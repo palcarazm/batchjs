@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import {
     Logger,
     RunnableStatus,
@@ -99,6 +100,29 @@ describe("JobListener", () => {
         job.once("finished", () => {
             expect(logger.error).toHaveBeenCalledWith(
                 expect.stringContaining("rollback failed")
+            );
+            done();
+        });
+
+        job.run();
+    });
+
+    test("should log retry messages", (done) => {
+        const step = new MockProcessorFailingStep("retry-step", 0, { autoRollback: true, maxRetries: 1 });
+        jest.spyOn(step as unknown as { _rollback: () => Promise<void> }, "_rollback")
+            .mockImplementation(() => Promise.resolve());
+        
+        const job = new MockCustomStepsJob("test-job", [step], { logger });
+
+        job.once("finished", () => {
+            expect(logger.warn).toHaveBeenCalledWith(
+                expect.stringContaining("STEP::retry-step retry created with attempt 1 of 1")
+            );
+            expect(logger.debug).toHaveBeenCalledWith(
+                expect.stringContaining("STEP::retry-step retry started with attempt 1 of 1")
+            );
+            expect(logger.warn).toHaveBeenCalledWith(
+                expect.stringContaining("STEP::retry-step retry exhausted with attempt 2 of 1")
             );
             done();
         });

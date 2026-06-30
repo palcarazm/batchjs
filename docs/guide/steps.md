@@ -178,7 +178,7 @@ After a rollback attempt, the rollback status is available via `step.rollbackSta
 | `SUCCEED`       | Rollback completed successfully                                     |
 | `FAILED`        | Rollback failed with an error                                       |
 
-The rollback status is also included in job events (`stepFailed`, `stepCancelled`, `stepFinished`).
+The rollback status is also included in job events (`step-failed`, `step-cancelled`, `step-finished`).
 
 ### Rollback Events
 
@@ -189,7 +189,7 @@ Steps emit the following rollback-specific events:
 | `rollback-succeed`  | `void`              | Emitted when rollback completes successfully  |
 | `rollback-failed`   | `{ error: Error }`  | Emitted when rollback fails                   |
 
-Jobs re-emit these events as `stepRollbackSucceed` and `stepRollbackFailed` with the step instance included in the payload.
+Jobs re-emit these events as `step-rollback-succeed` and `step-rollback-failed` with the step instance included in the payload.
 
 ### Important Notes
 

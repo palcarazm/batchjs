@@ -33,7 +33,7 @@ export interface JobOptions {
  * }
  * 
  * const job = new JobImplementation("My job");
- * job.on("stepStarted", ({ step }) => {
+ * job.on("step-started", ({ step }) => {
  *     console.log(`Starting step ${step.name}`);
  * })
  * job.on("finished", ({ name, status }) => {
@@ -196,28 +196,28 @@ export abstract class Job extends Runnable<JobEventMap> {
         return new Promise<void>((resolve, reject) => {
             step
                 .once("started", () => {
-                    this.emit("stepStarted", { step });
+                    this.emit("step-started", { step });
                 })
                 .once("completed", () => {
-                    this.emit("stepCompleted", { step });
+                    this.emit("step-completed", { step });
                     resolve();
                 })
                 .once("failed", (payload) => {
-                    this.emit("stepFailed", { step, error: payload.error, rollback: step.rollbackStatus });
+                    this.emit("step-failed", { step, error: payload.error, rollback: step.rollbackStatus });
                     reject(payload.error);
                 })
                 .once("cancelled", () => {
-                    this.emit("stepCancelled", { step, rollback: step.rollbackStatus });
+                    this.emit("step-cancelled", { step, rollback: step.rollbackStatus });
                     reject(new JobCancelledError([step.name]));
                 })
                 .once("finished", (payload) => {
-                    this.emit("stepFinished", { step, status: payload.status, rollback: step.rollbackStatus });
+                    this.emit("step-finished", { step, status: payload.status, rollback: step.rollbackStatus });
                 })
                 .once("rollback-succeed", () => {
-                    this.emit("stepRollbackSucceed", { step });
+                    this.emit("step-rollback-succeed", { step });
                 })
                 .once("rollback-failed", (payload) => {
-                    this.emit("stepRollbackFailed", { step, error: payload.error });
+                    this.emit("step-rollback-failed", { step, error: payload.error });
                 })
                 .run();
         });
@@ -241,10 +241,10 @@ export abstract class Job extends Runnable<JobEventMap> {
             for (const step of steps) {
                 step
                     .once("started", () => {
-                        this.emit("stepStarted", { step });
+                        this.emit("step-started", { step });
                     })
                     .once("completed", () => {
-                        this.emit("stepCompleted", { step });
+                        this.emit("step-completed", { step });
                         completedCount++;
                         if (completedCount === steps.length && !hasRejected) {
                             if (cancelled) {
@@ -255,7 +255,7 @@ export abstract class Job extends Runnable<JobEventMap> {
                         }
                     })
                     .once("failed", ({ error }) => {
-                        this.emit("stepFailed", { step, error, rollback: step.rollbackStatus });
+                        this.emit("step-failed", { step, error, rollback: step.rollbackStatus });
                         if (!cancelled && !hasRejected) {
                             hasRejected = true;
                             cancelled = true;
@@ -269,20 +269,20 @@ export abstract class Job extends Runnable<JobEventMap> {
                     })
                     .once("cancelled", () => {
                         cancelled = true;
-                        this.emit("stepCancelled", { step, rollback: step.rollbackStatus });
+                        this.emit("step-cancelled", { step, rollback: step.rollbackStatus });
                         completedCount++;
                         if (completedCount === steps.length && !hasRejected) {
                             reject(new JobCancelledError(steps.filter((s) => s.isCancelled).map((s) => s.name)));
                         }
                     })
                     .once("finished", ({status}) => {
-                        this.emit("stepFinished", { step, status, rollback: step.rollbackStatus });
+                        this.emit("step-finished", { step, status, rollback: step.rollbackStatus });
                     })
                     .once("rollback-succeed", () => {
-                        this.emit("stepRollbackSucceed", { step });
+                        this.emit("step-rollback-succeed", { step });
                     })
                     .once("rollback-failed", (payload) => {
-                        this.emit("stepRollbackFailed", { step, error: payload.error });
+                        this.emit("step-rollback-failed", { step, error: payload.error });
                     })
                     .run();
             }

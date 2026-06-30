@@ -41,7 +41,7 @@ When a group of steps is defined as an array:
 2. If **all** steps complete successfully, the job proceeds to the next element.
 3. If **any** step fails, the job immediately:
    - Cancels all other running steps in the group.
-   - Emits a `stepCancelled` event for each cancelled step.
+   - Emits a `step-cancelled` event for each cancelled step.
    - Sets the job status to `FAILED`.
    - Halts execution (does NOT proceed to subsequent steps).
 
@@ -96,21 +96,21 @@ CREATED → RUNNING → COMPLETED | FAILED | CANCELLED
 
 ### Step Events (re-emitted by Job)
 
-| Event           | Payload                                   | Description                                       |
-|-----------------|-------------------------------------------|---------------------------------------------------|
-| `stepStarted`   | `{ step: Step }`                          | Emitted when a step starts                        |
-| `stepCompleted` | `{ step: Step }`                          | Emitted when a step completes successfully        |
-| `stepFailed`    | `{ step: Step; error: Error }`            | Emitted when a step fails                         |
-| `stepCancelled` | `{ step: Step }`                          | Emitted when a step is cancelled                  |
-| `stepFinished`  | `{ step: Step; status: RunnableStatus }`  | Emitted when a step finishes (any terminal state) |
+| Event            | Payload                                   | Description                                       |
+|------------------|-------------------------------------------|---------------------------------------------------|
+| `step-started`   | `{ step: Step }`                          | Emitted when a step starts                        |
+| `step-completed` | `{ step: Step }`                          | Emitted when a step completes successfully        |
+| `step-failed`    | `{ step: Step; error: Error }`            | Emitted when a step fails                         |
+| `step-cancelled` | `{ step: Step }`                          | Emitted when a step is cancelled                  |
+| `step-finished`  | `{ step: Step; status: RunnableStatus }`  | Emitted when a step finishes (any terminal state) |
 
 ### Usage Example
 
 ```typescript
 job.on('started', ({ name }) => console.log(`Job ${name} started`));
-job.on('stepStarted', ({ step }) => console.log(`Starting ${step.name}`));
-job.on('stepCompleted', ({ step }) => console.log(`Step ${step.name} completed`));
-job.on('stepCancelled', ({ step }) => console.log(`Step ${step.name} was cancelled`));
+job.on('step-started', ({ step }) => console.log(`Starting ${step.name}`));
+job.on('step-completed', ({ step }) => console.log(`Step ${step.name} completed`));
+job.on('step-cancelled', ({ step }) => console.log(`Step ${step.name} was cancelled`));
 job.on('finished', ({ name, status }) => console.log(`Job ${name} finished with ${status}`));
 ```
 

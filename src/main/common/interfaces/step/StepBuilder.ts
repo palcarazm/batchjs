@@ -113,6 +113,26 @@ export class StepBuilder {
     }
 
     /**
+     * Sets the maximum number of retry attempts for this step.
+     * @param maxRetries - Maximum retry attempts (0 to disable)
+     * @returns {this} The builder instance for chaining.
+     */
+    maxRetries(maxRetries: number): this {
+        this._options.maxRetries = maxRetries;
+        return this;
+    }
+
+    /**
+     * Sets the retry delay function for this step.
+     * @param retryDelay - Function that returns delay in milliseconds for a given attempt number (1-based)
+     * @returns {this} The builder instance for chaining.
+     */
+    retryDelay(retryDelay: (attempt: number) => number): this {
+        this._options.retryDelay = retryDelay;
+        return this;
+    }
+
+    /**
      * Builds and returns a Step instance using the configured reader, processors, and writer.
      * Each call to build() returns a new Step instance. The builder can be reused to create
      * multiple Step instances with the same configuration.

@@ -147,6 +147,21 @@ describe("Step", () => {
                 
             step.run().then(()=>step.cancel());    
         });
+
+        test("should retry timeout when destroy() is called", (done) => {
+            const callback = jest.fn();
+            const step = new MockPassingStep()
+                .once("finished", () => {
+                    expect((step as unknown as { _retryTimeout?: NodeJS.Timeout })._retryTimeout).toBeUndefined();
+                    jest.advanceTimersByTime(1000);
+                    expect(callback).not.toHaveBeenCalled();
+                    done();
+                });
+                
+            step.run().then(()=>{
+                (step as unknown as { _retryTimeout?: NodeJS.Timeout })._retryTimeout = setTimeout(() => callback(), 1000);
+            });  
+        });
     });
 
     describe("_rollback()", () => {
@@ -251,6 +266,92 @@ describe("Step", () => {
                     done();
                 })
                 .run();
+        });
+    });
+
+    describe("retry", () => {
+        let retryCreatedCount = 0;
+        let retryStartedCount = 0;
+        let retryExhaustedCount = 0;
+
+        beforeEach(() => {
+            retryCreatedCount = 0;
+            retryStartedCount = 0;
+            retryExhaustedCount = 0;
+        });
+
+        test("should retry the step on fail since retry are exhausted", () => {
+            const step = new MockProcessorFailingStep("test-step", 0,{ autoRollback: true , maxRetries: 2 , retryDelay: () => 25 });
+
+            jest.spyOn(step as unknown as { _rollback(): Promise<void> }, "_rollback")
+                .mockImplementation(() => Promise.resolve());
+
+            step
+                .on("retry-created", () => {
+                    retryCreatedCount++;
+                })
+                .on("retry-started", () => {
+                    retryStartedCount++;
+                })
+                .on("retry-exhausted", () => {
+                    retryExhaustedCount++;
+                })
+                .on("finished", () => {
+                    expect(retryCreatedCount).toBe(2);
+                    expect(retryStartedCount).toBe(2);
+                    expect(retryExhaustedCount).toBe(1);
+                });
+
+            step.run();
+        });
+
+        test("should not retry the step on fail if auto rollback is disabled", () => {
+            const step = new MockProcessorFailingStep("test-step", 0,{ autoRollback: false , maxRetries: 2 , retryDelay: () => 25 });
+
+            step
+                .on("retry-created", () => {
+                    retryCreatedCount++;
+                })
+                .on("retry-started", () => {
+                    retryStartedCount++;
+                })
+                .on("retry-exhausted", () => {
+                    retryExhaustedCount++;
+                })
+                .on("finished", () => {
+                    expect(retryCreatedCount).toBe(0);
+                    expect(retryStartedCount).toBe(0);
+                    expect(retryExhaustedCount).toBe(0);
+                });
+
+            step.run();
+        });
+
+        test("should not retry the step on fail if rollback fails", () => {
+            const step = new MockProcessorFailingStep("test-step", 0,{ autoRollback: true , maxRetries: 2 , retryDelay: () => 25 });
+
+            jest.spyOn(step as unknown as { _rollback(): Promise<void> }, "_rollback")
+                .mockImplementation(() => {
+                    throw new Error("Rollback failed");
+                });
+
+            step
+                .on("retry-created", () => {
+                    retryCreatedCount++;
+                })
+                .on("retry-started", () => {
+                    retryStartedCount++;
+                })
+                .on("retry-exhausted", () => {
+                    retryExhaustedCount++;
+                })
+                .on("finished", () => {
+                    expect(retryCreatedCount).toBe(0);
+                    expect(retryStartedCount).toBe(0);
+                    expect(retryExhaustedCount).toBe(0);
+                });
+
+            step.run();
         });
     });
 

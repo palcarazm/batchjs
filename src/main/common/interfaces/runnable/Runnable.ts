@@ -16,6 +16,32 @@ const VALID_TRANSITIONS: Record<RunnableStatus, RunnableStatus[]> = {
 };
 
 /**
+ * Result of a cancelled Runnable hook.
+ */
+export interface RunnableHookCancelledResult {
+    /** Whether the transition was cancelled */
+    cancelled: true;
+    /** Optional reason for the cancellation */
+    reason?: string
+};
+
+/**
+ * Result of a successful Runnable hook.
+ */
+export interface RunnableHookSucceedResult { 
+    /** Whether the transition was cancelled */
+    cancelled: false; 
+    /** Optional function to execute the runnable */
+    executionPromise?: () => Promise<void> };
+
+/**
+ * Result of a Runnable hook:
+ * - for cancelled results use {@link RunnableHookCancelledResult}
+ * - for successful results use {@link RunnableHookSucceedResult}
+ */
+export type RunnableHookResult = RunnableHookCancelledResult | RunnableHookSucceedResult;
+
+/**
  * Abstract base class for all runnable entities (Job, Step, etc.).
  * Provides state machine, lifecycle hooks, and typed events.
  * 
@@ -148,7 +174,7 @@ export abstract class Runnable<
      * 
      * @param executionTask - Promise to be settled as execution task.
      */
-    private setExecutionTask(executionTask: Promise<void> | undefined) {
+    protected setExecutionTask(executionTask: Promise<void> | undefined) {
         if (executionTask === undefined) return;
         this._executionTask = Promise.allSettled([executionTask]).then((results) => results[0]);
     }
@@ -194,22 +220,45 @@ export abstract class Runnable<
 
         switch (next) {
         case RunnableStatus.RUNNING:{
-            await this.executeTransition(RunnableStatus.RUNNING, () => this.doRun(), "started", {name: this.name});
+            await this.executeTransition(
+                RunnableStatus.RUNNING,
+                () => this.doRun(),
+                (hookResult) => {
+                    this.setExecutionTask(hookResult.executionPromise ? hookResult.executionPromise() : undefined);
+                    this.emit("started", { name: this.name});
+                }
+            );
             break;
         }
         case RunnableStatus.COMPLETED:
-            await this.executeTransition(RunnableStatus.COMPLETED, () => this.doComplete(), "completed", {name: this.name});
-            this.emit("finished", { name: this.name, status: this._status });
+            await this.executeTransition(
+                RunnableStatus.COMPLETED,
+                () => this.doComplete(),
+                () => {
+                    this.emit("completed", { name: this.name});
+                    this.emit("finished", { name: this.name, status: this._status });
+                }
+            );
             break;
         case RunnableStatus.FAILED:{ 
             const e = error ?? new Error("Unknown error");
-            await this.executeTransition(RunnableStatus.FAILED, () => this.doFail(e), "failed", {name: this.name, error: e });
-            this.emit("finished", { name: this.name, status: this._status });
+            await this.executeTransition(
+                RunnableStatus.FAILED,
+                () => this.doFail(e),
+                () => {
+                    this.emit("failed", { name: this.name, error: e });
+                    this.emit("finished", { name: this.name, status: this._status });
+                });
             break; 
         }
         case RunnableStatus.CANCELLED:
-            await this.executeTransition(RunnableStatus.CANCELLED, () => this.doCancel(), "cancelled", {name: this.name});
-            this.emit("finished", { name: this.name, status: this._status });
+            await this.executeTransition(
+                RunnableStatus.CANCELLED,
+                () => this.doCancel(),
+                () => {
+                    this.emit("cancelled", { name: this.name});
+                    this.emit("finished", { name: this.name, status: this._status });
+                });
             break;
         }
 
@@ -217,7 +266,7 @@ export abstract class Runnable<
     }
 
     /**
-     * Executes a transition, running the associated hook and emitting the corresponding event if the transition succeeds.
+     * Executes a transition, running the associated hook and running the post transition callback if the transition succeeds.
      * 
      * @internal Internal helper: it is **not** a generic event emitter wrapper.
      * 
@@ -226,15 +275,14 @@ export abstract class Runnable<
      * @param hook - The transition hook to execute before committing the transition.
      *   If the hook returns `{ cancelled: true }`, the transition is aborted
      *   and a `"transition-cancelled"` event is emitted instead.
-     * @param eventName - The event to emit when the transition completes successfully.
+     * @param postTransitionCallback - Optional function to execute after the transition.
      * 
      * @returns A promise that resolves once the transition has completed.
      */
-    private async executeTransition<K extends keyof TEventMap & string>(
+    private async executeTransition(
         to: RunnableStatus,
-        hook: () => Promise<{ cancelled: boolean; reason?: string; executionPromise?: () => Promise<void> }>,
-        eventName: K,
-        eventArgs: TEventMap[K]
+        hook: () => Promise<RunnableHookResult>,
+        postTransitionCallback?: (result: RunnableHookSucceedResult) => void
     ): Promise<{ cancelled: boolean; reason?: string, executionPromise?: () => Promise<void> }> {
         const hookResult = await hook();
         if (hookResult.cancelled) {
@@ -246,8 +294,7 @@ export abstract class Runnable<
             return hookResult;
         }
         this._status = to;
-        this.setExecutionTask(hookResult.executionPromise ? hookResult.executionPromise() : undefined);
-        this.emit(eventName, eventArgs);
+        postTransitionCallback?.(hookResult);
         return hookResult;
     }
 
@@ -261,7 +308,7 @@ export abstract class Runnable<
      *   - reason: Optional reason for cancellation.
      *   - executionPromise: The promise that runs the main work.
      */
-    protected abstract doRun(): Promise<{ cancelled: true; reason?: string} | { cancelled: false; reason?: string, executionPromise: () => Promise<void> }>;
+    protected abstract doRun(): Promise<RunnableHookResult>;
 
     /**
      * Abstract hook called during transition to COMPLETED.
@@ -270,7 +317,7 @@ export abstract class Runnable<
      * 
      * @returns An object containing cancelled status and optional reason.
      */
-    protected abstract doComplete(): Promise<{ cancelled: boolean; reason?: string }>;
+    protected abstract doComplete(): Promise<RunnableHookResult>;
 
     /**
      * Abstract hook called during transition to FAILED.
@@ -280,7 +327,7 @@ export abstract class Runnable<
      * @param error - The error that caused the failure.
      * @returns An object containing cancelled status and optional reason.
      */
-    protected abstract doFail(error: Error): Promise<{ cancelled: boolean; reason?: string }>;
+    protected abstract doFail(error: Error): Promise<RunnableHookResult>;
 
     /**
      * Abstract hook called during transition to CANCELLED.
@@ -289,7 +336,7 @@ export abstract class Runnable<
      * 
      * @returns An object containing cancelled status and optional reason.
      */
-    protected abstract doCancel(): Promise<{ cancelled: boolean; reason?: string }>;
+    protected abstract doCancel(): Promise<RunnableHookResult>;
 
     /**
      * Launches the runnable and returns a promise that resolves when it finishes.

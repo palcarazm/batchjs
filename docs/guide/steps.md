@@ -178,7 +178,7 @@ After a rollback attempt, the rollback status is available via `step.rollbackSta
 | `SUCCEED`       | Rollback completed successfully                                     |
 | `FAILED`        | Rollback failed with an error                                       |
 
-The rollback status is also included in job events (`stepFailed`, `stepCancelled`, `stepFinished`).
+The rollback status is also included in job events (`step-failed`, `step-cancelled`, `step-finished`).
 
 ### Rollback Events
 
@@ -189,7 +189,7 @@ Steps emit the following rollback-specific events:
 | `rollback-succeed`  | `void`              | Emitted when rollback completes successfully  |
 | `rollback-failed`   | `{ error: Error }`  | Emitted when rollback fails                   |
 
-Jobs re-emit these events as `stepRollbackSucceed` and `stepRollbackFailed` with the step instance included in the payload.
+Jobs re-emit these events as `step-rollback-succeed` and `step-rollback-failed` with the step instance included in the payload.
 
 ### Important Notes
 
@@ -199,6 +199,24 @@ Jobs re-emit these events as `stepRollbackSucceed` and `stepRollbackFailed` with
 | **Builder validation**      | `StepBuilder` will throw an error if `autoRollback: true` is set without a rollback function.                                               |
 | **Error preservation**      | If rollback fails, the original error (from the step failure) is preserved. The rollback error is emitted via the `rollback-failed` event.  |
 | **Order of operations**     | When a step fails or is cancelled: 1) Streams are destroyed, 2) Rollback is attempted (if enabled).                                         |
+
+## Retry & Resilience
+
+Steps can be configured to automatically retry on failure, making your batch jobs resilient to transient failures like network timeouts, database locks, or temporary resource unavailability.
+
+```typescript
+const step = new StepBuilder('resilient-step')
+  .reader(() => Readable.from([1, 2, 3], { objectMode: true }))
+  .processors(() => [/* ... */])
+  .writer(() => new Writable({ objectMode: true, write(chunk, enc, cb) { cb(); } }))
+  .autoRollback(true)
+  .rollback(async () => { /* Clean up partial writes */ })
+  .maxRetries(3)
+  .retryDelay((attempt) => Math.min(100 * Math.pow(2, attempt - 1), 5000))
+  .build();
+```
+
+> **Learn more:** See the [Retry & Resilience guide](/guide/retry) for detailed documentation, event reference, and retry patterns.
 
 ## Running a Step
 

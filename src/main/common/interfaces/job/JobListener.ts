@@ -36,37 +36,49 @@ export class JobListener {
         });
 
 
-        job.on("stepStarted", ({ step }) => {
+        job.on("step-started", ({ step }) => {
             this.timer.start(TimerType.STEP, step.name);
             this.meter.stepStart(step.name);
             this.logger?.stepStart(step.name, step.params);
         });
 
-        job.once("stepFailed", ({ step, error }) => {
+        job.once("step-failed", ({ step, error }) => {
             const duration = this.timer.stop(TimerType.STEP, step.name);
             this.meter.stepFinish(step.name, step.status, duration);
             this.logger?.stepError(step.name, step.status, error);
             this.logger?.stepFinish(step.name, step.status, duration);
         });
 
-        job.on("stepCompleted", ({ step }) => {
+        job.on("step-completed", ({ step }) => {
             const duration = this.timer.stop(TimerType.STEP, step.name);
             this.meter.stepFinish(step.name, step.status, duration);
             this.logger?.stepFinish(step.name, step.status, duration);
         });
 
-        job.on("stepCancelled", ({ step }) => {
+        job.on("step-cancelled", ({ step }) => {
             const duration = this.timer.stop(TimerType.STEP, step.name);
             this.meter.stepFinish(step.name, step.status, duration);
             this.logger?.stepFinish(step.name, step.status, duration);
         });
 
-        job.on("stepRollbackSucceed", ({ step }) => {
+        job.on("step-rollback-succeed", ({ step }) => {
             this.logger?.stepRollbackSucceed(step.name);
         });
 
-        job.on("stepRollbackFailed", ({ step, error }) => {
+        job.on("step-rollback-failed", ({ step, error }) => {
             this.logger?.stepRollbackFailed(step.name, error);
+        });
+
+        job.on("step-retry-created", ({ step, attempt, maxRetries, delayMs, cause })=>{
+            this.logger?.stepRetry(step.name, attempt, maxRetries, delayMs, cause);
+        });
+
+        job.on("step-retry-started", ({ step, attempt, maxRetries })=>{
+            this.logger?.stepRetryStarted(step.name, attempt, maxRetries);
+        });
+
+        job.on("step-retry-exhausted", ({ step, attempt, maxRetries, cause })=>{
+            this.logger?.stepRetryExhausted(step.name, attempt, maxRetries, cause);
         });
     }
 

@@ -8,17 +8,24 @@ import { Step } from "../step/Step";
  */
 export type JobEventMap = ExtendableRunnableEventMap<{
   /** Emitted when a step starts */
-  stepStarted: { step: Step };
+  "step-started": { step: Step };
   /** Emitted when a step completes successfully */
-  stepCompleted: { step: Step };
+  "step-completed": { step: Step };
   /** Emitted when a step is cancelled */
-  stepCancelled: { step: Step; rollback: RollbackStatus };
+  "step-cancelled": { step: Step; rollback: RollbackStatus };
   /** Emitted when a step fails */
-  stepFailed: { step: Step; error: Error; rollback: RollbackStatus };
+  "step-failed": { step: Step; error: Error; rollback: RollbackStatus };
   /** Emitted when a step finishes (any terminal state) */
-  stepFinished: { step: Step; status: RunnableStatus; rollback: RollbackStatus };
+  "step-finished": { step: Step; status: RunnableStatus; rollback: RollbackStatus };
   /** Emitted when a step's rollback succeeds */
-  stepRollbackSucceed: {step: Step;};
+  "step-rollback-succeed": {step: Step;};
   /** Emitted when a step's rollback fails */
-  stepRollbackFailed: { step: Step; error: Error };
+  "step-rollback-failed": { step: Step; error: Error };
+  /** Emitted when a step schedules a retry */
+  "step-retry-created": { step: Step; attempt: number; maxRetries: number; delayMs: number; cause: Error; };
+  /** Emitted when a step actually starts a retry */
+  "step-retry-started": { step: Step; attempt: number; maxRetries: number; };
+  /** Emitted when a step exhausts all retry attempts */
+  "step-retry-exhausted": { step: Step; attempt: number; maxRetries: number; cause: Error; };
+
 }>;

@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+/// <reference types="node" />
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Readable, Writable, Transform, Duplex, TransformCallback } from "node:stream";
 import { StepBuilder, StepBuilderError, RunnableStatus, Step } from "../../../../main/common/index";
@@ -15,6 +17,13 @@ describe("StepBuilder", () => {
             .processors(processorsFn)
             .writer(writerFn)
             .build();
+    }
+
+    function initializeBuilder(): StepBuilder {
+        return builder
+            .reader(readerFn)
+            .processors(processorsFn)
+            .writer(writerFn);
     }
 
     beforeEach(() => {
@@ -37,11 +46,10 @@ describe("StepBuilder", () => {
 
     describe("chainable methods", () => {
         test("should support method chaining", () => {
-            const result = builder
-                .reader(readerFn)
-                .processors(processorsFn)
-                .writer(writerFn)
+            const result = initializeBuilder()
                 .autoRollback(true)
+                .maxRetries(3)
+                .retryDelay(() => 1000)
                 .rollback(() => Promise.resolve());
 
             expect(result).toBe(builder);
@@ -71,10 +79,7 @@ describe("StepBuilder", () => {
 
         test("rollback should store the provided function", () => {
             const rollbackFn = () => Promise.resolve();
-            const step = builder
-                .reader(readerFn)
-                .processors(processorsFn)
-                .writer(writerFn)
+            const step = initializeBuilder()
                 .rollback(rollbackFn)
                 .build();
             
@@ -83,16 +88,33 @@ describe("StepBuilder", () => {
         });
 
         test.each([true, false])("autoRollback should store the provided boolean %s", (value) => {
-            const step = builder
-                .reader(readerFn)
-                .processors(processorsFn)
-                .writer(writerFn)
+            const step = initializeBuilder()
                 .rollback(() => Promise.resolve())
                 .autoRollback(value)
                 .build();
             
             expect((builder as any)._options.autoRollback).toBe(value);
             expect((step as any).options.autoRollback).toBe(value);
+        });
+
+        test("maxRetries should store the provided number", () => {
+            const maxRetries = 3;
+            const step = initializeBuilder()
+                .maxRetries(maxRetries)
+                .build();
+            
+            expect((builder as any)._options.maxRetries).toBe(maxRetries);
+            expect((step as any).options.maxRetries).toBe(maxRetries);
+        });
+
+        test("retryDelay should store the provided function", () => {
+            const retryDelay = () => 1000;
+            const step = initializeBuilder()
+                .retryDelay(retryDelay)
+                .build();
+            
+            expect((builder as any)._options.retryDelay).toBe(retryDelay);
+            expect((step as any).options.retryDelay).toBe(retryDelay);
         });
     });
 

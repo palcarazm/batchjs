@@ -33,7 +33,7 @@ export interface JobOptions {
  * }
  * 
  * const job = new JobImplementation("My job");
- * job.on("stepStarted", ({ step }) => {
+ * job.on("step-started", ({ step }) => {
  *     console.log(`Starting step ${step.name}`);
  * })
  * job.on("finished", ({ name, status }) => {
@@ -187,44 +187,31 @@ export abstract class Job extends Runnable<JobEventMap> {
     }
 
     /**
-     * Runs a single step sequentially and re-emits its events.
+     * Runs a single step sequentially and blinks an event dispatcher to re-emit events.
      * @param step The step to run.
      * @returns {Promise<void>}
      * @private
      */
     private _runSequential(step: Step): Promise<void> {
+        this._blinkStepEventDispatcher(step);
         return new Promise<void>((resolve, reject) => {
             step
-                .once("started", () => {
-                    this.emit("stepStarted", { step });
-                })
                 .once("completed", () => {
-                    this.emit("stepCompleted", { step });
                     resolve();
                 })
                 .once("failed", (payload) => {
-                    this.emit("stepFailed", { step, error: payload.error, rollback: step.rollbackStatus });
                     reject(payload.error);
                 })
                 .once("cancelled", () => {
-                    this.emit("stepCancelled", { step, rollback: step.rollbackStatus });
                     reject(new JobCancelledError([step.name]));
-                })
-                .once("finished", (payload) => {
-                    this.emit("stepFinished", { step, status: payload.status, rollback: step.rollbackStatus });
-                })
-                .once("rollback-succeed", () => {
-                    this.emit("stepRollbackSucceed", { step });
-                })
-                .once("rollback-failed", (payload) => {
-                    this.emit("stepRollbackFailed", { step, error: payload.error });
                 })
                 .run();
         });
     }
 
     /**
-     * Runs an array of steps in parallel with fail-fast behavior.
+     * Runs an array of steps in parallel with fail-fast behavior
+     * and blinks an event dispatcher to re-emit events.
      * If any step fails, all other steps are cancelled immediately.
      * @param steps The steps to run in parallel.
      * @returns {Promise<void>}
@@ -239,12 +226,9 @@ export abstract class Job extends Runnable<JobEventMap> {
             let hasRejected = false;
 
             for (const step of steps) {
+                this._blinkStepEventDispatcher(step);
                 step
-                    .once("started", () => {
-                        this.emit("stepStarted", { step });
-                    })
                     .once("completed", () => {
-                        this.emit("stepCompleted", { step });
                         completedCount++;
                         if (completedCount === steps.length && !hasRejected) {
                             if (cancelled) {
@@ -255,7 +239,6 @@ export abstract class Job extends Runnable<JobEventMap> {
                         }
                     })
                     .once("failed", ({ error }) => {
-                        this.emit("stepFailed", { step, error, rollback: step.rollbackStatus });
                         if (!cancelled && !hasRejected) {
                             hasRejected = true;
                             cancelled = true;
@@ -269,23 +252,52 @@ export abstract class Job extends Runnable<JobEventMap> {
                     })
                     .once("cancelled", () => {
                         cancelled = true;
-                        this.emit("stepCancelled", { step, rollback: step.rollbackStatus });
                         completedCount++;
                         if (completedCount === steps.length && !hasRejected) {
                             reject(new JobCancelledError(steps.filter((s) => s.isCancelled).map((s) => s.name)));
                         }
                     })
-                    .once("finished", ({status}) => {
-                        this.emit("stepFinished", { step, status, rollback: step.rollbackStatus });
-                    })
-                    .once("rollback-succeed", () => {
-                        this.emit("stepRollbackSucceed", { step });
-                    })
-                    .once("rollback-failed", (payload) => {
-                        this.emit("stepRollbackFailed", { step, error: payload.error });
-                    })
                     .run();
             }
         });
+    }
+
+    /**
+     * Adds event dispatchers to each step event
+     * that will re-emit events to the job.
+     * @param step Step to blink event dispatcher
+     */
+    private _blinkStepEventDispatcher(step: Step) {
+        step
+            .once("started", () => {
+                this.emit("step-started", { step });
+            })
+            .once("completed", () => {
+                this.emit("step-completed", { step });
+            })
+            .once("failed", (payload) => {
+                this.emit("step-failed", { step, error: payload.error, rollback: step.rollbackStatus });
+            })
+            .once("cancelled", () => {
+                this.emit("step-cancelled", { step, rollback: step.rollbackStatus });
+            })
+            .once("finished", (payload) => {
+                this.emit("step-finished", { step, status: payload.status, rollback: step.rollbackStatus });
+            })
+            .on("rollback-succeed", () => {
+                this.emit("step-rollback-succeed", { step });
+            })
+            .once("rollback-failed", (payload) => {
+                this.emit("step-rollback-failed", { step, error: payload.error });
+            })
+            .on("retry-created", ({ attempt, maxRetries, delayMs, cause }) => {
+                this.emit("step-retry-created", { step, attempt, maxRetries, delayMs, cause });
+            })
+            .on("retry-started", ({ attempt, maxRetries }) => {
+                this.emit("step-retry-started", { step, attempt, maxRetries });
+            })
+            .once("retry-exhausted", ({ attempt, maxRetries, cause }) => {
+                this.emit("step-retry-exhausted", { step, attempt, maxRetries, cause });
+            });
     }
 }

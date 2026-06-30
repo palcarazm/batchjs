@@ -205,7 +205,7 @@ describe("Job", () => {
             let stepStartedCount = 0;
 
             const job = new MockPassingJob()
-                .on("stepStarted",({ step }: { step: Step }) => {
+                .on("step-started",({ step }: { step: Step }) => {
                     expect(step).toBeInstanceOf(Step);
                     stepStartedCount++;
                 })
@@ -221,11 +221,11 @@ describe("Job", () => {
             let stepFinishedCount = 0;
 
             const job = new MockPassingJob()
-                .on("stepCompleted", ({ step }: { step: Step }) => {
+                .on("step-completed", ({ step }: { step: Step }) => {
                     expect(step).toBeInstanceOf(Step);
                     stepCompletedCount++;
                 })
-                .on("stepFinished", ({ step, status }) => {
+                .on("step-finished", ({ step, status }) => {
                     expect(step).toBeInstanceOf(Step);
                     expect(status).toBe(RunnableStatus.COMPLETED);
                     stepFinishedCount++;
@@ -243,11 +243,11 @@ describe("Job", () => {
             let stepFinishedCount = 0;
 
             const job = new MockSequentialFailingBeforeParallelJob()
-                .on("stepFailed", ({ step }: { step: Step }) => {
+                .on("step-failed", ({ step }: { step: Step }) => {
                     expect(step).toBeInstanceOf(Step);
                     stepFailedCount++;
                 })
-                .on("stepFinished", ({ step, status }) => {
+                .on("step-finished", ({ step, status }) => {
                     expect(step).toBeInstanceOf(Step);
                     expect(status).toBe(RunnableStatus.FAILED);
                     stepFinishedCount++;
@@ -265,11 +265,11 @@ describe("Job", () => {
             let stepFinishedCount = 0;
 
             const job = new MockParallelWithFailureJob()
-                .on("stepCancelled", ({ step }: { step: Step }) => {
+                .on("step-cancelled", ({ step }: { step: Step }) => {
                     expect(step).toBeInstanceOf(Step);
                     stepCancelledCount++;
                 })
-                .on("stepFinished", ({ step, status }) => {
+                .on("step-finished", ({ step, status }) => {
                     expect(step).toBeInstanceOf(Step);
                     expect(status).toBeDefined();
                     stepFinishedCount++;
@@ -283,7 +283,7 @@ describe("Job", () => {
         });
 
         describe("rollback events", () => {
-            test("should emit stepRollbackSucceed when step rollback succeeds", (done) => {
+            test("should emit step-rollback-succeed when step rollback succeeds", (done) => {
                 let stepRollbackSucceedCount = 0;
 
                 const step = new MockProcessorFailingStep("rollback-step", 0, { autoRollback: true });
@@ -291,7 +291,7 @@ describe("Job", () => {
                     .mockImplementationOnce(() => Promise.resolve());
 
                 const job = new MockCustomStepsJob("test-job", [step])
-                    .on("stepRollbackSucceed", ({ step }) => {
+                    .on("step-rollback-succeed", ({ step }) => {
                         expect(step.name).toBe("rollback-step");
                         stepRollbackSucceedCount++;
                     })
@@ -303,7 +303,7 @@ describe("Job", () => {
                 job.run();
             });
 
-            test("should emit stepRollbackFailed when step rollback fails", (done) => {
+            test("should emit step-rollback-failed when step rollback fails", (done) => {
                 let stepRollbackFailedCount = 0;
 
                 const step = new MockProcessorFailingStep("rollback-step", 0, { autoRollback: true });
@@ -311,7 +311,7 @@ describe("Job", () => {
                     .mockImplementationOnce(() => Promise.reject(new Error("Rollback failed")));
 
                 const job = new MockCustomStepsJob("test-job", [step])
-                    .on("stepRollbackFailed", ({ step, error }) => {
+                    .on("step-rollback-failed", ({ step, error }) => {
                         expect(step.name).toBe("rollback-step");
                         expect(error.message).toBe("Rollback failed");
                         stepRollbackFailedCount++;
@@ -324,7 +324,7 @@ describe("Job", () => {
                 job.run();
             });
 
-            test("should emit stepRollbackSucceed when step rollback succeeds in parallel group", (done) => {
+            test("should emit step-rollback-succeed when step rollback succeeds in parallel group", (done) => {
                 let stepRollbackSucceedCount = 0;
 
                 const step1 = new MockProcessorFailingStep("rollback-step", 0, { autoRollback: true });
@@ -336,7 +336,7 @@ describe("Job", () => {
                     .mockImplementationOnce(() => Promise.resolve());
 
                 const job = new MockCustomStepsJob("test-job", [[step1, step2]])
-                    .on("stepRollbackSucceed", ({ step }) => {
+                    .on("step-rollback-succeed", ({ step }) => {
                         expect(step.name).toBe("rollback-step");
                         stepRollbackSucceedCount++;
                     })
@@ -348,7 +348,7 @@ describe("Job", () => {
                 job.run();
             });
 
-            test("should emit stepRollbackFailed when step rollback fails in parallel group", (done) => {
+            test("should emit step-rollback-failed when step rollback fails in parallel group", (done) => {
                 let stepRollbackFailedCount = 0;
 
                 const step1 = new MockProcessorFailingStep("rollback-step", 0, { autoRollback: true });
@@ -360,7 +360,7 @@ describe("Job", () => {
                     .mockImplementationOnce(() => Promise.reject(new Error("Rollback failed")));
 
                 const job = new MockCustomStepsJob("test-job", [[step1, step2]])
-                    .on("stepRollbackFailed", ({ step, error }) => {
+                    .on("step-rollback-failed", ({ step, error }) => {
                         expect(step.name).toBe("rollback-step");
                         expect(error.message).toBe("Rollback failed");
                         stepRollbackFailedCount++;
@@ -373,13 +373,13 @@ describe("Job", () => {
                 job.run();
             });
 
-            test("should include rollback status in stepFailed event", (done) => {
+            test("should include rollback status in step-failed event", (done) => {
                 const step = new MockProcessorFailingStep("rollback-step", 0, { autoRollback: true });
                 jest.spyOn(step as unknown as { _rollback: () => Promise<void> }, "_rollback")
                     .mockImplementationOnce(() => Promise.resolve());
 
                 const job = new MockCustomStepsJob("test-job", [step])
-                    .on("stepFailed", ({ step, rollback }) => {
+                    .on("step-failed", ({ step, rollback }) => {
                         expect(step.name).toBe("rollback-step");
                         expect(rollback).toBe(RollbackStatus.SUCCEED);
                     })
@@ -391,13 +391,13 @@ describe("Job", () => {
                 job.run();
             });
 
-            test("should include rollback status in stepCancelled event", (done) => {
+            test("should include rollback status in step-cancelled event", (done) => {
                 const step = new MockPassingStep("rollback-step", 0, { autoRollback: true });
                 jest.spyOn(step as unknown as { _rollback: () => Promise<void> }, "_rollback")
                     .mockImplementationOnce(() => Promise.resolve());
 
                 const job = new MockCustomStepsJob("test-job", [step])
-                    .on("stepCancelled", ({ step, rollback }) => {
+                    .on("step-cancelled", ({ step, rollback }) => {
                         expect(step.name).toBe("rollback-step");
                         expect(rollback).toBe(RollbackStatus.SUCCEED);
                     })
@@ -409,13 +409,13 @@ describe("Job", () => {
                 job.run().then(() => job.cancel());
             });
 
-            test("should include rollback status in stepFinished event", (done) => {
+            test("should include rollback status in step-finished event", (done) => {
                 const step = new MockPassingStep("rollback-step", 0, { autoRollback: true });
                 jest.spyOn(step as unknown as { _rollback: () => Promise<void> }, "_rollback")
                     .mockImplementationOnce(() => Promise.reject(new Error("Rollback failed")));
 
                 const job = new MockCustomStepsJob("test-job", [step])
-                    .on("stepFinished", ({ step, status, rollback }) => {
+                    .on("step-finished", ({ step, status, rollback }) => {
                         expect(step.name).toBe("rollback-step");
                         expect(status).toBe(RunnableStatus.FAILED);
                         expect(rollback).toBe(RollbackStatus.FAILED);

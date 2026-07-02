@@ -8,7 +8,7 @@ on:
       branch:
         description: "Branch to deploy"
         required: true
-        default: "version/v1"
+        default: "version/v2"
         type: string
 
 permissions:

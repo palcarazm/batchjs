@@ -1,5 +1,4 @@
 export * from "./DiscardingInternalBufferDuplex";
-export * from "./DiscardingStream";
 export * from "./DiscardingSingleObjectDuplex";
 export * from "./InternalBufferDuplex";
 export * from "./ObjectDuplex";

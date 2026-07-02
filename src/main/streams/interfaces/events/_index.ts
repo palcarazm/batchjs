@@ -1,2 +1,2 @@
 export * from "./StreamEventEmitters";
-export * from "./StreamEventHandlers";
+export * from "./TypedEventEmitter";

@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+/// <reference types="node" />
 import { TransformCallback } from "node:stream";
 import { DiscardingInternalBufferDuplex } from "../../../../main/streams/index";
 

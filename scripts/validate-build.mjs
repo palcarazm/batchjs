@@ -22,7 +22,7 @@ function validateExports(module, moduleName) {
     const streamClassExports = ["AllMatchStream", "AnyMatchStream", "BufferStream", "CountStream", "DistinctStream", "EmptyStream","FilterStream", 
         "FirstStream", "FlatStream", "GroupByStream", "HasElementsStream","LastStream", "ParallelStream", "ReplayStream", "SingleStream",];
     const streamErrorExports = ["NotClosedError", "SingleStreamError"];
-    const streamInterfaceExports = ["DiscardingInternalBufferDuplex", "DiscardingSingleObjectDuplex", "DiscardingStream", "InternalBufferDuplex", "ObjectDuplex", "ObjectReadable", "ObjectWritable", "SingleObjectDuplex"];
+    const streamInterfaceExports = ["DiscardingInternalBufferDuplex", "DiscardingSingleObjectDuplex", "InternalBufferDuplex", "ObjectDuplex", "ObjectReadable", "ObjectWritable", "SingleObjectDuplex"];
     const streamExports = [...streamClassExports, ...streamErrorExports, ...streamInterfaceExports, "StreamUtils"];
     const expectedExports = [...commonExports, ...streamExports];
 

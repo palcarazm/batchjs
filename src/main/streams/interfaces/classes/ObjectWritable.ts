@@ -1,4 +1,5 @@
-import { Writable, WritableOptions } from "node:stream";
+import { Writable, WritableEventMap, WritableOptions } from "node:stream";
+import { TypedEventEmitter } from "../_index";
 
 /**
  * @interface
@@ -28,9 +29,13 @@ const defaultOptions = {
  * Abstract class that handle data in a stream in object mode.
  * @extends Writable
  * @template Tin The type of the input data
+ * @template TEventMap The type of the event map
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export abstract class ObjectWritable<Tin=any> extends Writable {
+export abstract class ObjectWritable<   
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Tin = any,
+    TEventMap extends WritableEventMap = WritableEventMap
+> extends Writable implements TypedEventEmitter<TEventMap> {
     readonly drainTimeout: number;
     /**
      * @param {ObjectWritableOptions} options - The options for the ObjectWritable.

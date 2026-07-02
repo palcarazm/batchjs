@@ -1,5 +1,6 @@
 import { TransformCallback } from "node:stream";
 import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
+import { DuplexEventMap } from "../_index";
 
 /**
  * @abstract
@@ -8,8 +9,9 @@ import { ObjectDuplex, ObjectDuplexOptions } from "./ObjectDuplex";
  * @extends ObjectDuplex
  * @template Tin The type of the input data
  * @template Tout The type of the output data
+ * @template TEventMap The type of the event map
  */
-export abstract class SingleObjectDuplex<Tin,Tout> extends ObjectDuplex<Tin,Tout> {
+export abstract class SingleObjectDuplex<Tin,Tout, TEventMap extends DuplexEventMap<Tout> = DuplexEventMap<Tout>> extends ObjectDuplex<Tin,Tout, TEventMap> {
     protected result: Tout | undefined = undefined;
     protected pushedResult = false;
     private readonly canEarlyFlush:()=>boolean;

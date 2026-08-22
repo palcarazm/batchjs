@@ -1,0 +1,60 @@
+import { TransformCallback } from "node:stream";
+import {  DiscardingSingleObjectDuplex, ObjectDuplexOptions } from "../interfaces/_index";
+
+/**
+ * @class
+ * Class that allows you to emit only the first chunk in a stream and discard the rest.
+ * @extends DiscardingSingleObjectDuplex
+ * @template T The type of the input data.
+ * @example
+ * ```typescript
+ * const stream:FirstStream<string> = new FirstStream({
+ *     objectMode: true,
+ *     matcher: (chunk: string) => chunk.length > 2
+ * });
+ * 
+ * stream.write("first");
+ * stream.write("second");// Discarded
+ * stream.write("third");// Discarded
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: string) => {
+ *     console.log(``Pushed chunk: ${chunk}```);
+ * });
+ * stream.on("discard", (chunk: string) => {
+ *     console.log(``Discarded chunk: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Pushed chunk: first
+ * >> Discarded chunk: second
+ * >> Discarded chunk: third
+ * ```
+ */
+export class FirstStream<T> extends DiscardingSingleObjectDuplex<T,T> {
+
+    /**
+     * @param {ObjectDuplexOptions} options - The options for the FirstStream.
+     */
+    constructor(options: ObjectDuplexOptions) {
+        super(options,()=>true);
+    }
+
+    /**
+     * A method to write data to the stream, save first chunk and discard the rest, and execute the callback.
+     *
+     * @param {T} chunk - The data chunk to write to the stream.
+     * @param {BufferEncoding} encoding - The encoding of the data.
+     * @param {TransformCallback} callback - The callback function to be executed after writing the data.
+     * @return {void} This function does not return anything.
+     */
+    _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
+        if(this.result === undefined){
+            this.result = chunk;
+            this._flush();
+        }else{
+            this.emit("discard", chunk);
+        }
+        callback();
+    }
+}

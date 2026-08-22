@@ -2,16 +2,15 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022"],
-    "module": "ESNext",
     "declaration": true,
-    "outDir": "./dist/esm",
-    "declarationDir": "./dist/@types",
+    "rootDir": "./src/main",
+    "outDir": "./dist/tmp/js",
+    "declarationDir": "./dist/tmp/@types",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node", "jest"]
+    "types": ["node"]
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/main/**/*.ts"],
 }

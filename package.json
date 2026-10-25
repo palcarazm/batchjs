@@ -37,6 +37,8 @@
     "test": "jest --coverage",
     "lint": "eslint ./src",
     "prepare": "husky",
+    "preversion": "npm run lint && npm run build && npm run test",
+    "postversion": "git push --follow-tags",
     "validate:build": "node scripts/validate-build.mjs"
   },
   "keywords": [
@@ -107,5 +109,9 @@
       "import": "./dist/esm/streams/index.mjs",
       "require": "./dist/cjs/streams/index.cjs"
     }
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true,
+    "unrs-resolver@1.12.2": true
   }
 }

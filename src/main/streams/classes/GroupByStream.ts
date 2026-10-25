@@ -1,0 +1,94 @@
+import {  TransformCallback  } from "node:stream";
+import { InternalBufferDuplex, ObjectDuplexOptions } from "../interfaces/_index";
+
+/**
+ * @interface
+ * Options for the GroupByStream.
+ * @extends ObjectDuplexOptions
+ * @template T The type of the input data.
+ */
+export interface GroupByStreamOptions<T> extends ObjectDuplexOptions {
+    /**
+     * The function that will be used to group the data.
+     */
+    groupBy: (chunk: T) => string;
+}
+
+/**
+ * @class
+ * Class that allows you to group data in a stream.
+ * @extends InternalBufferDuplex
+ * @template T The type of the input data.
+ * @example
+ * ```typescript
+ * const stream:GroupByStream<string> = new GroupByStream({
+ *     objectMode: true,
+ *     groupBy: (chunk: string) => chunk.split("").at(0) ?? "",
+ * });
+ * 
+ * stream.write("DATA1"); //group : D
+ * stream.write("DATA2"); //group : D
+ * stream.write("data3"); //group : d
+ * stream.end();
+ * 
+ * stream.on("data", (chunk: Array<string>) => {
+ *     console.log(``Pushed chunk: ${chunk}```);
+ * });
+ * ```
+ * ```shell
+ * >> Pushed chunk: ["DATA1", "DATA2"]
+ * >> Pushed chunk: ["data3"]
+ * ```
+ */
+export class GroupByStream<T> extends InternalBufferDuplex<T,T[]> {
+    protected groups: Map<string,Array<T>> = new Map();
+    private readonly groupBy: (chunk: T) => string;
+
+    /**
+     * @param {GroupByStreamOptions<T>} options - The options for the GroupBy.
+     */
+    constructor(options: GroupByStreamOptions<T>) {
+        super(options);
+        this.groupBy = options.groupBy;
+    }
+
+    /**
+     * Writes a chunk of data to the stream, groups it according to a specified function,
+     * and executes the callback.
+     *
+     * @param {T} chunk - The data chunk to write to the stream.
+     * @param {BufferEncoding} encoding - The encoding of the data.
+     * @param {TransformCallback} callback - The callback function to be executed after writing the data.
+     * @return {void}
+     */
+    _write(chunk: T, encoding: BufferEncoding, callback: TransformCallback): void {
+        this._groupBy(chunk);
+        callback();
+    }
+
+ 
+    /**
+     * Finalize the stream by draining the buffer and pushing any remaining chunks to the stream.
+     * 
+     * @override
+     * @param {TransformCallback} callback - The callback to be called when the stream is finalized.
+     * @return {void}
+     */
+    _final(callback: TransformCallback): void {
+        this.buffer = Array.from(this.groups.values());
+        super._final(callback);
+    }
+
+    /**
+     * Groups a chunk of data based on the provided groupBy function and stores it in the buffer.
+     *
+     * @param {T} chunk - The data chunk to be grouped.
+     * @return {void} This function does not return anything.
+     */
+    private _groupBy(chunk: T): void {
+        const groupKey = this.groupBy(chunk);
+        const group = this.groups.get(groupKey) ?? [];
+        group.push(chunk);
+        this.groups.set(groupKey, group);
+    }
+}

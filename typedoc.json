@@ -1,0 +1,44 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/main/common/index.ts", "src/main/streams/index.ts"],
+  "name": "API Reference",
+  "entryPointStrategy": "expand",
+  "entryFileName": "index",
+  "out": "docs/api",
+  "plugin": ["typedoc-plugin-markdown"],
+
+  "cleanOutputDir": true,
+
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "excludeNotDocumented": true,
+
+  "disableSources": true,
+  "categorizeByGroup": true,
+  "readme": "none",
+  "useCodeBlocks": true,
+
+  "parametersFormat": "table",
+  "interfacePropertiesFormat": "table",
+  "classPropertiesFormat": "table",
+  "typeAliasPropertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "propertyMembersFormat": "table",
+  "typeDeclarationFormat": "table",
+  
+  "markdownItOptions": {
+    "html": false
+  },
+
+  "externalSymbolLinkMappings": {
+    "@types/node": {
+      "Stream.Readable.push": "https://nodejs.org/api/stream.html#readablepushchunk-encoding",
+      "Stream.Readable._read": "https://nodejs.org/api/stream.html#readable_readsize",
+      "Stream.Writable.write": "https://nodejs.org/api/stream.html#writablewritechunk-encoding-callback",
+      "Stream.Writable.end": "https://nodejs.org/api/stream.html#writableendchunk-encoding-callback",
+      "Stream.pipe": "https://nodejs.org/api/stream.html#readablepipedestination-options"
+    }
+  }
+}

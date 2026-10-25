@@ -129,8 +129,7 @@ job
 
 # Documentation
 
-- [Core API](./docs/common-api.md)
-- [Stream API](./docs/streams-api.md)
+[See our documentation](https://palcarazm.github.io/batchjs/).
 
 # Collaborators welcome!
 

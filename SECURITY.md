@@ -1,4 +1,23 @@
-# Reporting Security Issues
+# Security Policy
+
+## Supported Versions
+
+Versions currently being supported with security updates:
+
+| Version     | Active Support              | Critical Support            |
+| ----------: | :-------------------------: | :-------------------------: |
+| **v2**      | :white_check_mark:          | :white_check_mark:          |
+| **v1**      | :x:                         | :warning: Since 2026-12-31  |
+
+At times to be determined by the maintainers, major versions will be frozen and transitioned to Critical Support. Versions in Critical Support should not have any changes landed, except for:
+
+- Critical bug fixes
+- Critical security updates
+- Important documentation updates
+
+After a determined period of time, versions in Critical Support will be deep-frozen.
+
+## Reporting a Vulnerability
 
 If you discover a security vulnerability in this project, please follow these steps to report it:
 

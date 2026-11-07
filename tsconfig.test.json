@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "commonjs",
+    "strict": true,
+    "declaration": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "./src",
+    "outDir": "dist/tmp",
+    "noEmit": true,
+    "types": ["jest", "node"]
+  },
+  "include": ["src/main/**/*.ts", "src/test/**/*.ts"]
+}
